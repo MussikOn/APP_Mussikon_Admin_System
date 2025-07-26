@@ -66,7 +66,7 @@ const mapBackendStatusToFrontend = (backendStatus: BackendMusicianRequest['statu
 // Obtener todas las solicitudes usando el endpoint de administración
 export const getAllRequests = async (): Promise<MusicianRequest[]> => {
   try {
-    // Intentar conectar al backend usando endpoint de prueba temporal
+    // Intentar conectar al backend usando endpoint de prueba
     const response = await get('/test/musician-requests');
     const backendRequests = (response as any).data || [];
     console.log('✅ Backend conectado, usando datos reales');
@@ -155,7 +155,7 @@ export const getAllRequests = async (): Promise<MusicianRequest[]> => {
 // Obtener solicitud por ID
 export const getRequestById = async (id: string): Promise<MusicianRequest | null> => {
   try {
-    const response = await get(`/musician-requests/${id}/status`);
+    const response = await get(`/test/musician-requests/${id}`);
     return mapBackendRequestToFrontend((response as any).data);
   } catch (error) {
     console.error('Error fetching request by ID:', error);
@@ -166,7 +166,7 @@ export const getRequestById = async (id: string): Promise<MusicianRequest | null
 // Crear nueva solicitud
 export const createRequest = async (requestData: CreateRequestData): Promise<MusicianRequest> => {
   try {
-    const response = await post('/musician-requests', requestData);
+    const response = await post('/test/musician-requests', requestData);
     return mapBackendRequestToFrontend((response as any).data);
   } catch (error) {
     console.error('Error creating request:', error);
@@ -193,7 +193,7 @@ export const createRequest = async (requestData: CreateRequestData): Promise<Mus
 // Actualizar solicitud
 export const updateRequest = async (id: string, requestData: UpdateRequestData): Promise<MusicianRequest> => {
   try {
-    const response = await put(`/musician-requests/${id}`, requestData);
+    const response = await put(`/test/musician-requests/${id}`, requestData);
     return mapBackendRequestToFrontend((response as any).data);
   } catch (error) {
     console.error('Error updating request:', error);
@@ -221,7 +221,7 @@ export const updateRequest = async (id: string, requestData: UpdateRequestData):
 // Eliminar solicitud
 export const deleteRequest = async (id: string): Promise<void> => {
   try {
-    await del(`/admin/musician-requests/${id}`);
+    await del(`/test/musician-requests/${id}`);
   } catch (error) {
     console.error('Error deleting request:', error);
     console.log('Backend no disponible, simulando eliminación de solicitud');
@@ -232,7 +232,7 @@ export const deleteRequest = async (id: string): Promise<void> => {
 // Aceptar solicitud
 export const acceptRequest = async (acceptData: AcceptRequestData): Promise<boolean> => {
   try {
-    const response = await post('/musician-requests/accept', acceptData);
+    const response = await post('/test/musician-requests/accept', acceptData);
     return (response as any).data.success;
   } catch (error) {
     console.error('Error accepting request:', error);
@@ -244,7 +244,7 @@ export const acceptRequest = async (acceptData: AcceptRequestData): Promise<bool
 // Cancelar solicitud
 export const cancelRequest = async (cancelData: CancelRequestData): Promise<boolean> => {
   try {
-    const response = await post('/musician-requests/cancel', cancelData);
+    const response = await post('/test/musician-requests/cancel', cancelData);
     return (response as any).data.success;
   } catch (error) {
     console.error('Error cancelling request:', error);

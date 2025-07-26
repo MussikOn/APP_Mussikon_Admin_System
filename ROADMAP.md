@@ -1,4 +1,4 @@
-# 🗺️ Roadmap - MussikOn Admin System
+# 🗺️ Roadmap - MusikOn Admin System
 
 > **Versión:** 1.0.0  
 > **Última Actualización:** Diciembre 2024  
