@@ -50,6 +50,28 @@ npm run dev
 npm run build
 ```
 
+### 🚀 Inicio Rápido (Recomendado)
+
+#### **Opción 1: Script Automático (Windows)**
+```bash
+# Ejecutar script batch
+start-dev.bat
+
+# O script PowerShell
+.\start-dev.ps1
+```
+
+#### **Opción 2: Manual**
+```bash
+# Terminal 1 - Backend
+cd ../app_mussikon_express
+npm start
+
+# Terminal 2 - Frontend
+cd ../APP_Mussikon_Admin_System
+npm run dev
+```
+
 ## 🔗 Conexión con Backend
 
 El proyecto está configurado para conectarse con el backend MussikOn Express:

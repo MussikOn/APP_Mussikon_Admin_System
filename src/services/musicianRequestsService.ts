@@ -66,10 +66,13 @@ const mapFrontendStatusToBackend = (frontendStatus: MusicianRequest['status']): 
 // Obtener todas las solicitudes usando el endpoint de administración
 export const getAllRequests = async (): Promise<MusicianRequest[]> => {
   try {
+    // Intentar conectar al backend
     const response = await get('/admin/musician-requests');
     const backendRequests = (response as any).data || [];
+    console.log('✅ Backend conectado, usando datos reales');
     return backendRequests.map(mapBackendRequestToFrontend);
   } catch (error) {
+    console.log('⚠️ Backend no disponible, usando datos de prueba');
     console.error('Error fetching requests:', error);
     // Fallback con datos de prueba si el backend no está disponible
     return [
