@@ -8,16 +8,14 @@ import {
   MenuItem,
   Button,
   Chip,
-  Typography,
-  IconButton,
   Collapse
 } from '@mui/material';
 import { FilterList, Clear } from '@mui/icons-material';
-import type { RequestFilters } from '../types/request';
+import type { RequestFilters as RequestFiltersType } from '../types/request';
 import { EVENT_TYPES, INSTRUMENTS, REQUEST_STATUSES } from '../types/request';
 
 interface RequestFiltersProps {
-  onFilterChange: (filters: RequestFilters) => void;
+  onFilterChange: (filters: RequestFiltersType) => void;
   onClearFilters: () => void;
 }
 
@@ -26,7 +24,7 @@ const RequestFilters: React.FC<RequestFiltersProps> = ({
   onClearFilters
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const [filters, setFilters] = useState<RequestFilters>({
+  const [filters, setFilters] = useState<RequestFiltersType>({
     search: '',
     status: undefined,
     eventType: '',
@@ -34,7 +32,7 @@ const RequestFilters: React.FC<RequestFiltersProps> = ({
     dateRange: undefined
   });
 
-  const handleFilterChange = (field: keyof RequestFilters, value: any) => {
+  const handleFilterChange = (field: keyof RequestFiltersType, value: any) => {
     const newFilters = { ...filters, [field]: value };
     setFilters(newFilters);
     onFilterChange(newFilters);

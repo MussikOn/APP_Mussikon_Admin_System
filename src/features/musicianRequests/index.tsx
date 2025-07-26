@@ -14,7 +14,7 @@ import { useRequests } from './hooks/useRequests';
 import RequestCard from './components/RequestCard';
 import RequestForm from './components/RequestForm';
 import RequestDetails from './components/RequestDetails';
-import RequestFilters from './components/RequestFilters';
+import RequestFiltersComponent from './components/RequestFilters';
 import type { MusicianRequest, CreateRequestData } from './types/request';
 
 const MusicianRequests = () => {
@@ -295,7 +295,7 @@ const MusicianRequests = () => {
         </Box>
 
         {/* Filtros */}
-        <RequestFilters
+        <RequestFiltersComponent
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
         />

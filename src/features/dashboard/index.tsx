@@ -308,7 +308,7 @@ const Dashboard = () => {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {recentRequests.map((r, i) => (
                 <li key={r._id || i} style={{ marginBottom: 6, fontSize: '1rem' }}>
-                  <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{r.musician || r.name || r.userEmail || r.solicitante || 'Solicitante'}</span> <span style={{ color: '#b0b8c1' }}>{r.status || r.estado || ''}</span>
+                  <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{r.userId || 'Solicitante'}</span> <span style={{ color: '#b0b8c1' }}>{r.status || ''}</span>
                 </li>
               ))}
             </ul>

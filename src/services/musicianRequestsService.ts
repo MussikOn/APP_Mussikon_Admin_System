@@ -45,29 +45,29 @@ const mapBackendStatusToFrontend = (backendStatus: BackendMusicianRequest['statu
   }
 };
 
-// Función para mapear status del frontend al backend
-const mapFrontendStatusToBackend = (frontendStatus: MusicianRequest['status']): BackendMusicianRequest['status'] => {
-  switch (frontendStatus) {
-    case 'pending':
-      return 'pendiente';
-    case 'assigned':
-      return 'asignada';
-    case 'unassigned':
-      return 'no_asignada';
-    case 'cancelled':
-      return 'cancelada';
-    case 'completed':
-      return 'completada';
-    default:
-      return 'pendiente';
-  }
-};
+// Función para mapear status del frontend al backend (no utilizada actualmente)
+// const mapFrontendStatusToBackend = (frontendStatus: MusicianRequest['status']): BackendMusicianRequest['status'] => {
+//   switch (frontendStatus) {
+//     case 'pending':
+//       return 'pendiente';
+//     case 'assigned':
+//       return 'asignada';
+//     case 'unassigned':
+//       return 'no_asignada';
+//     case 'cancelled':
+//       return 'cancelada';
+//     case 'completed':
+//       return 'completada';
+//     default:
+//       return 'pendiente';
+//   }
+// };
 
 // Obtener todas las solicitudes usando el endpoint de administración
 export const getAllRequests = async (): Promise<MusicianRequest[]> => {
   try {
-    // Intentar conectar al backend
-    const response = await get('/admin/musician-requests');
+    // Intentar conectar al backend usando endpoint de prueba temporal
+    const response = await get('/test/musician-requests');
     const backendRequests = (response as any).data || [];
     console.log('✅ Backend conectado, usando datos reales');
     return backendRequests.map(mapBackendRequestToFrontend);
