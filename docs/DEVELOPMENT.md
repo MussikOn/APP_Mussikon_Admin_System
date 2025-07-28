@@ -1,782 +1,712 @@
-# 👨‍💻 Guía de Desarrollo - MusikOn Admin System
+# 🛠️ **GUÍA DE DESARROLLO - MUSSIKON ADMIN SYSTEM**
 
-> **Versión:** 1.0.0  
-> **Última Actualización:** Diciembre 2024
-
-## 📋 Estándares de Desarrollo
-
-### Principios Fundamentales
-- **Clean Code:** Código legible y mantenible
-- **Type Safety:** Uso completo de TypeScript
-- **Component Composition:** Composición sobre herencia
-- **Single Responsibility:** Una función, una responsabilidad
-- **DRY:** Don't Repeat Yourself
-- **KISS:** Keep It Simple, Stupid
+> **Guías, Mejores Prácticas y Estándares de Desarrollo**
 
 ---
 
-## 🏗️ Arquitectura de Componentes
+## 🎯 **INFORMACIÓN GENERAL**
 
-### 1. Estructura de Componentes
+### **Estado del Proyecto**
+- **✅ COMPLETADO**: Sistema de API Centralizado y Gestión de Usuarios Móviles
+- **🚧 EN DESARROLLO**: Sistema de Notificaciones
+- **📅 Fecha**: Diciembre 2024
+- **🏆 Versión**: 2.0.0
 
-#### Componentes Presentacionales
+### **Tecnologías Utilizadas**
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI Framework**: Material-UI v7
+- **HTTP Client**: Axios con interceptores
+- **Estado**: React Hooks + Context
+- **Routing**: React Router v6
+- **Build Tool**: Vite
+
+---
+
+## 🚀 **CONFIGURACIÓN DEL ENTORNO**
+
+### **Requisitos Previos**
+```bash
+# Versiones mínimas requeridas
+Node.js >= 18.0.0
+npm >= 8.0.0
+Git >= 2.30.0
+```
+
+### **Instalación del Proyecto**
+```bash
+# Clonar el repositorio
+git clone https://github.com/MussikOn/APP_Mussikon_Admin_System.git
+
+# Navegar al directorio
+cd APP_Mussikon_Admin_System
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con la configuración local
+
+# Ejecutar en desarrollo
+npm run dev
+```
+
+### **Scripts Disponibles**
+```bash
+# Desarrollo
+npm run dev          # Servidor de desarrollo (puerto 5173)
+npm run build        # Build de producción
+npm run preview      # Preview del build
+npm run lint         # Linting del código
+
+# Testing (futuro)
+npm run test         # Ejecutar tests
+npm run test:watch   # Tests en modo watch
+npm run test:coverage # Tests con cobertura
+```
+
+---
+
+## 📁 **ESTRUCTURA DE DESARROLLO**
+
+### **Convenciones de Nomenclatura**
 ```typescript
-// Componentes que solo muestran UI
-interface UserCardProps {
-  user: User;
-  onEdit: (user: User) => void;
+// Archivos y carpetas
+components/           # Componentes reutilizables
+features/            # Módulos de funcionalidad
+hooks/               # Custom hooks
+services/            # Servicios de API
+types/               # Definiciones de tipos
+utils/               # Utilidades
+
+// Nomenclatura de archivos
+ComponentName.tsx    # Componentes React
+useHookName.ts       # Custom hooks
+serviceName.ts       # Servicios
+typeName.ts          # Tipos TypeScript
+```
+
+### **Organización de Componentes**
+```typescript
+// Estructura recomendada para features
+src/features/featureName/
+├── components/          # Componentes específicos
+│   ├── ComponentName.tsx
+│   └── ComponentName.test.tsx
+├── hooks/              # Hooks específicos
+│   └── useFeatureName.ts
+├── services/           # Servicios específicos
+│   └── featureNameService.ts
+├── types/              # Tipos específicos
+│   └── featureName.ts
+└── index.tsx           # Punto de entrada
+```
+
+---
+
+## 🔧 **PATRONES DE DESARROLLO**
+
+### **1. Patrón de Servicios**
+```typescript
+// src/services/exampleService.ts
+export const exampleService = {
+  // GET - Obtener datos
+  async getData(filters?: Filters): Promise<ApiResponse<Data[]>> {
+    return apiService.get('/endpoint', { params: filters });
+  },
+
+  // POST - Crear datos
+  async createData(data: CreateData): Promise<ApiResponse<Data>> {
+    return apiService.post('/endpoint', data);
+  },
+
+  // PUT - Actualizar datos
+  async updateData(id: string, data: UpdateData): Promise<ApiResponse<Data>> {
+    return apiService.put(`/endpoint/${id}`, data);
+  },
+
+  // DELETE - Eliminar datos
+  async deleteData(id: string): Promise<ApiResponse<void>> {
+    return apiService.delete(`/endpoint/${id}`);
+  },
+};
+```
+
+### **2. Patrón de Hooks**
+```typescript
+// src/hooks/useExample.ts
+export const useExample = () => {
+  const [data, setData] = useState<Data[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async (filters?: Filters) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await exampleService.getData(filters);
+      setData(response.data);
+    } catch (err: any) {
+      setError(err.message || 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createData = useCallback(async (newData: CreateData) => {
+    try {
+      const response = await exampleService.createData(newData);
+      setData(prev => [...prev, response.data]);
+      return response;
+    } catch (err: any) {
+      setError(err.message || 'Error al crear');
+      throw err;
+    }
+  }, []);
+
+  return {
+    data,
+    loading,
+    error,
+    fetchData,
+    createData,
+  };
+};
+```
+
+### **3. Patrón de Componentes**
+```typescript
+// src/components/ExampleComponent.tsx
+interface ExampleComponentProps {
+  data: Data;
+  onEdit: (data: Data) => void;
   onDelete: (id: string) => void;
   loading?: boolean;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ 
-  user, 
-  onEdit, 
-  onDelete, 
-  loading = false 
+export const ExampleComponent: React.FC<ExampleComponentProps> = ({
+  data,
+  onEdit,
+  onDelete,
+  loading = false,
 }) => {
+  const handleEdit = useCallback(() => {
+    onEdit(data);
+  }, [data, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    if (window.confirm('¿Estás seguro de eliminar este elemento?')) {
+      onDelete(data.id);
+    }
+  }, [data.id, onDelete]);
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
   return (
-    <Card className="user-card glass-panel">
+    <Card>
       <CardContent>
-        <Typography variant="h6">{user.name} {user.lastName}</Typography>
-        <Typography color="textSecondary">{user.userEmail}</Typography>
-        <Chip label={user.roll} color="primary" />
+        <Typography variant="h6">{data.title}</Typography>
+        <Typography variant="body2">{data.description}</Typography>
       </CardContent>
       <CardActions>
-        <Button 
-          onClick={() => onEdit(user)}
-          disabled={loading}
-          startIcon={<EditIcon />}
-        >
-          Editar
-        </Button>
-        <Button 
-          onClick={() => onDelete(user.userEmail)}
-          disabled={loading}
-          color="error"
-          startIcon={<DeleteIcon />}
-        >
-          Eliminar
-        </Button>
+        <Button onClick={handleEdit}>Editar</Button>
+        <Button onClick={handleDelete} color="error">Eliminar</Button>
       </CardActions>
     </Card>
   );
 };
 ```
 
-#### Componentes de Contenedor
+---
+
+## 🎨 **ESTÁNDARES DE UI/UX**
+
+### **1. Componentes Material-UI**
 ```typescript
-// Componentes que manejan lógica de negocio
-const UsersContainer: React.FC = () => {
-  const { data: users, loading, error, execute: fetchUsers } = useApiRequest(getAllUsers);
-  const { createUser, updateUser, deleteUser } = useUsers();
-  
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-  
-  const handleCreate = async (userData: User) => {
-    try {
-      await createUser(userData);
-      fetchUsers(); // Recargar lista
-    } catch (error) {
-      console.error('Error creating user:', error);
-    }
-  };
-  
-  const handleUpdate = async (email: string, userData: Partial<User>) => {
-    try {
-      await updateUser(email, userData);
-      fetchUsers(); // Recargar lista
-    } catch (error) {
-      console.error('Error updating user:', error);
-    }
-  };
-  
-  const handleDelete = async (email: string) => {
-    if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
-      try {
-        await deleteUser(email);
-        fetchUsers(); // Recargar lista
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
-    }
-  };
-  
-  if (error) return <ErrorMessage error={error} />;
-  
-  return (
-    <div className="users-container">
-      <UserForm onSubmit={handleCreate} />
-      <div className="users-grid">
-        {users?.map(user => (
-          <UserCard
-            key={user.userEmail}
-            user={user}
-            onEdit={(user) => setSelectedUser(user)}
-            onDelete={handleDelete}
-            loading={loading}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
+// Uso correcto de Material-UI v7
+import { Box, Typography, Button, Card, CardContent } from '@mui/material';
+
+// Layout con Box (reemplaza Grid)
+<Box
+  sx={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: 2,
+    p: 2,
+  }}
+>
+  {/* Contenido */}
+</Box>
+
+// Tema personalizado
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#00fff7',
+    },
+    secondary: {
+      main: '#b993d6',
+    },
+  },
+});
 ```
 
-### 2. Patrón de Hooks
-
-#### Custom Hooks Reutilizables
+### **2. Glassmorphism Design**
 ```typescript
-// Hook para formularios
-export function useForm<T>(initialValues: T) {
-  const [values, setValues] = useState<T>(initialValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
-  const [touched, setTouched] = useState<Partial<Record<keyof T, boolean>>>({});
+// Componente Glass Panel
+const GlassPanel: React.FC<GlassPanelProps> = ({ children, className }) => (
+  <Box
+    className={className}
+    sx={{
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: 2,
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      p: 2,
+    }}
+  >
+    {children}
+  </Box>
+);
+```
 
-  const handleChange = useCallback((field: keyof T, value: any) => {
-    setValues(prev => ({ ...prev, [field]: value }));
-    if (touched[field]) {
-      // Validar campo cuando ha sido tocado
-      validateField(field, value);
-    }
-  }, [touched]);
+### **3. Responsive Design**
+```typescript
+// Hook para responsive
+export const useResponsive = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  const handleBlur = useCallback((field: keyof T) => {
-    setTouched(prev => ({ ...prev, [field]: true }));
-    validateField(field, values[field]);
-  }, [values]);
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width <= 768);
+      setIsTablet(width > 768 && width <= 1024);
+      setIsDesktop(width > 1024);
+    };
 
-  const validateField = useCallback((field: keyof T, value: any) => {
-    const fieldErrors = validateFormField(field, value);
-    setErrors(prev => ({ ...prev, [field]: fieldErrors }));
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const reset = useCallback(() => {
-    setValues(initialValues);
-    setErrors({});
-    setTouched({});
-  }, [initialValues]);
-
-  return {
-    values,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    reset,
-    setValues,
-    setErrors,
-  };
-}
-
-// Hook para paginación
-export function usePagination<T>(items: T[], itemsPerPage: number = 10) {
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  const totalPages = Math.ceil(items.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = items.slice(startIndex, endIndex);
-  
-  const goToPage = useCallback((page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  }, [totalPages]);
-  
-  const nextPage = useCallback(() => {
-    goToPage(currentPage + 1);
-  }, [currentPage, goToPage]);
-  
-  const prevPage = useCallback(() => {
-    goToPage(currentPage - 1);
-  }, [currentPage, goToPage]);
-  
-  return {
-    currentItems,
-    currentPage,
-    totalPages,
-    goToPage,
-    nextPage,
-    prevPage,
-    hasNextPage: currentPage < totalPages,
-    hasPrevPage: currentPage > 1,
-  };
-}
-```
-
----
-
-## 🎨 Estándares de Diseño
-
-### 1. Sistema de Colores
-```typescript
-// src/theme/colors.ts
-export const colors = {
-  primary: {
-    main: '#b993d6',
-    light: '#d4b5e8',
-    dark: '#8b6b9e',
-  },
-  secondary: {
-    main: '#43cea2',
-    light: '#6dd4b8',
-    dark: '#2a8f6b',
-  },
-  background: {
-    default: '#0a0a0a',
-    paper: 'rgba(255, 255, 255, 0.05)',
-  },
-  text: {
-    primary: '#ffffff',
-    secondary: 'rgba(255, 255, 255, 0.7)',
-  },
-  error: '#f44336',
-  warning: '#ff9800',
-  success: '#4caf50',
-  info: '#2196f3',
-};
-```
-
-### 2. Tipografía
-```typescript
-// src/theme/typography.ts
-export const typography = {
-  fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  h1: {
-    fontSize: '2.5rem',
-    fontWeight: 300,
-    lineHeight: 1.2,
-  },
-  h2: {
-    fontSize: '2rem',
-    fontWeight: 400,
-    lineHeight: 1.3,
-  },
-  h3: {
-    fontSize: '1.75rem',
-    fontWeight: 400,
-    lineHeight: 1.4,
-  },
-  h4: {
-    fontSize: '1.5rem',
-    fontWeight: 500,
-    lineHeight: 1.4,
-  },
-  h5: {
-    fontSize: '1.25rem',
-    fontWeight: 500,
-    lineHeight: 1.5,
-  },
-  h6: {
-    fontSize: '1rem',
-    fontWeight: 500,
-    lineHeight: 1.6,
-  },
-  body1: {
-    fontSize: '1rem',
-    fontWeight: 400,
-    lineHeight: 1.5,
-  },
-  body2: {
-    fontSize: '0.875rem',
-    fontWeight: 400,
-    lineHeight: 1.43,
-  },
-};
-```
-
-### 3. Espaciado
-```typescript
-// src/theme/spacing.ts
-export const spacing = {
-  xs: '0.25rem',   // 4px
-  sm: '0.5rem',    // 8px
-  md: '1rem',      // 16px
-  lg: '1.5rem',    // 24px
-  xl: '2rem',      // 32px
-  xxl: '3rem',     // 48px
+  return { isMobile, isTablet, isDesktop };
 };
 ```
 
 ---
 
-## 🔧 Estándares de Código
+## 🔐 **SEGURIDAD Y AUTENTICACIÓN**
 
-### 1. Nomenclatura
-
-#### Variables y Funciones
+### **1. Protección de Rutas**
 ```typescript
-// ✅ Correcto
-const userList = [];
-const fetchUserData = () => {};
-const isUserActive = true;
-const handleUserClick = () => {};
-
-// ❌ Incorrecto
-const user_list = [];
-const fetchUserData = () => {};
-const isUserActive = true;
-const handleUserClick = () => {};
-```
-
-#### Componentes
-```typescript
-// ✅ Correcto
-const UserCard: React.FC<UserCardProps> = () => {};
-const UserListContainer: React.FC = () => {};
-const useUserData = () => {};
-
-// ❌ Incorrecto
-const userCard: React.FC<UserCardProps> = () => {};
-const userListContainer: React.FC = () => {};
-const useUserData = () => {};
-```
-
-#### Interfaces y Tipos
-```typescript
-// ✅ Correcto
-interface UserCardProps {
-  user: User;
-  onEdit: (user: User) => void;
+// src/components/PrivateRoute.tsx
+interface PrivateRouteProps {
+  children: React.ReactNode;
+  allowedRoles?: string[];
 }
 
-type UserStatus = 'active' | 'inactive' | 'pending';
+export const PrivateRoute: React.FC<PrivateRouteProps> = ({
+  children,
+  allowedRoles = [],
+}) => {
+  const { user, isAuthenticated, loading } = useAuth();
 
-// ❌ Incorrecto
-interface userCardProps {
-  user: User;
-  onEdit: (user: User) => void;
-}
-
-type userStatus = 'active' | 'inactive' | 'pending';
-```
-
-### 2. Estructura de Archivos
-```
-src/
-├── components/
-│   ├── common/           # Componentes reutilizables
-│   │   ├── Button/
-│   │   │   ├── index.tsx
-│   │   │   ├── Button.test.tsx
-│   │   │   └── Button.stories.tsx
-│   │   └── Modal/
-│   └── layout/           # Componentes de layout
-├── features/
-│   ├── users/
-│   │   ├── components/   # Componentes específicos
-│   │   ├── hooks/        # Hooks específicos
-│   │   ├── services/     # Servicios específicos
-│   │   ├── types/        # Tipos específicos
-│   │   └── index.tsx     # Punto de entrada
-├── hooks/
-├── services/
-├── utils/
-└── types/
-```
-
-### 3. Imports y Exports
-```typescript
-// ✅ Correcto - Imports organizados
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, Typography, Button } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-
-import { User } from '../types';
-import { useUsers } from '../hooks/useUsers';
-import { UserCard } from '../components/UserCard';
-
-// ✅ Correcto - Exports nombrados
-export { UserCard } from './UserCard';
-export { useUsers } from './useUsers';
-export type { User } from './types';
-
-// ❌ Incorrecto - Imports desordenados
-import { Card, CardContent, Typography, Button } from '@mui/material';
-import React, { useState, useEffect, useCallback } from 'react';
-import { User } from '../types';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-```
-
----
-
-## 🧪 Testing
-
-### 1. Estructura de Tests
-```typescript
-// src/components/UserCard/UserCard.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import { UserCard } from './UserCard';
-
-const mockUser = {
-  name: 'John',
-  lastName: 'Doe',
-  userEmail: 'john@example.com',
-  roll: 'musico',
-  status: true,
-};
-
-const mockOnEdit = jest.fn();
-const mockOnDelete = jest.fn();
-
-describe('UserCard', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should render user information correctly', () => {
-    render(
-      <UserCard
-        user={mockUser}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-      />
-    );
-
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('john@example.com')).toBeInTheDocument();
-    expect(screen.getByText('musico')).toBeInTheDocument();
-  });
-
-  it('should call onEdit when edit button is clicked', () => {
-    render(
-      <UserCard
-        user={mockUser}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-      />
-    );
-
-    fireEvent.click(screen.getByText('Editar'));
-    expect(mockOnEdit).toHaveBeenCalledWith(mockUser);
-  });
-
-  it('should call onDelete when delete button is clicked', () => {
-    render(
-      <UserCard
-        user={mockUser}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-      />
-    );
-
-    fireEvent.click(screen.getByText('Eliminar'));
-    expect(mockOnDelete).toHaveBeenCalledWith(mockUser.userEmail);
-  });
-
-  it('should disable buttons when loading', () => {
-    render(
-      <UserCard
-        user={mockUser}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        loading={true}
-      />
-    );
-
-    expect(screen.getByText('Editar')).toBeDisabled();
-    expect(screen.getByText('Eliminar')).toBeDisabled();
-  });
-});
-```
-
-### 2. Tests de Hooks
-```typescript
-// src/hooks/useUsers.test.ts
-import { renderHook, act } from '@testing-library/react';
-import { useUsers } from './useUsers';
-import { getAllUsers, createUser, updateUser, deleteUser } from '../services/usersService';
-
-jest.mock('../services/usersService');
-
-describe('useUsers', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should fetch users on mount', async () => {
-    const mockUsers = [
-      { name: 'John', userEmail: 'john@example.com' },
-      { name: 'Jane', userEmail: 'jane@example.com' },
-    ];
-
-    (getAllUsers as jest.Mock).mockResolvedValue(mockUsers);
-
-    const { result } = renderHook(() => useUsers());
-
-    await act(async () => {
-      await result.current.fetchUsers();
-    });
-
-    expect(result.current.users).toEqual(mockUsers);
-    expect(result.current.loading).toBe(false);
-  });
-
-  it('should handle error when fetching users', async () => {
-    const error = new Error('Failed to fetch users');
-    (getAllUsers as jest.Mock).mockRejectedValue(error);
-
-    const { result } = renderHook(() => useUsers());
-
-    await act(async () => {
-      await result.current.fetchUsers();
-    });
-
-    expect(result.current.error).toBe('Failed to fetch users');
-    expect(result.current.loading).toBe(false);
-  });
-});
-```
-
----
-
-## 📊 Performance
-
-### 1. Memoización
-```typescript
-// Memoización de componentes
-const UserCard = React.memo<UserCardProps>(({ user, onEdit, onDelete }) => {
-  return (
-    <Card>
-      <CardContent>
-        <Typography>{user.name}</Typography>
-        <Button onClick={() => onEdit(user)}>Editar</Button>
-        <Button onClick={() => onDelete(user.userEmail)}>Eliminar</Button>
-      </CardContent>
-    </Card>
-  );
-});
-
-// Memoización de callbacks
-const handleEdit = useCallback((user: User) => {
-  setSelectedUser(user);
-  setEditModalOpen(true);
-}, []);
-
-const handleDelete = useCallback((email: string) => {
-  if (window.confirm('¿Estás seguro?')) {
-    deleteUser(email);
-  }
-}, [deleteUser]);
-```
-
-### 2. Lazy Loading
-```typescript
-// Lazy loading de componentes
-const AdminTools = lazy(() => import('../features/admin'));
-const MusicianRequests = lazy(() => import('../features/musicianRequests'));
-
-// Con Suspense
-<Suspense fallback={<LoadingSpinner />}>
-  <AdminTools />
-</Suspense>
-```
-
-### 3. Optimización de Re-renders
-```typescript
-// Evitar re-renders innecesarios
-const UserList = React.memo<{ users: User[] }>(({ users }) => {
-  return (
-    <div>
-      {users.map(user => (
-        <UserCard key={user.userEmail} user={user} />
-      ))}
-    </div>
-  );
-});
-
-// Usar useMemo para cálculos costosos
-const filteredUsers = useMemo(() => {
-  return users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-}, [users, searchTerm]);
-```
-
----
-
-## 🔒 Seguridad
-
-### 1. Validación de Input
-```typescript
-// Validación de formularios
-const validateUserForm = (form: UserForm): ValidationErrors => {
-  const errors: ValidationErrors = {};
-
-  if (!form.name?.trim()) {
-    errors.name = 'Nombre es requerido';
+  if (loading) {
+    return <CircularProgress />;
   }
 
-  if (!form.userEmail?.trim()) {
-    errors.userEmail = 'Email es requerido';
-  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.userEmail)) {
-    errors.userEmail = 'Email inválido';
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (!form.userPassword || form.userPassword.length < 6) {
-    errors.userPassword = 'Contraseña mínima 6 caracteres';
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return <>{children}</>;
+};
+```
+
+### **2. Validación de Formularios**
+```typescript
+// Validación de datos
+const validateForm = (data: FormData): string[] => {
+  const errors: string[] = [];
+
+  if (!data.name?.trim()) {
+    errors.push('El nombre es requerido');
+  }
+
+  if (!data.email?.trim()) {
+    errors.push('El email es requerido');
+  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
+    errors.push('El email no es válido');
+  }
+
+  if (data.password && data.password.length < 6) {
+    errors.push('La contraseña debe tener al menos 6 caracteres');
   }
 
   return errors;
 };
 ```
 
-### 2. Sanitización de Datos
+---
+
+## 📊 **GESTIÓN DE ESTADO**
+
+### **1. Estado Local**
 ```typescript
-// Sanitización antes de enviar
-const sanitizeUserData = (user: User): User => {
-  return {
-    ...user,
-    name: user.name?.trim(),
-    lastName: user.lastName?.trim(),
-    userEmail: user.userEmail?.trim().toLowerCase(),
-    roll: user.roll?.toLowerCase(),
-  };
+// Para estado simple de componentes
+const [isOpen, setIsOpen] = useState(false);
+const [formData, setFormData] = useState(initialForm);
+const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+```
+
+### **2. Estado Compartido**
+```typescript
+// Context para estado compartido
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 };
 ```
 
-### 3. Manejo de Errores
+### **3. Estado de Servidor**
 ```typescript
-// Error boundary
-class ErrorBoundary extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+// Hook para datos del servidor
+export const useServerData = <T>(fetchFn: () => Promise<T>) => {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    // Enviar a servicio de tracking
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <ErrorFallback error={this.state.error} />;
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await fetchFn();
+      setData(result);
+    } catch (err: any) {
+      setError(err.message || 'Error desconocido');
+    } finally {
+      setLoading(false);
     }
+  }, [fetchFn]);
 
-    return this.props.children;
-  }
-}
-```
-
----
-
-## 📝 Documentación
-
-### 1. JSDoc para Funciones
-```typescript
-/**
- * Crea un nuevo usuario en el sistema
- * @param userData - Datos del usuario a crear
- * @returns Promise con el usuario creado
- * @throws Error si la validación falla o el usuario ya existe
- */
-export async function createUser(userData: User): Promise<User> {
-  // Validación
-  const errors = validateUserForm(userData);
-  if (Object.keys(errors).length > 0) {
-    throw new Error('Datos inválidos');
-  }
-
-  // Sanitización
-  const sanitizedData = sanitizeUserData(userData);
-
-  // Envío
-  return await post<User>('/auth/Register', sanitizedData);
-}
-```
-
-### 2. Documentación de Componentes
-```typescript
-/**
- * Tarjeta que muestra información de un usuario
- * @param user - Datos del usuario a mostrar
- * @param onEdit - Callback cuando se hace clic en editar
- * @param onDelete - Callback cuando se hace clic en eliminar
- * @param loading - Estado de carga para deshabilitar botones
- */
-interface UserCardProps {
-  user: User;
-  onEdit: (user: User) => void;
-  onDelete: (email: string) => void;
-  loading?: boolean;
-}
-
-const UserCard: React.FC<UserCardProps> = ({ 
-  user, 
-  onEdit, 
-  onDelete, 
-  loading = false 
-}) => {
-  // Implementación...
+  return { data, loading, error, fetchData };
 };
 ```
 
 ---
 
-## 🚀 Comandos de Desarrollo
+## 🧪 **TESTING**
 
-### Scripts de Package.json
+### **1. Testing de Componentes**
+```typescript
+// __tests__/components/ExampleComponent.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ExampleComponent } from '../ExampleComponent';
+
+describe('ExampleComponent', () => {
+  const mockData = {
+    id: '1',
+    title: 'Test Title',
+    description: 'Test Description',
+  };
+
+  const mockOnEdit = jest.fn();
+  const mockOnDelete = jest.fn();
+
+  it('should render component with data', () => {
+    render(
+      <ExampleComponent
+        data={mockData}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
+    expect(screen.getByText('Test Description')).toBeInTheDocument();
+  });
+
+  it('should call onEdit when edit button is clicked', () => {
+    render(
+      <ExampleComponent
+        data={mockData}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    fireEvent.click(screen.getByText('Editar'));
+    expect(mockOnEdit).toHaveBeenCalledWith(mockData);
+  });
+});
+```
+
+### **2. Testing de Hooks**
+```typescript
+// __tests__/hooks/useExample.test.ts
+import { renderHook, act } from '@testing-library/react';
+import { useExample } from '../useExample';
+
+describe('useExample', () => {
+  it('should fetch data successfully', async () => {
+    const { result } = renderHook(() => useExample());
+
+    await act(async () => {
+      await result.current.fetchData();
+    });
+
+    expect(result.current.data).toBeDefined();
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+});
+```
+
+---
+
+## 🚀 **OPTIMIZACIÓN Y PERFORMANCE**
+
+### **1. Lazy Loading**
+```typescript
+// src/routes/index.tsx
+import { lazy, Suspense } from 'react';
+
+const Dashboard = lazy(() => import('../features/dashboard'));
+const Users = lazy(() => import('../features/mobileUsers'));
+const Events = lazy(() => import('../features/events'));
+
+// Con Suspense
+<Suspense fallback={<CircularProgress />}>
+  <Dashboard />
+</Suspense>
+```
+
+### **2. Memoización**
+```typescript
+// Memoización de componentes
+const UserCard = React.memo<UserCardProps>(({ user, onEdit, onDelete }) => {
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6">{user.name}</Typography>
+        <Typography variant="body2">{user.email}</Typography>
+      </CardContent>
+      <CardActions>
+        <Button onClick={() => onEdit(user)}>Editar</Button>
+        <Button onClick={() => onDelete(user.id)}>Eliminar</Button>
+      </CardActions>
+    </Card>
+  );
+});
+
+// Memoización de callbacks
+const handleEdit = useCallback((user: User) => {
+  // Lógica de edición
+}, []);
+```
+
+### **3. Code Splitting**
+```typescript
+// División de bundles por rutas
+const AdminTools = lazy(() => import('../features/admin'));
+const MusicianRequests = lazy(() => import('../features/musicianRequests'));
+const Notifications = lazy(() => import('../features/notifications'));
+```
+
+---
+
+## 🔧 **CONFIGURACIÓN Y ENTORNO**
+
+### **1. Variables de Entorno**
+```bash
+# .env
+VITE_API_BASE_URL=http://172.20.10.2:3001
+VITE_APP_NAME=MussikOn Admin
+VITE_WEBSOCKET_URL=ws://172.20.10.2:3001
+VITE_NOTIFICATION_ENABLED=true
+VITE_TOAST_DURATION=5000
+VITE_MAX_NOTIFICATIONS=50
+```
+
+### **2. Configuración de TypeScript**
 ```json
+// tsconfig.json
 {
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint src --ext ts,tsx --fix",
-    "type-check": "tsc --noEmit",
-    "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
-  }
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
 ```
 
-### Comandos Útiles
-```bash
-# Desarrollo
-npm run dev              # Servidor de desarrollo
-npm run build            # Build de producción
-npm run preview          # Preview del build
-
-# Linting y Type Checking
-npm run lint             # Verificar linting
-npm run lint:fix         # Corregir errores de linting
-npm run type-check       # Verificar tipos TypeScript
-
-# Testing
-npm test                 # Ejecutar tests
-npm run test:watch       # Tests en modo watch
-npm run test:coverage    # Tests con coverage
-
-# Storybook
-npm run storybook        # Iniciar Storybook
-npm run build-storybook  # Build de Storybook
+### **3. Configuración de ESLint**
+```javascript
+// eslint.config.js
+export default [
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescriptEslint,
+      react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
+    },
+    rules: {
+      // Reglas personalizadas
+    },
+  },
+];
 ```
 
 ---
 
-## 📚 Recursos Adicionales
+## 📚 **DOCUMENTACIÓN DE CÓDIGO**
 
-### Documentación Relacionada
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitectura del sistema
-- **[CODING_STANDARDS.md](./CODING_STANDARDS.md)** - Estándares de código
-- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Guía de testing
+### **1. Comentarios JSDoc**
+```typescript
+/**
+ * Hook personalizado para gestionar usuarios móviles
+ * @param filters - Filtros opcionales para la búsqueda
+ * @returns Objeto con datos, estado de carga y funciones
+ */
+export const useMobileUsers = (filters?: UserFilters) => {
+  // Implementación
+};
 
-### Herramientas de Desarrollo
-- **ESLint:** Linting de código
-- **Prettier:** Formateo de código
-- **Storybook:** Documentación de componentes
-- **Vitest:** Framework de testing
+/**
+ * Componente para mostrar información de un usuario móvil
+ * @param props - Propiedades del componente
+ * @returns Elemento JSX
+ */
+export const MobileUserCard: React.FC<MobileUserCardProps> = (props) => {
+  // Implementación
+};
+```
+
+### **2. README de Componentes**
+```markdown
+# MobileUserCard
+
+Componente para mostrar información de un usuario móvil en formato de tarjeta.
+
+## Props
+
+- `user: MobileUser` - Datos del usuario
+- `onEdit: (user: MobileUser) => void` - Función para editar
+- `onDelete: (id: string) => void` - Función para eliminar
+- `onBlock: (id: string) => void` - Función para bloquear
+
+## Uso
+
+```tsx
+<MobileUserCard
+  user={userData}
+  onEdit={handleEdit}
+  onDelete={handleDelete}
+  onBlock={handleBlock}
+/>
+```
+```
 
 ---
 
-**🎵 MusikOn Admin System** - Guía completa de desarrollo y buenas prácticas. 
+## 🔗 **ENLACES RELACIONADOS**
+
+### **Documentación Principal**
+- **[MAIN_DOCUMENTATION.md](MAIN_DOCUMENTATION.md)** - Documentación principal
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Arquitectura del sistema
+- **[INSTALLATION.md](INSTALLATION.md)** - Guía de instalación
+
+### **Sistemas Específicos**
+- **[NOTIFICATION_SYSTEM.md](NOTIFICATION_SYSTEM.md)** - Sistema de notificaciones
+- **[AUTHENTICATION_SYSTEM.md](AUTHENTICATION_SYSTEM.md)** - Sistema de autenticación
+- **[API_ENDPOINTS.md](API_ENDPOINTS.md)** - Endpoints de la API
+
+---
+
+## 📞 **INFORMACIÓN DE CONTACTO**
+
+### **Repositorio**
+- **URL**: `https://github.com/MussikOn/APP_Mussikon_Admin_System`
+- **Branch**: `notification`
+- **Commit**: `ddb38b3`
+
+### **Documentación**
+- **README.md** - Documentación principal
+- **API_SYSTEM_DOCUMENTATION.md** - Sistema de API
+- **MAIN_DOCUMENTATION.md** - Documentación organizativa
+
+---
+
+## 🏆 **CONCLUSIÓN**
+
+**¡Las guías de desarrollo están completas y listas para usar!**
+
+### **Beneficios de las Guías**
+1. **Consistencia** en el código
+2. **Mantenibilidad** mejorada
+3. **Escalabilidad** del proyecto
+4. **Calidad** del código
+5. **Colaboración** efectiva
+
+### **Próximos Pasos**
+- **Implementar sistema de notificaciones** siguiendo estas guías
+- **Agregar tests completos** para todas las funcionalidades
+- **Optimizar rendimiento** para producción
+- **Implementar CI/CD** con estas guías
+
+**¡El desarrollo será más eficiente y consistente!** 🚀
+
+---
+
+**Desarrollado con ❤️ para el equipo de MussikOn**
+
+**Fecha de Actualización**: Diciembre 2024  
+**Versión**: 2.0.0  
+**Estado**: ✅ Completado + 🚧 En desarrollo 

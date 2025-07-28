@@ -188,17 +188,35 @@ VITE_APP_NAME=MussikOn Admin
 
 ## 📚 **Documentación Completa**
 
-### **Documentación Técnica**
+### **📖 Documentación Principal**
+- 📖 **[MAIN_DOCUMENTATION.md](docs/MAIN_DOCUMENTATION.md)** - Documentación organizativa principal
+- 📖 **[README.md](README.md)** - Esta documentación principal
+- 📖 **[DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - Resumen del deployment
+
+### **🏗️ Documentación Técnica**
 - 📖 **[API System Documentation](API_SYSTEM_DOCUMENTATION.md)** - Sistema de API centralizado
 - 📖 **[Backend Connectivity Guide](BACKEND_CONNECTIVITY_GUIDE.md)** - Guía de conectividad
 - 📖 **[Mobile Users System](MOBILE_USERS_SYSTEM.md)** - Sistema de usuarios móviles
 - 📖 **[API Implementation Status](API_IMPLEMENTATION_STATUS.md)** - Estado de implementación
 - 📖 **[Project Final Status](PROJECT_FINAL_STATUS.md)** - Estado final del proyecto
 
-### **Documentación de Desarrollo**
-- 📖 **[Development Guidelines](docs/DEVELOPMENT.md)**
-- 📖 **[Installation Guide](docs/INSTALLATION.md)**
-- 📖 **[Architecture Documentation](docs/ARCHITECTURE.md)**
+### **🔧 Documentación de Desarrollo**
+- 📖 **[Development Guidelines](docs/DEVELOPMENT.md)** - Guías de desarrollo
+- 📖 **[Architecture Documentation](docs/ARCHITECTURE.md)** - Arquitectura del sistema
+- 📖 **[Installation Guide](docs/INSTALLATION.md)** - Guía de instalación
+- 📖 **[API Endpoints](docs/API_ENDPOINTS.md)** - Documentación de endpoints
+
+### **🚀 Documentación de Funcionalidades**
+- 📖 **[Notification System](docs/NOTIFICATION_SYSTEM.md)** - Sistema de notificaciones (NUEVO)
+- 📖 **[Authentication System](docs/AUTHENTICATION_SYSTEM.md)** - Sistema de autenticación
+- 📖 **[Dashboard System](docs/DASHBOARD_SYSTEM.md)** - Sistema de dashboard
+- 📖 **[Event Management](docs/EVENT_MANAGEMENT.md)** - Gestión de eventos
+- 📖 **[Request Management](docs/REQUEST_MANAGEMENT.md)** - Gestión de solicitudes
+
+### **📊 Documentación de Configuración**
+- 📖 **[Configuration Guide](docs/CONFIGURATION_GUIDE.md)** - Guía de configuración
+- 📖 **[Environment Setup](docs/ENVIRONMENT_SETUP.md)** - Configuración de entorno
+- 📖 **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Guía de despliegue
 
 ---
 
