@@ -7,6 +7,7 @@ import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import ImageIcon from '@mui/icons-material/Image';
 import PersonIcon from '@mui/icons-material/Person';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -23,6 +24,7 @@ const links = [
   { to: '/musician-requests', label: 'Solicitudes', icon: <LibraryMusicIcon /> },
   { to: '/images', label: 'Imágenes', icon: <ImageIcon /> },
   { to: '/musicians', label: 'Músicos', icon: <PersonIcon /> },
+  { to: '/mobile-users', label: 'Usuarios Móviles', icon: <SmartphoneIcon /> },
   { to: '/admin', label: 'Admin', icon: <AdminPanelSettingsIcon /> },
 ];
 

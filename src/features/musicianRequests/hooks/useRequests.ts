@@ -1,17 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
-  getAllRequests,
-  getRequestById,
-  createRequest,
-  updateRequest,
-  deleteRequest,
-  acceptRequest,
-  cancelRequest,
-  getRequestsByStatus,
-  getRequestsByDateRange,
-  getRequestsCount,
-  getRequestsByEventType,
-  getRequestsByInstrument
+  musicianRequestsService,
+  type RequestFilters
 } from '../../../services/musicianRequestsService';
 import type { 
   MusicianRequest, 
@@ -28,12 +18,12 @@ export const useRequests = () => {
   const [selectedRequest, setSelectedRequest] = useState<MusicianRequest | null>(null);
 
   // Obtener todas las solicitudes
-  const fetchRequests = useCallback(async () => {
+  const fetchRequests = useCallback(async (filters?: RequestFilters) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAllRequests();
-      setRequests(data);
+      const response = await musicianRequestsService.getAllRequests(filters);
+      setRequests(response.requests);
     } catch (err) {
       setError('Error al cargar las solicitudes');
       console.error('Error fetching requests:', err);
@@ -47,7 +37,7 @@ export const useRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getRequestById(id);
+      const data = await musicianRequestsService.getRequestById(id);
       setSelectedRequest(data);
       return data;
     } catch (err) {
@@ -64,7 +54,7 @@ export const useRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      const newRequest = await createRequest(requestData);
+      const newRequest = await musicianRequestsService.createRequest(requestData);
       setRequests(prev => [newRequest, ...prev]);
       return newRequest;
     } catch (err) {
@@ -81,7 +71,7 @@ export const useRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      const updatedRequest = await updateRequest(id, requestData);
+      const updatedRequest = await musicianRequestsService.updateRequest(id, requestData);
       setRequests(prev => prev.map(req => req._id === id ? updatedRequest : req));
       if (selectedRequest?._id === id) {
         setSelectedRequest(updatedRequest);
@@ -101,7 +91,7 @@ export const useRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      await deleteRequest(id);
+      await musicianRequestsService.deleteRequest(id);
       setRequests(prev => prev.filter(req => req._id !== id));
       if (selectedRequest?._id === id) {
         setSelectedRequest(null);
@@ -115,29 +105,14 @@ export const useRequests = () => {
     }
   }, [selectedRequest]);
 
-  // Aceptar solicitud
-  const acceptRequestHandler = useCallback(async (acceptData: AcceptRequestData) => {
+  // Aceptar solicitud (funcionalidad no disponible en el nuevo servicio)
+  const acceptRequestHandler = useCallback(async (_acceptData: AcceptRequestData) => {
     setLoading(true);
     setError(null);
     try {
-      const success = await acceptRequest(acceptData);
-      if (success) {
-        // Actualizar el estado de la solicitud en la lista
-        setRequests(prev => prev.map(req => 
-          req._id === acceptData.requestId 
-            ? { ...req, status: 'assigned', assignedMusicianId: acceptData.musicianId }
-            : req
-        ));
-        // Actualizar la solicitud seleccionada si es la misma
-        if (selectedRequest?._id === acceptData.requestId) {
-          setSelectedRequest(prev => prev ? {
-            ...prev,
-            status: 'assigned',
-            assignedMusicianId: acceptData.musicianId
-          } : null);
-        }
-      }
-      return success;
+      // TODO: Implementar cuando el backend soporte esta funcionalidad
+      console.warn('Funcionalidad de aceptar solicitud no implementada en el nuevo servicio');
+      return false;
     } catch (err) {
       setError('Error al aceptar la solicitud');
       console.error('Error accepting request:', err);
@@ -147,28 +122,14 @@ export const useRequests = () => {
     }
   }, [selectedRequest]);
 
-  // Cancelar solicitud
-  const cancelRequestHandler = useCallback(async (cancelData: CancelRequestData) => {
+  // Cancelar solicitud (funcionalidad no disponible en el nuevo servicio)
+  const cancelRequestHandler = useCallback(async (_cancelData: CancelRequestData) => {
     setLoading(true);
     setError(null);
     try {
-      const success = await cancelRequest(cancelData);
-      if (success) {
-        // Actualizar el estado de la solicitud en la lista
-        setRequests(prev => prev.map(req => 
-          req._id === cancelData.requestId 
-            ? { ...req, status: 'cancelled' }
-            : req
-        ));
-        // Actualizar la solicitud seleccionada si es la misma
-        if (selectedRequest?._id === cancelData.requestId) {
-          setSelectedRequest(prev => prev ? {
-            ...prev,
-            status: 'cancelled'
-          } : null);
-        }
-      }
-      return success;
+      // TODO: Implementar cuando el backend soporte esta funcionalidad
+      console.warn('Funcionalidad de cancelar solicitud no implementada en el nuevo servicio');
+      return false;
     } catch (err) {
       setError('Error al cancelar la solicitud');
       console.error('Error cancelling request:', err);
@@ -183,8 +144,8 @@ export const useRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      const filteredRequests = await getRequestsByStatus(status);
-      setRequests(filteredRequests);
+      const response = await musicianRequestsService.getAllRequests({ status });
+      setRequests(response.requests);
     } catch (err) {
       setError('Error al filtrar las solicitudes');
       console.error('Error filtering requests by status:', err);
@@ -198,8 +159,10 @@ export const useRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      const filteredRequests = await getRequestsByDateRange(startDate, endDate);
-      setRequests(filteredRequests);
+      const response = await musicianRequestsService.getAllRequests({ 
+        dateRange: { start: startDate, end: endDate } 
+      });
+      setRequests(response.requests);
     } catch (err) {
       setError('Error al filtrar las solicitudes por fecha');
       console.error('Error filtering requests by date range:', err);
@@ -208,13 +171,15 @@ export const useRequests = () => {
     }
   }, []);
 
-  // Filtrar solicitudes por tipo de evento
+  // Filtrar solicitudes por tipo de evento (usando eventId como aproximación)
   const filterRequestsByEventType = useCallback(async (eventType: string) => {
     setLoading(true);
     setError(null);
     try {
-      const filteredRequests = await getRequestsByEventType(eventType);
-      setRequests(filteredRequests);
+      // TODO: Implementar filtro por tipo de evento cuando el backend lo soporte
+      console.warn('Filtro por tipo de evento no implementado, usando búsqueda general');
+      const response = await musicianRequestsService.getAllRequests({ search: eventType });
+      setRequests(response.requests);
     } catch (err) {
       setError('Error al filtrar las solicitudes por tipo de evento');
       console.error('Error filtering requests by event type:', err);
@@ -228,8 +193,8 @@ export const useRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      const filteredRequests = await getRequestsByInstrument(instrument);
-      setRequests(filteredRequests);
+      const response = await musicianRequestsService.getAllRequests({ instrument });
+      setRequests(response.requests);
     } catch (err) {
       setError('Error al filtrar las solicitudes por instrumento');
       console.error('Error filtering requests by instrument:', err);
@@ -241,7 +206,7 @@ export const useRequests = () => {
   // Obtener conteo de solicitudes
   const getRequestsCountHandler = useCallback(async () => {
     try {
-      return await getRequestsCount();
+      return await musicianRequestsService.getRequestsCount();
     } catch (err) {
       console.error('Error getting requests count:', err);
       return 0;

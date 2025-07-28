@@ -8,6 +8,7 @@ import MusicianRequests from '../features/musicianRequests';
 import Images from '../features/images';
 import Musicians from '../features/musicians';
 import AdminTools from '../features/admin';
+import MobileUsers from '../features/mobileUsers';
 import { useAuth } from '../hooks/useAuth';
 import PrivateLayout from '../components/PrivateLayout';
 
@@ -32,6 +33,7 @@ const AppRoutes = () => (
       <Route path="/musician-requests" element={<PrivateRoute><MusicianRequests /></PrivateRoute>} />
       <Route path="/images" element={<PrivateRoute><Images /></PrivateRoute>} />
       <Route path="/musicians" element={<PrivateRoute><Musicians /></PrivateRoute>} />
+      <Route path="/mobile-users" element={<PrivateRoute><MobileUsers /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute allowedRoles={['superadmin']}><AdminTools /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

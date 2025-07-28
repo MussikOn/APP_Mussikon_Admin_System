@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { login as loginService, verifyToken } from '../services/authService';
+import { authService } from '../services/authService';
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
@@ -14,8 +14,13 @@ export function useAuth() {
         return;
       }
       try {
-        const data = await verifyToken(token);
-        setUser(data.user || data);
+        // Verificar si el token es válido usando el servicio de auth
+        if (authService.isAuthenticated() && !authService.isTokenExpired()) {
+          const currentUser = authService.getCurrentUser();
+          setUser(currentUser);
+        } else {
+          throw new Error('Token inválido o expirado');
+        }
       } catch (err: any) {
         setUser(null);
         localStorage.removeItem('token');
@@ -30,22 +35,21 @@ export function useAuth() {
     setError('');
     setLoading(true);
     try {
-      const data = await loginService(email, password);
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        setUser(data.user || {});
+      const data = await authService.login({ userEmail: email, userPassword: password });
+      if (data.success && data.user) {
+        setUser(data.user);
       } else {
-        setError('Respuesta inesperada del servidor.');
+        setError(data.message || 'Respuesta inesperada del servidor.');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error de autenticación.');
+      setError(err.message || 'Error de autenticación.');
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
   };
 

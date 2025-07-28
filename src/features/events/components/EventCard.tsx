@@ -20,12 +20,14 @@ const EventCard: React.FC<EventCardProps> = ({
 }) => {
   const getStatusColor = (status: Event['status']) => {
     switch (status) {
-      case 'published':
+      case 'publicado':
         return '#00ff88';
-      case 'draft':
+      case 'borrador':
         return '#ffaa00';
-      case 'cancelled':
+      case 'cancelado':
         return '#ff4444';
+      case 'completado':
+        return '#00fff7';
       default:
         return '#888888';
     }
@@ -33,12 +35,14 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const getStatusLabel = (status: Event['status']) => {
     switch (status) {
-      case 'published':
+      case 'publicado':
         return 'PUBLICADO';
-      case 'draft':
+      case 'borrador':
         return 'BORRADOR';
-      case 'cancelled':
+      case 'cancelado':
         return 'CANCELADO';
+      case 'completado':
+        return 'COMPLETADO';
       default:
         return status;
     }
@@ -55,10 +59,7 @@ const EventCard: React.FC<EventCardProps> = ({
     });
   };
 
-  const formatPrice = (price?: number) => {
-    if (!price) return 'GRATIS';
-    return `$${price.toLocaleString()}`;
-  };
+
 
   return (
     <Card 
@@ -99,7 +100,7 @@ const EventCard: React.FC<EventCardProps> = ({
       }}
     >
       {/* Imagen de fondo con overlay */}
-      {event.imageUrl && (
+      {event.images && event.images.length > 0 && (
         <Box
           className="event-image"
           sx={{
@@ -108,7 +109,7 @@ const EventCard: React.FC<EventCardProps> = ({
             left: 0,
             right: 0,
             height: '120px',
-            backgroundImage: `url(${event.imageUrl})`,
+            backgroundImage: `url(${event.images[0]})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             transition: 'transform 0.4s ease',
@@ -125,7 +126,7 @@ const EventCard: React.FC<EventCardProps> = ({
         />
       )}
 
-      <CardContent sx={{ flexGrow: 1, position: 'relative', zIndex: 1, pt: event.imageUrl ? 8 : 2 }}>
+              <CardContent sx={{ flexGrow: 1, position: 'relative', zIndex: 1, pt: event.images && event.images.length > 0 ? 8 : 2 }}>
         {/* Header con título y estado */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
           <Typography 
@@ -141,7 +142,7 @@ const EventCard: React.FC<EventCardProps> = ({
               mr: 1
             }}
           >
-            {event.name}
+            {event.title}
           </Typography>
           <Chip 
             label={getStatusLabel(event.status)} 
@@ -224,7 +225,7 @@ const EventCard: React.FC<EventCardProps> = ({
             </Box>
           )}
           
-          {event.type && (
+          {event.category && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ 
                 width: 6, 
@@ -234,12 +235,12 @@ const EventCard: React.FC<EventCardProps> = ({
                 boxShadow: '0 0 6px #ffaa00'
               }} />
               <Typography variant="body2" sx={{ color: '#b0b8c1', fontSize: '0.75rem' }}>
-                {event.type}
+                {event.category}
               </Typography>
             </Box>
           )}
           
-          {event.capacity && (
+          {event.maxAttendees && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ 
                 width: 6, 
@@ -249,7 +250,7 @@ const EventCard: React.FC<EventCardProps> = ({
                 boxShadow: '0 0 6px #00ff88'
               }} />
               <Typography variant="body2" sx={{ color: '#b0b8c1', fontSize: '0.75rem' }}>
-                {event.capacity} personas
+                {event.maxAttendees} personas
               </Typography>
             </Box>
           )}
@@ -263,7 +264,7 @@ const EventCard: React.FC<EventCardProps> = ({
               textShadow: '0 0 8px rgba(0, 255, 136, 0.5)'
             }}
           >
-            {formatPrice(event.price)}
+            {event.budget ? `$${event.budget.toLocaleString()}` : 'GRATIS'}
           </Typography>
         </Box>
       </CardContent>

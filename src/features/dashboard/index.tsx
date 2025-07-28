@@ -91,8 +91,8 @@ const Dashboard = () => {
 
   // Procesar datos recientes y roles
   const recentUsers = usersData ? usersData.slice(-3).reverse() : [];
-  const recentEvents = eventsData ? eventsData.slice(-3).reverse() : [];
-  const recentRequests = requestsData ? requestsData.slice(-3).reverse() : [];
+  const recentEvents = eventsData?.events ? eventsData.events.slice(-3).reverse() : [];
+  const recentRequests = requestsData?.requests ? requestsData.requests.slice(-3).reverse() : [];
   const rolesDist = usersData ? usersData.reduce((acc: Record<string, number>, u: any) => {
     acc[u.roll] = (acc[u.roll] || 0) + 1;
     return acc;
@@ -282,7 +282,7 @@ const Dashboard = () => {
           <h4 style={{ margin: 0, marginBottom: 8, color: 'var(--color-accent)' }}>Últimos usuarios</h4>
           {loadingRecentUsers ? <div>Cargando...</div> : errorRecentUsers ? <div style={{ color: '#ff5252' }}>{errorRecentUsers}</div> : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {recentUsers.map((u, i) => (
+              {recentUsers.map((u: any, i: number) => (
                 <li key={u.userEmail || i} style={{ marginBottom: 6, fontSize: '1rem' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{u.name}</span> <span style={{ color: '#b0b8c1' }}>{u.lastName}</span> <span style={{ fontSize: '0.95em', color: '#888' }}>({u.roll})</span>
                 </li>
@@ -294,7 +294,7 @@ const Dashboard = () => {
           <h4 style={{ margin: 0, marginBottom: 8, color: 'var(--color-accent)' }}>Últimos eventos</h4>
           {loadingRecentEvents ? <div>Cargando...</div> : errorRecentEvents ? <div style={{ color: '#ff5252' }}>{errorRecentEvents}</div> : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {recentEvents.map((e, i) => (
+              {recentEvents.map((e: any, i: number) => (
                 <li key={e._id || e.name || i} style={{ marginBottom: 6, fontSize: '1rem' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{e.name || e.title}</span> <span style={{ color: '#b0b8c1' }}>{e.date || e.fecha || e.createdAt || ''}</span>
                 </li>
@@ -306,7 +306,7 @@ const Dashboard = () => {
           <h4 style={{ margin: 0, marginBottom: 8, color: 'var(--color-accent)' }}>Últimas solicitudes</h4>
           {loadingRecentRequests ? <div>Cargando...</div> : errorRecentRequests ? <div style={{ color: '#ff5252' }}>{errorRecentRequests}</div> : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {recentRequests.map((r, i) => (
+              {recentRequests.map((r: any, i: number) => (
                 <li key={r._id || i} style={{ marginBottom: 6, fontSize: '1rem' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{r.userId || 'Solicitante'}</span> <span style={{ color: '#b0b8c1' }}>{r.status || ''}</span>
                 </li>

@@ -1,16 +1,269 @@
-import { post, get } from './httpClient';
+import { apiService } from './api';
+import { API_CONFIG } from '../config/apiConfig';
+
+// Tipos para autenticación
+export interface LoginData {
+  userEmail: string;
+  userPassword: string;
+}
+
+export interface RegisterData {
+  name: string;
+  lastName: string;
+  userEmail: string;
+  userPassword: string;
+  roll: string;
+  phone?: string;
+  location?: string;
+}
+
+export interface User {
+  _id: string;
+  name: string;
+  lastName: string;
+  userEmail: string;
+  roll: string;
+  status: boolean;
+  phone?: string;
+  location?: string;
+  profileImage?: string;
+  bio?: string;
+  instruments?: string[];
+  experience?: string;
+  preferences?: {
+    notifications: boolean;
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    language: string;
+    theme: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  lastLogin?: string;
+}
 
 export interface AuthResponse {
-  token: string;
-  user: any;
+  success: boolean;
+  message: string;
+  user?: User;
+  token?: string;
+  refreshToken?: string;
 }
 
-export async function login(userEmail: string, userPassword: string): Promise<AuthResponse> {
-  return await post<AuthResponse>('/auth/login', { userEmail, userPassword });
+export interface RefreshTokenData {
+  refreshToken: string;
 }
 
-export async function verifyToken(token: string): Promise<any> {
-  return await get<any>('/auth/verToken', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-} 
+// Servicio de autenticación
+export const authService = {
+  // Iniciar sesión
+  async login(loginData: LoginData): Promise<AuthResponse> {
+    try {
+      const response = await apiService.post<AuthResponse>(API_CONFIG.ENDPOINTS.LOGIN, loginData);
+      
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+        if (response.data.user) {
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+      }
+      
+      return response.data || { success: false, message: 'Error en la respuesta del servidor' };
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+      throw error;
+    }
+  },
+
+  // Registrar usuario
+  async register(registerData: RegisterData): Promise<AuthResponse> {
+    try {
+      const response = await apiService.post<AuthResponse>(API_CONFIG.ENDPOINTS.REGISTER, registerData);
+      
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+        if (response.data.user) {
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+      }
+      
+      return response.data || { success: false, message: 'Error en la respuesta del servidor' };
+    } catch (error) {
+      console.error('Error al registrar usuario:', error);
+      throw error;
+    }
+  },
+
+  // Refrescar token
+  async refreshToken(refreshTokenData: RefreshTokenData): Promise<AuthResponse> {
+    try {
+      const response = await apiService.post<AuthResponse>(API_CONFIG.ENDPOINTS.REFRESH_TOKEN, refreshTokenData);
+      
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+      }
+      
+      return response.data || { success: false, message: 'Error en la respuesta del servidor' };
+    } catch (error) {
+      console.error('Error al refrescar token:', error);
+      throw error;
+    }
+  },
+
+  // Cerrar sesión
+  async logout(): Promise<void> {
+    try {
+      // Limpiar tokens del localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      
+      // Opcional: llamar al endpoint de logout del backend
+      // await apiService.post('/auth/logout');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      // Aún así limpiar el localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
+  },
+
+  // Verificar si el usuario está autenticado
+  isAuthenticated(): boolean {
+    const token = localStorage.getItem('token');
+    return !!token;
+  },
+
+  // Obtener token actual
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  },
+
+  // Obtener refresh token
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  },
+
+  // Obtener usuario actual
+  getCurrentUser(): User | null {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (error) {
+        console.error('Error al parsear usuario:', error);
+        return null;
+      }
+    }
+    return null;
+  },
+
+  // Verificar si el token ha expirado
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      return payload.exp < currentTime;
+    } catch (error) {
+      console.error('Error al verificar expiración del token:', error);
+      return true;
+    }
+  },
+
+  // Renovar token automáticamente si es necesario
+  async refreshTokenIfNeeded(): Promise<boolean> {
+    if (this.isTokenExpired()) {
+      const refreshToken = this.getRefreshToken();
+      if (refreshToken) {
+        try {
+          await this.refreshToken({ refreshToken });
+          return true;
+        } catch (error) {
+          console.error('Error al renovar token:', error);
+          await this.logout();
+          return false;
+        }
+      } else {
+        await this.logout();
+        return false;
+      }
+    }
+    return true;
+  },
+
+  // Verificar permisos de administrador
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    
+    const adminRoles = ['adminJunior', 'adminMidLevel', 'adminSenior', 'superAdmin'];
+    return adminRoles.includes(user.roll);
+  },
+
+  // Verificar si es super admin
+  isSuperAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.roll === 'superAdmin';
+  },
+
+  // Verificar si es admin senior o superior
+  isSeniorAdmin(): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    
+    const seniorRoles = ['adminSenior', 'superAdmin'];
+    return seniorRoles.includes(user.roll);
+  },
+
+  // Obtener nivel de permisos
+  getPermissionLevel(): number {
+    const user = this.getCurrentUser();
+    if (!user) return 0;
+    
+    switch (user.roll) {
+      case 'superAdmin':
+        return 5;
+      case 'adminSenior':
+        return 4;
+      case 'adminMidLevel':
+        return 3;
+      case 'adminJunior':
+        return 2;
+      case 'eventCreator':
+        return 1;
+      default:
+        return 0;
+    }
+  }
+};
+
+// Exportar funciones individuales para compatibilidad
+export const {
+  login,
+  register,
+  refreshToken,
+  logout,
+  isAuthenticated,
+  getToken,
+  getRefreshToken,
+  getCurrentUser,
+  isTokenExpired,
+  refreshTokenIfNeeded,
+  isAdmin,
+  isSuperAdmin,
+  isSeniorAdmin,
+  getPermissionLevel
+} = authService; 

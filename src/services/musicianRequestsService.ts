@@ -1,17 +1,52 @@
-import { get, post, put, del } from './httpClient';
+import { apiService } from './api';
+import { getApiUrl } from '../config/apiConfig';
+import { API_CONFIG } from '../config/apiConfig';
 import type { 
+  BackendMusicianRequest, 
   MusicianRequest, 
   CreateRequestData, 
-  UpdateRequestData, 
-  AcceptRequestData, 
-  CancelRequestData,
-  BackendMusicianRequest 
+  UpdateRequestData 
 } from '../features/musicianRequests/types/request';
 
-// Función para mapear BackendMusicianRequest a MusicianRequest del frontend
+// Tipos para respuestas de la API
+export interface MusicianRequestsResponse {
+  requests: MusicianRequest[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface RequestFilters {
+  search?: string;
+  status?: string;
+  instrument?: string;
+  location?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  eventId?: string;
+  musicianId?: string;
+}
+
+export interface RequestStats {
+  totalRequests: number;
+  pendingRequests: number;
+  assignedRequests: number;
+  completedRequests: number;
+  cancelledRequests: number;
+  unassignedRequests: number;
+  averageResponseTime: number;
+  topInstruments: Array<{ instrument: string; count: number }>;
+  topLocations: Array<{ location: string; count: number }>;
+  requestsByMonth: Array<{ month: string; count: number }>;
+}
+
+// Función para mapear datos del backend al frontend
 const mapBackendRequestToFrontend = (backendRequest: BackendMusicianRequest): MusicianRequest => {
   return {
-    _id: backendRequest.id,
+    _id: backendRequest._id || backendRequest.id,
     userId: backendRequest.userId,
     eventType: backendRequest.eventType,
     date: backendRequest.date,
@@ -45,270 +80,268 @@ const mapBackendStatusToFrontend = (backendStatus: BackendMusicianRequest['statu
   }
 };
 
-// Función para mapear status del frontend al backend (no utilizada actualmente)
-// const mapFrontendStatusToBackend = (frontendStatus: MusicianRequest['status']): BackendMusicianRequest['status'] => {
-//   switch (frontendStatus) {
-//     case 'pending':
-//       return 'pendiente';
-//     case 'assigned':
-//       return 'asignada';
-//     case 'unassigned':
-//       return 'no_asignada';
-//     case 'cancelled':
-//       return 'cancelada';
-//     case 'completed':
-//       return 'completada';
-//     default:
-//       return 'pendiente';
-//   }
-// };
+// Función para mapear datos del frontend al backend
+const mapFrontendRequestToBackend = (frontendRequest: CreateRequestData | UpdateRequestData): any => {
+  const backendRequest: any = {
+    userId: frontendRequest.userId,
+    eventType: frontendRequest.eventType,
+    date: frontendRequest.date,
+    time: `${frontendRequest.startTime} - ${frontendRequest.endTime}`,
+    location: frontendRequest.location,
+    instrument: frontendRequest.instrument,
+    budget: frontendRequest.budget,
+    comments: frontendRequest.comments
+  };
 
-// Obtener todas las solicitudes usando el endpoint de administración
-export const getAllRequests = async (): Promise<MusicianRequest[]> => {
-  try {
-    // Intentar conectar al backend usando endpoint de prueba
-    const response = await get('/test/musician-requests');
-    const backendRequests = (response as any).data || [];
-    console.log('✅ Backend conectado, usando datos reales');
-    return backendRequests.map(mapBackendRequestToFrontend);
-  } catch (error) {
-    console.log('⚠️ Backend no disponible, usando datos de prueba');
-    console.error('Error fetching requests:', error);
-    // Fallback con datos de prueba si el backend no está disponible
-    return [
-      {
-        _id: '1',
-        userId: 'admin@mussikon.com',
-        eventType: 'concierto',
-        date: '2024-08-15',
-        time: '20:00 - 22:00',
-        location: 'Teatro Municipal',
-        instrument: 'guitarra',
-        budget: 500,
-        comments: 'Necesitamos un guitarrista para un concierto de rock',
-        status: 'pending',
-        createdAt: '2024-07-01T10:00:00.000Z',
-        updatedAt: '2024-07-01T10:00:00.000Z'
-      },
-      {
-        _id: '2',
-        userId: 'admin@mussikon.com',
-        eventType: 'boda',
-        date: '2024-09-20',
-        time: '18:00 - 20:00',
-        location: 'Jardín Botánico',
-        instrument: 'piano',
-        budget: 800,
-        comments: 'Buscamos pianista para ceremonia de boda',
-        status: 'assigned',
-        assignedMusicianId: 'musico1@email.com',
-        createdAt: '2024-07-02T14:30:00.000Z',
-        updatedAt: '2024-07-02T14:30:00.000Z'
-      },
-      {
-        _id: '3',
-        userId: 'admin@mussikon.com',
-        eventType: 'culto',
-        date: '2024-08-04',
-        time: '10:00 - 12:00',
-        location: 'Iglesia Central',
-        instrument: 'voz',
-        budget: 300,
-        comments: 'Cantante para servicio dominical',
-        status: 'completed',
-        assignedMusicianId: 'musico2@email.com',
-        createdAt: '2024-07-03T09:00:00.000Z',
-        updatedAt: '2024-07-03T09:00:00.000Z'
-      },
-      {
-        _id: '4',
-        userId: 'admin@mussikon.com',
-        eventType: 'evento corporativo',
-        date: '2024-08-25',
-        time: '19:00 - 21:00',
-        location: 'Centro de Convenciones',
-        instrument: 'bajo',
-        budget: 600,
-        comments: 'Bajista para evento corporativo',
-        status: 'cancelled',
-        createdAt: '2024-07-04T16:45:00.000Z',
-        updatedAt: '2024-07-04T16:45:00.000Z'
-      },
-      {
-        _id: '5',
-        userId: 'admin@mussikon.com',
-        eventType: 'festival',
-        date: '2024-09-10',
-        time: '21:00 - 23:00',
-        location: 'Parque Central',
-        instrument: 'batería',
-        budget: 700,
-        comments: 'Baterista para festival de música',
-        status: 'unassigned',
-        createdAt: '2024-07-05T11:20:00.000Z',
-        updatedAt: '2024-07-05T11:20:00.000Z'
+  // Agregar status solo si está presente (para actualizaciones)
+  if ('status' in frontendRequest && frontendRequest.status) {
+    backendRequest.status = mapFrontendStatusToBackend(frontendRequest.status);
+  }
+
+  // Agregar assignedMusicianId solo si está presente
+  if ('assignedMusicianId' in frontendRequest && frontendRequest.assignedMusicianId) {
+    backendRequest.assignedMusicianId = frontendRequest.assignedMusicianId;
+  }
+
+  return backendRequest;
+};
+
+// Función para mapear status del frontend al backend
+const mapFrontendStatusToBackend = (frontendStatus: MusicianRequest['status']): BackendMusicianRequest['status'] => {
+  switch (frontendStatus) {
+    case 'pending':
+      return 'pendiente';
+    case 'assigned':
+      return 'asignada';
+    case 'unassigned':
+      return 'no_asignada';
+    case 'cancelled':
+      return 'cancelada';
+    case 'completed':
+      return 'completada';
+    default:
+      return 'pendiente';
+  }
+};
+
+// Servicio de solicitudes de músicos
+export const musicianRequestsService = {
+  // Obtener todas las solicitudes
+  async getAllRequests(filters?: RequestFilters, page: number = 1, limit: number = 20): Promise<MusicianRequestsResponse> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.search) params.append('search', filters.search);
+        if (filters.status) params.append('status', filters.status);
+        if (filters.instrument) params.append('instrument', filters.instrument);
+        if (filters.location) params.append('location', filters.location);
+        if (filters.eventId) params.append('eventId', filters.eventId);
+        if (filters.musicianId) params.append('musicianId', filters.musicianId);
+        if (filters.dateRange) {
+          params.append('startDate', filters.dateRange.start);
+          params.append('endDate', filters.dateRange.end);
+        }
       }
-    ];
+      
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}?${params.toString()}`;
+      const response = await apiService.get<{ requests: any[]; total: number; page: number; limit: number; totalPages: number }>(url);
+      
+      return {
+        requests: response.data?.requests?.map(mapBackendRequestToFrontend) || [],
+        total: response.data?.total || 0,
+        page: response.data?.page || 1,
+        limit: response.data?.limit || 20,
+        totalPages: response.data?.totalPages || 1
+      };
+    } catch (error) {
+      console.error('Error al obtener solicitudes de músicos:', error);
+      throw error;
+    }
+  },
+
+  // Obtener solicitud por ID
+  async getRequestById(id: string): Promise<MusicianRequest> {
+    try {
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUEST_BY_ID, { id });
+      const response = await apiService.get<{ request: any }>(url);
+      
+      return mapBackendRequestToFrontend(response.data?.request);
+    } catch (error) {
+      console.error('Error al obtener solicitud por ID:', error);
+      throw error;
+    }
+  },
+
+  // Crear nueva solicitud
+  async createRequest(requestData: CreateRequestData): Promise<MusicianRequest> {
+    try {
+      const backendData = mapFrontendRequestToBackend(requestData);
+      const response = await apiService.post<{ request: any }>(API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS, backendData);
+      
+      return mapBackendRequestToFrontend(response.data?.request);
+    } catch (error) {
+      console.error('Error al crear solicitud:', error);
+      throw error;
+    }
+  },
+
+  // Actualizar solicitud
+  async updateRequest(id: string, requestData: UpdateRequestData): Promise<MusicianRequest> {
+    try {
+      const backendData = mapFrontendRequestToBackend(requestData);
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS, { id });
+      const response = await apiService.put<{ request: any }>(url, backendData);
+      
+      return mapBackendRequestToFrontend(response.data?.request);
+    } catch (error) {
+      console.error('Error al actualizar solicitud:', error);
+      throw error;
+    }
+  },
+
+  // Eliminar solicitud
+  async deleteRequest(id: string): Promise<void> {
+    try {
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.DELETE_ADMIN_MUSICIAN_REQUEST, { id });
+      await apiService.delete(url);
+    } catch (error) {
+      console.error('Error al eliminar solicitud:', error);
+      throw error;
+    }
+  },
+
+  // Obtener estadísticas de solicitudes
+  async getRequestStats(): Promise<RequestStats> {
+    try {
+      const response = await apiService.get<{ stats: RequestStats }>(`${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}/stats`);
+      return response.data?.stats || {
+        totalRequests: 0,
+        pendingRequests: 0,
+        assignedRequests: 0,
+        completedRequests: 0,
+        cancelledRequests: 0,
+        unassignedRequests: 0,
+        averageResponseTime: 0,
+        topInstruments: [],
+        topLocations: [],
+        requestsByMonth: []
+      };
+    } catch (error) {
+      console.error('Error al obtener estadísticas de solicitudes:', error);
+      throw error;
+    }
+  },
+
+  // Obtener solicitudes por estado
+  async getRequestsByStatus(status: string): Promise<MusicianRequest[]> {
+    try {
+      const params = new URLSearchParams({ status });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}?${params.toString()}`;
+      const response = await apiService.get<{ requests: any[] }>(url);
+      
+      return response.data?.requests?.map(mapBackendRequestToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener solicitudes por estado:', error);
+      throw error;
+    }
+  },
+
+  // Obtener solicitudes por instrumento
+  async getRequestsByInstrument(instrument: string): Promise<MusicianRequest[]> {
+    try {
+      const params = new URLSearchParams({ instrument });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}?${params.toString()}`;
+      const response = await apiService.get<{ requests: any[] }>(url);
+      
+      return response.data?.requests?.map(mapBackendRequestToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener solicitudes por instrumento:', error);
+      throw error;
+    }
+  },
+
+  // Obtener solicitudes por ubicación
+  async getRequestsByLocation(location: string): Promise<MusicianRequest[]> {
+    try {
+      const params = new URLSearchParams({ location });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}?${params.toString()}`;
+      const response = await apiService.get<{ requests: any[] }>(url);
+      
+      return response.data?.requests?.map(mapBackendRequestToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener solicitudes por ubicación:', error);
+      throw error;
+    }
+  },
+
+  // Obtener solicitudes por evento
+  async getRequestsByEvent(eventId: string): Promise<MusicianRequest[]> {
+    try {
+      const params = new URLSearchParams({ eventId });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}?${params.toString()}`;
+      const response = await apiService.get<{ requests: any[] }>(url);
+      
+      return response.data?.requests?.map(mapBackendRequestToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener solicitudes por evento:', error);
+      throw error;
+    }
+  },
+
+  // Obtener solicitudes por músico
+  async getRequestsByMusician(musicianId: string): Promise<MusicianRequest[]> {
+    try {
+      const params = new URLSearchParams({ musicianId });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}?${params.toString()}`;
+      const response = await apiService.get<{ requests: any[] }>(url);
+      
+      return response.data?.requests?.map(mapBackendRequestToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener solicitudes por músico:', error);
+      throw error;
+    }
+  },
+
+  // Obtener conteo de solicitudes
+  async getRequestsCount(filters?: RequestFilters): Promise<number> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.status) params.append('status', filters.status);
+        if (filters.instrument) params.append('instrument', filters.instrument);
+        if (filters.location) params.append('location', filters.location);
+        if (filters.eventId) params.append('eventId', filters.eventId);
+        if (filters.musicianId) params.append('musicianId', filters.musicianId);
+      }
+      
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}/count?${params.toString()}`;
+      const response = await apiService.get<{ count: number }>(url);
+      
+      return response.data?.count || 0;
+    } catch (error) {
+      console.error('Error al obtener conteo de solicitudes:', error);
+      throw error;
+    }
   }
 };
 
-// Obtener solicitud por ID
-export const getRequestById = async (id: string): Promise<MusicianRequest | null> => {
-  try {
-    const response = await get(`/test/musician-requests/${id}`);
-    return mapBackendRequestToFrontend((response as any).data);
-  } catch (error) {
-    console.error('Error fetching request by ID:', error);
-    return null;
-  }
-};
-
-// Crear nueva solicitud
-export const createRequest = async (requestData: CreateRequestData): Promise<MusicianRequest> => {
-  try {
-    const response = await post('/test/musician-requests', requestData);
-    return mapBackendRequestToFrontend((response as any).data);
-  } catch (error) {
-    console.error('Error creating request:', error);
-    // Simular creación exitosa para desarrollo
-    const newRequest: MusicianRequest = {
-      _id: Date.now().toString(),
-      userId: requestData.userId,
-      eventType: requestData.eventType,
-      date: requestData.date,
-      time: `${requestData.startTime} - ${requestData.endTime}`,
-      location: requestData.location,
-      instrument: requestData.instrument,
-      budget: requestData.budget,
-      comments: requestData.comments,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    console.log('Backend no disponible, simulando creación de solicitud');
-    return newRequest;
-  }
-};
-
-// Actualizar solicitud
-export const updateRequest = async (id: string, requestData: UpdateRequestData): Promise<MusicianRequest> => {
-  try {
-    const response = await put(`/test/musician-requests/${id}`, requestData);
-    return mapBackendRequestToFrontend((response as any).data);
-  } catch (error) {
-    console.error('Error updating request:', error);
-    // Simular actualización exitosa para desarrollo
-    const updatedRequest: MusicianRequest = {
-      _id: id,
-      userId: 'admin@mussikon.com',
-      eventType: requestData.eventType || 'concierto',
-      date: requestData.date || new Date().toISOString().split('T')[0],
-      time: requestData.startTime && requestData.endTime ? `${requestData.startTime} - ${requestData.endTime}` : '20:00 - 22:00',
-      location: requestData.location || '',
-      instrument: requestData.instrument || 'guitarra',
-      budget: requestData.budget || 0,
-      comments: requestData.comments || '',
-      status: requestData.status || 'pending',
-      assignedMusicianId: requestData.assignedMusicianId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    console.log('Backend no disponible, simulando actualización de solicitud');
-    return updatedRequest;
-  }
-};
-
-// Eliminar solicitud
-export const deleteRequest = async (id: string): Promise<void> => {
-  try {
-    await del(`/test/musician-requests/${id}`);
-  } catch (error) {
-    console.error('Error deleting request:', error);
-    console.log('Backend no disponible, simulando eliminación de solicitud');
-    // Simular eliminación exitosa para desarrollo
-  }
-};
-
-// Aceptar solicitud
-export const acceptRequest = async (acceptData: AcceptRequestData): Promise<boolean> => {
-  try {
-    const response = await post('/test/musician-requests/accept', acceptData);
-    return (response as any).data.success;
-  } catch (error) {
-    console.error('Error accepting request:', error);
-    console.log('Backend no disponible, simulando aceptación de solicitud');
-    return true; // Simular aceptación exitosa para desarrollo
-  }
-};
-
-// Cancelar solicitud
-export const cancelRequest = async (cancelData: CancelRequestData): Promise<boolean> => {
-  try {
-    const response = await post('/test/musician-requests/cancel', cancelData);
-    return (response as any).data.success;
-  } catch (error) {
-    console.error('Error cancelling request:', error);
-    console.log('Backend no disponible, simulando cancelación de solicitud');
-    return true; // Simular cancelación exitosa para desarrollo
-  }
-};
-
-// Obtener solicitudes por estado
-export const getRequestsByStatus = async (status: MusicianRequest['status']): Promise<MusicianRequest[]> => {
-  try {
-    const allRequests = await getAllRequests();
-    return allRequests.filter(request => request.status === status);
-  } catch (error) {
-    console.error('Error fetching requests by status:', error);
-    return [];
-  }
-};
-
-// Obtener solicitudes por rango de fechas
-export const getRequestsByDateRange = async (startDate: string, endDate: string): Promise<MusicianRequest[]> => {
-  try {
-    const allRequests = await getAllRequests();
-    return allRequests.filter(request => {
-      const requestDate = new Date(request.date);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      return requestDate >= start && requestDate <= end;
-    });
-  } catch (error) {
-    console.error('Error fetching requests by date range:', error);
-    return [];
-  }
-};
-
-// Obtener conteo de solicitudes
-export const getRequestsCount = async (): Promise<number> => {
-  try {
-    const requests = await getAllRequests();
-    return requests.length;
-  } catch (error) {
-    console.error('Error getting requests count:', error);
-    return 0;
-  }
-};
-
-// Obtener solicitudes por tipo de evento
-export const getRequestsByEventType = async (eventType: string): Promise<MusicianRequest[]> => {
-  try {
-    const allRequests = await getAllRequests();
-    return allRequests.filter(request => request.eventType === eventType);
-  } catch (error) {
-    console.error('Error fetching requests by event type:', error);
-    return [];
-  }
-};
-
-// Obtener solicitudes por instrumento
-export const getRequestsByInstrument = async (instrument: string): Promise<MusicianRequest[]> => {
-  try {
-    const allRequests = await getAllRequests();
-    return allRequests.filter(request => request.instrument === instrument);
-  } catch (error) {
-    console.error('Error fetching requests by instrument:', error);
-    return [];
-  }
-}; 
+// Exportar funciones individuales para compatibilidad
+export const {
+  getAllRequests,
+  getRequestById,
+  createRequest,
+  updateRequest,
+  deleteRequest,
+  getRequestStats,
+  getRequestsByStatus,
+  getRequestsByInstrument,
+  getRequestsByLocation,
+  getRequestsByEvent,
+  getRequestsByMusician,
+  getRequestsCount
+} = musicianRequestsService; 

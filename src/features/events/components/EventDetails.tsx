@@ -35,12 +35,14 @@ const EventDetails: React.FC<EventDetailsProps> = ({
 
   const getStatusColor = (status: Event['status']) => {
     switch (status) {
-      case 'published':
+      case 'publicado':
         return 'success';
-      case 'draft':
+      case 'borrador':
         return 'warning';
-      case 'cancelled':
+      case 'cancelado':
         return 'error';
+      case 'completado':
+        return 'info';
       default:
         return 'default';
     }
@@ -48,12 +50,14 @@ const EventDetails: React.FC<EventDetailsProps> = ({
 
   const getStatusLabel = (status: Event['status']) => {
     switch (status) {
-      case 'published':
+      case 'publicado':
         return 'Publicado';
-      case 'draft':
+      case 'borrador':
         return 'Borrador';
-      case 'cancelled':
+      case 'cancelado':
         return 'Cancelado';
+      case 'completado':
+        return 'Completado';
       default:
         return status;
     }
@@ -71,10 +75,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({
     });
   };
 
-  const formatPrice = (price?: number) => {
-    if (!price) return 'Gratis';
-    return `$${price.toLocaleString()}`;
-  };
+
 
   const formatCreatedDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -111,7 +112,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({
         fontWeight: 600
       }}>
         <Typography variant="h5" component="h2">
-          {event.name}
+          {event.title}
         </Typography>
         <Chip
           label={getStatusLabel(event.status)}
@@ -123,14 +124,14 @@ const EventDetails: React.FC<EventDetailsProps> = ({
       <DialogContent>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
           {/* Imagen del evento */}
-          {event.imageUrl && (
+          {event.images && event.images.length > 0 && (
             <Box sx={{ gridColumn: '1 / -1' }}>
               <Box sx={{ 
                 width: '100%', 
                 height: 200, 
                 borderRadius: 2,
                 overflow: 'hidden',
-                backgroundImage: `url(${event.imageUrl})`,
+                backgroundImage: `url(${event.images[0]})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -170,31 +171,31 @@ const EventDetails: React.FC<EventDetailsProps> = ({
                 </Box>
               )}
 
-              {event.organizer && (
+              {event.organizerName && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Person sx={{ color: '#00fff7' }} />
                   <Typography variant="body1">
-                    Organizado por: {event.organizer}
+                    Organizado por: {event.organizerName}
                   </Typography>
                 </Box>
               )}
 
-              {event.type && (
+              {event.category && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Avatar sx={{ width: 24, height: 24, bgcolor: '#00fff7' }}>
                     🎵
                   </Avatar>
                   <Typography variant="body1">
-                    Tipo: {event.type}
+                    Categoría: {event.category}
                   </Typography>
                 </Box>
               )}
 
-              {event.capacity && (
+              {event.maxAttendees && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Group sx={{ color: '#00fff7' }} />
                   <Typography variant="body1">
-                    Capacidad: {event.capacity} personas
+                    Capacidad: {event.maxAttendees} personas
                   </Typography>
                 </Box>
               )}
@@ -202,7 +203,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <AttachMoney sx={{ color: '#00fff7' }} />
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  Precio: {formatPrice(event.price)}
+                  Presupuesto: {event.budget ? `$${event.budget.toLocaleString()}` : 'Gratis'}
                 </Typography>
               </Box>
             </Box>

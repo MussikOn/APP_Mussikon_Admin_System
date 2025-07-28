@@ -1,14 +1,9 @@
 import { useState, useCallback } from 'react';
 import { 
-  getAllEvents, 
-  getEventById, 
-  createEvent, 
-  updateEvent, 
-  deleteEvent,
-  getEventsByStatus,
-  getEventsByDateRange,
+  eventsService,
   type CreateEventData,
-
+  type UpdateEventData,
+  type EventFilters
 } from '../../../services/eventsService';
 import type { Event } from '../types/event';
 
@@ -18,12 +13,12 @@ export function useEvents() {
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (filters?: EventFilters) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAllEvents();
-      setEvents(data);
+      const response = await eventsService.getAllEvents(filters);
+      setEvents(response.events);
     } catch (err: any) {
       setError(err.message || 'Error al cargar eventos');
     } finally {
@@ -35,7 +30,7 @@ export function useEvents() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getEventById(id);
+      const data = await eventsService.getEventById(id);
       setSelectedEvent(data);
       return data;
     } catch (err: any) {
@@ -50,7 +45,7 @@ export function useEvents() {
     setLoading(true);
     setError(null);
     try {
-      const newEvent = await createEvent(eventData);
+      const newEvent = await eventsService.createEvent(eventData);
       setEvents(prev => [...prev, newEvent]);
       return newEvent;
     } catch (err: any) {
@@ -61,11 +56,11 @@ export function useEvents() {
     }
   }, []);
 
-  const updateEventHandler = useCallback(async (id: string, eventData: Partial<CreateEventData>) => {
+  const updateEventHandler = useCallback(async (id: string, eventData: UpdateEventData) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedEvent = await updateEvent(id, eventData);
+      const updatedEvent = await eventsService.updateEvent(id, eventData);
       setEvents(prev => prev.map(event => 
         event._id === id ? updatedEvent : event
       ));
@@ -85,7 +80,7 @@ export function useEvents() {
     setLoading(true);
     setError(null);
     try {
-      await deleteEvent(id);
+      await eventsService.deleteEvent(id);
       setEvents(prev => prev.filter(event => event._id !== id));
       if (selectedEvent?._id === id) {
         setSelectedEvent(null);
@@ -102,8 +97,8 @@ export function useEvents() {
     setLoading(true);
     setError(null);
     try {
-      const filteredEvents = await getEventsByStatus(status);
-      setEvents(filteredEvents);
+      const response = await eventsService.getAllEvents({ status });
+      setEvents(response.events);
     } catch (err: any) {
       setError(err.message || 'Error al filtrar eventos');
     } finally {
@@ -115,8 +110,10 @@ export function useEvents() {
     setLoading(true);
     setError(null);
     try {
-      const filteredEvents = await getEventsByDateRange(startDate, endDate);
-      setEvents(filteredEvents);
+      const response = await eventsService.getAllEvents({ 
+        dateRange: { start: startDate, end: endDate } 
+      });
+      setEvents(response.events);
     } catch (err: any) {
       setError(err.message || 'Error al filtrar eventos por fecha');
     } finally {

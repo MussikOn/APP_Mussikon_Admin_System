@@ -31,17 +31,20 @@ const EventForm: React.FC<EventFormProps> = ({
   loading = false
 }) => {
   const [formData, setFormData] = useState<CreateEventData>({
-    name: '',
     title: '',
     description: '',
     date: '',
+    time: '',
     location: '',
-    status: 'draft',
-    type: '',
-    capacity: 0,
-    price: 0,
-    organizer: '',
-    imageUrl: ''
+    category: '',
+    status: 'borrador',
+    organizerId: '',
+    organizerName: '',
+    budget: 0,
+    attendees: 0,
+    maxAttendees: 0,
+    images: [],
+    tags: []
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -49,31 +52,37 @@ const EventForm: React.FC<EventFormProps> = ({
   useEffect(() => {
     if (event) {
       setFormData({
-        name: event.name || '',
         title: event.title || '',
         description: event.description || '',
         date: event.date || '',
+        time: event.time || '',
         location: event.location || '',
-        status: event.status || 'draft',
-        type: event.type || '',
-        capacity: event.capacity || 0,
-        price: event.price || 0,
-        organizer: event.organizer || '',
-        imageUrl: event.imageUrl || ''
+        category: event.category || '',
+        status: event.status || 'borrador',
+        organizerId: event.organizerId || '',
+        organizerName: event.organizerName || '',
+        budget: event.budget || 0,
+        attendees: event.attendees || 0,
+        maxAttendees: event.maxAttendees || 0,
+        images: event.images || [],
+        tags: event.tags || []
       });
     } else {
       setFormData({
-        name: '',
         title: '',
         description: '',
         date: '',
+        time: '',
         location: '',
-        status: 'draft',
-        type: '',
-        capacity: 0,
-        price: 0,
-        organizer: '',
-        imageUrl: ''
+        category: '',
+        status: 'borrador',
+        organizerId: '',
+        organizerName: '',
+        budget: 0,
+        attendees: 0,
+        maxAttendees: 0,
+        images: [],
+        tags: []
       });
     }
     setErrors({});
@@ -82,8 +91,8 @@ const EventForm: React.FC<EventFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre del evento es requerido';
+    if (!formData.title.trim()) {
+      newErrors.title = 'El título del evento es requerido';
     }
 
     if (!formData.date) {
@@ -96,12 +105,12 @@ const EventForm: React.FC<EventFormProps> = ({
       }
     }
 
-    if (formData.capacity && formData.capacity < 1) {
-      newErrors.capacity = 'La capacidad debe ser mayor a 0';
+    if (formData.maxAttendees && formData.maxAttendees < 1) {
+      newErrors.maxAttendees = 'La capacidad debe ser mayor a 0';
     }
 
-    if (formData.price && formData.price < 0) {
-      newErrors.price = 'El precio no puede ser negativo';
+    if (formData.budget && formData.budget < 0) {
+      newErrors.budget = 'El presupuesto no puede ser negativo';
     }
 
     setErrors(newErrors);
@@ -207,27 +216,29 @@ const EventForm: React.FC<EventFormProps> = ({
             }
           }}>
             <TextField
-              label="Nombre del Evento"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              error={!!errors.name}
-              helperText={errors.name}
+              label="Título del Evento"
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              error={!!errors.title}
+              helperText={errors.title}
               fullWidth
               required
               sx={{ gridColumn: 'span 2' }}
             />
 
             <TextField
-              label="Título (Opcional)"
-              value={formData.title}
-              onChange={(e) => handleChange('title', e.target.value)}
+              label="Descripción"
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              multiline
+              rows={3}
               fullWidth
             />
 
             <TextField
-              label="Organizador"
-              value={formData.organizer}
-              onChange={(e) => handleChange('organizer', e.target.value)}
+              label="Nombre del Organizador"
+              value={formData.organizerName}
+              onChange={(e) => handleChange('organizerName', e.target.value)}
               fullWidth
             />
 
@@ -251,11 +262,11 @@ const EventForm: React.FC<EventFormProps> = ({
             />
 
             <FormControl fullWidth>
-              <InputLabel>Tipo de Evento</InputLabel>
+              <InputLabel>Categoría del Evento</InputLabel>
               <Select
-                value={formData.type}
-                onChange={(e) => handleChange('type', e.target.value)}
-                label="Tipo de Evento"
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                label="Categoría del Evento"
                 sx={{
                   '& .MuiSelect-icon': {
                     color: '#00fff7'
@@ -271,22 +282,22 @@ const EventForm: React.FC<EventFormProps> = ({
             </FormControl>
 
             <TextField
-              label="Capacidad"
+              label="Capacidad Máxima"
               type="number"
-              value={formData.capacity}
-              onChange={(e) => handleChange('capacity', parseInt(e.target.value) || 0)}
-              error={!!errors.capacity}
-              helperText={errors.capacity}
+              value={formData.maxAttendees}
+              onChange={(e) => handleChange('maxAttendees', parseInt(e.target.value) || 0)}
+              error={!!errors.maxAttendees}
+              helperText={errors.maxAttendees}
               fullWidth
             />
 
             <TextField
-              label="Precio"
+              label="Presupuesto"
               type="number"
-              value={formData.price}
-              onChange={(e) => handleChange('price', parseFloat(e.target.value) || 0)}
-              error={!!errors.price}
-              helperText={errors.price}
+              value={formData.budget}
+              onChange={(e) => handleChange('budget', parseFloat(e.target.value) || 0)}
+              error={!!errors.budget}
+              helperText={errors.budget}
               fullWidth
             />
 
@@ -311,11 +322,12 @@ const EventForm: React.FC<EventFormProps> = ({
             </FormControl>
 
             <TextField
-              label="URL de Imagen (Opcional)"
-              value={formData.imageUrl}
-              onChange={(e) => handleChange('imageUrl', e.target.value)}
+              label="Hora del Evento"
+              type="time"
+              value={formData.time}
+              onChange={(e) => handleChange('time', e.target.value)}
               fullWidth
-              sx={{ gridColumn: 'span 2' }}
+              InputLabelProps={{ shrink: true }}
             />
 
             <TextField

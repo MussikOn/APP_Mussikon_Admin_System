@@ -1,349 +1,323 @@
-import { get, post, put, del } from './httpClient';
-import type { Event } from '../features/events/types/event';
+import { apiService } from './api';
+import { getApiUrl } from '../config/apiConfig';
+import { API_CONFIG } from '../config/apiConfig';
 
-// Tipos que coinciden con el backend
-export interface BackendEvent {
-  id: string;
-  user: string;
-  eventName: string;
-  eventType: string;
+// Tipos para eventos
+export interface Event {
+  _id: string;
+  title: string;
+  description: string;
   date: string;
   time: string;
   location: string;
-  duration: string;
-  instrument: string;
-  bringInstrument: boolean;
-  comment: string;
-  budget: string;
-  flyerUrl?: string;
-  songs: string[];
-  recommendations: string[];
-  mapsLink: string;
-  status: 'pending_musician' | 'musician_assigned' | 'completed' | 'cancelled';
-  assignedMusicianId?: string;
-  interestedMusicians?: string[];
+  category: string;
+  status: 'borrador' | 'publicado' | 'cancelado' | 'completado';
+  organizerId: string;
+  organizerName: string;
+  budget?: number;
+  attendees?: number;
+  maxAttendees?: number;
+  images?: string[];
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-// Tipo para crear eventos en el frontend
 export interface CreateEventData {
-  name: string;
-  title?: string;
-  description?: string;
+  title: string;
+  description: string;
   date: string;
-  location?: string;
-  status?: 'draft' | 'published' | 'cancelled';
-  type?: string;
-  capacity?: number;
-  price?: number;
-  organizer?: string;
-  imageUrl?: string;
+  time: string;
+  location: string;
+  category: string;
+  budget?: number;
+  maxAttendees?: number;
+  tags?: string[];
 }
 
-// Tipo para actualizar eventos
 export interface UpdateEventData extends Partial<CreateEventData> {
-  status?: 'draft' | 'published' | 'cancelled';
+  status?: 'borrador' | 'publicado' | 'cancelado' | 'completado';
 }
 
-// Función para mapear BackendEvent a Event del frontend
-const mapBackendEventToFrontend = (backendEvent: BackendEvent): Event => {
+export interface EventFilters {
+  search?: string;
+  status?: string;
+  category?: string;
+  location?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  organizerId?: string;
+}
+
+export interface EventsResponse {
+  events: Event[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface EventStats {
+  totalEvents: number;
+  publishedEvents: number;
+  cancelledEvents: number;
+  completedEvents: number;
+  draftEvents: number;
+  totalAttendees: number;
+  averageBudget: number;
+  topCategories: Array<{ category: string; count: number }>;
+  topLocations: Array<{ location: string; count: number }>;
+  eventsByMonth: Array<{ month: string; count: number }>;
+}
+
+// Función para mapear datos del backend al frontend
+const mapBackendEventToFrontend = (backendEvent: any): Event => {
   return {
-    _id: backendEvent.id,
-    name: backendEvent.eventName,
-    title: backendEvent.eventType,
-    description: backendEvent.comment,
+    _id: backendEvent._id || backendEvent.id,
+    title: backendEvent.title,
+    description: backendEvent.description,
     date: backendEvent.date,
+    time: backendEvent.time,
     location: backendEvent.location,
-    status: mapBackendStatusToFrontend(backendEvent.status),
-    type: backendEvent.eventType,
-    capacity: parseInt(backendEvent.duration) || 0,
-    price: parseFloat(backendEvent.budget) || 0,
-    organizer: backendEvent.user,
-    imageUrl: backendEvent.flyerUrl || '',
+    category: backendEvent.category,
+    status: backendEvent.status,
+    organizerId: backendEvent.organizerId,
+    organizerName: backendEvent.organizerName,
+    budget: backendEvent.budget,
+    attendees: backendEvent.attendees,
+    maxAttendees: backendEvent.maxAttendees,
+    images: backendEvent.images || [],
+    tags: backendEvent.tags || [],
     createdAt: backendEvent.createdAt,
     updatedAt: backendEvent.updatedAt
   };
 };
 
-// Función para mapear status del backend al frontend
-const mapBackendStatusToFrontend = (backendStatus: BackendEvent['status']): Event['status'] => {
-  switch (backendStatus) {
-    case 'pending_musician':
-      return 'draft';
-    case 'musician_assigned':
-      return 'published';
-    case 'completed':
-      return 'published';
-    case 'cancelled':
-      return 'cancelled';
-    default:
-      return 'draft';
-  }
-};
-
-// Función para mapear status del frontend al backend
-const mapFrontendStatusToBackend = (frontendStatus: Event['status']): BackendEvent['status'] => {
-  switch (frontendStatus) {
-    case 'draft':
-      return 'pending_musician';
-    case 'published':
-      return 'musician_assigned';
-    case 'cancelled':
-      return 'cancelled';
-    default:
-      return 'pending_musician';
-  }
-};
-
-// Función para mapear CreateEventData del frontend al backend
-const mapFrontendEventToBackend = (frontendEvent: CreateEventData): any => {
-  return {
-    eventName: frontendEvent.name,
-    eventType: frontendEvent.type || 'concierto',
+// Función para mapear datos del frontend al backend
+const mapFrontendEventToBackend = (frontendEvent: CreateEventData | UpdateEventData): any => {
+  const backendEvent: any = {
+    title: frontendEvent.title,
+    description: frontendEvent.description,
     date: frontendEvent.date,
-    time: '18:00 - 20:00', // Default time
-    location: frontendEvent.location || '',
-    duration: frontendEvent.capacity?.toString() || '120',
-    instrument: 'guitarra', // Default instrument
-    bringInstrument: false,
-    comment: frontendEvent.description || '',
-    budget: frontendEvent.price?.toString() || '0',
-    flyerUrl: frontendEvent.imageUrl,
-    songs: [],
-    recommendations: [],
-    mapsLink: `https://maps.google.com/?q=${encodeURIComponent(frontendEvent.location || '')}`
+    time: frontendEvent.time,
+    location: frontendEvent.location,
+    category: frontendEvent.category,
+    budget: frontendEvent.budget,
+    maxAttendees: frontendEvent.maxAttendees,
+    tags: frontendEvent.tags
   };
+
+  // Agregar status solo si está presente (para actualizaciones)
+  if ('status' in frontendEvent && frontendEvent.status) {
+    backendEvent.status = frontendEvent.status;
+  }
+
+  return backendEvent;
 };
 
-// Obtener todos los eventos del usuario
-export const getAllEvents = async (): Promise<Event[]> => {
-  try {
-    const response = await get('/events/my-events');
-    const backendEvents = (response as any).data.data || [];
-    return backendEvents.map(mapBackendEventToFrontend);
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    // Fallback con datos de prueba si el backend no está disponible
-    return [
-      {
-        _id: '1',
-        name: 'Concierto de Verano',
-        title: 'Música en el Parque',
-        description: 'Un evento musical al aire libre con los mejores artistas locales',
-        date: '2024-08-15T20:00:00.000Z',
-        location: 'Parque Central',
-        status: 'published',
-        type: 'concierto',
-        capacity: 500,
-        price: 25,
-        organizer: 'admin@mussikon.com',
-        imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
-        createdAt: '2024-07-01T10:00:00.000Z',
-        updatedAt: '2024-07-01T10:00:00.000Z'
-      },
-      {
-        _id: '2',
-        name: 'Festival de Jazz',
-        title: 'Noche de Jazz',
-        description: 'Una noche mágica con los mejores exponentes del jazz',
-        date: '2024-09-20T19:00:00.000Z',
-        location: 'Teatro Municipal',
-        status: 'draft',
-        type: 'festival',
-        capacity: 300,
-        price: 40,
-        organizer: 'admin@mussikon.com',
-        imageUrl: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400',
-        createdAt: '2024-07-02T14:30:00.000Z',
-        updatedAt: '2024-07-02T14:30:00.000Z'
-      },
-      {
-        _id: '3',
-        name: 'Culto Dominical',
-        title: 'Adoración y Alabanza',
-        description: 'Servicio de adoración con música en vivo',
-        date: '2024-08-04T10:00:00.000Z',
-        location: 'Iglesia Central',
-        status: 'published',
-        type: 'culto',
-        capacity: 200,
-        price: 0,
-        organizer: 'admin@mussikon.com',
-        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-        createdAt: '2024-07-03T09:00:00.000Z',
-        updatedAt: '2024-07-03T09:00:00.000Z'
-      },
-      {
-        _id: '4',
-        name: 'Workshop de Guitarra',
-        title: 'Aprende Guitarra',
-        description: 'Taller intensivo de guitarra para principiantes',
-        date: '2024-08-25T15:00:00.000Z',
-        location: 'Centro Cultural',
-        status: 'draft',
-        type: 'workshop',
-        capacity: 50,
-        price: 75,
-        organizer: 'admin@mussikon.com',
-        imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
-        createdAt: '2024-07-04T16:45:00.000Z',
-        updatedAt: '2024-07-04T16:45:00.000Z'
-      },
-      {
-        _id: '5',
-        name: 'Concierto de Rock',
-        title: 'Rock en la Ciudad',
-        description: 'La mejor música rock en vivo',
-        date: '2024-09-10T21:00:00.000Z',
-        location: 'Estadio Municipal',
-        status: 'cancelled',
-        type: 'concierto',
-        capacity: 1000,
-        price: 60,
-        organizer: 'admin@mussikon.com',
-        imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
-        createdAt: '2024-07-05T11:20:00.000Z',
-        updatedAt: '2024-07-05T11:20:00.000Z'
+// Servicio de eventos
+export const eventsService = {
+  // Obtener todos los eventos
+  async getAllEvents(filters?: EventFilters, page: number = 1, limit: number = 20): Promise<EventsResponse> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.search) params.append('search', filters.search);
+        if (filters.status) params.append('status', filters.status);
+        if (filters.category) params.append('category', filters.category);
+        if (filters.location) params.append('location', filters.location);
+        if (filters.organizerId) params.append('organizerId', filters.organizerId);
+        if (filters.dateRange) {
+          params.append('startDate', filters.dateRange.start);
+          params.append('endDate', filters.dateRange.end);
+        }
       }
-    ];
-  }
-};
+      
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
 
-// Obtener evento por ID
-export const getEventById = async (id: string): Promise<Event | null> => {
-  try {
-    const response = await get(`/events/${id}`);
-    return mapBackendEventToFrontend((response as any).data);
-  } catch (error) {
-    console.error('Error fetching event by ID:', error);
-    return null;
-  }
-};
-
-// Crear nuevo evento
-export const createEvent = async (eventData: CreateEventData): Promise<Event> => {
-  try {
-    const backendEventData = mapFrontendEventToBackend(eventData);
-    const response = await post('/events/request-musician', backendEventData);
-    return mapBackendEventToFrontend((response as any).data.data);
-  } catch (error) {
-    console.error('Error creating event:', error);
-    // Simular creación exitosa para desarrollo
-    const newEvent: Event = {
-      _id: Date.now().toString(),
-      name: eventData.name,
-      title: eventData.title || '',
-      description: eventData.description || '',
-      date: eventData.date,
-      location: eventData.location,
-      status: 'draft',
-      type: eventData.type,
-      capacity: eventData.capacity || 0,
-      price: eventData.price || 0,
-      organizer: 'admin@mussikon.com',
-      imageUrl: eventData.imageUrl || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    console.log('Backend no disponible, simulando creación de evento');
-    return newEvent;
-  }
-};
-
-// Actualizar evento
-export const updateEvent = async (id: string, eventData: UpdateEventData): Promise<Event> => {
-  try {
-    const backendEventData = mapFrontendEventToBackend(eventData as CreateEventData);
-    const response = await put(`/events/${id}`, backendEventData);
-    return mapBackendEventToFrontend((response as any).data);
-  } catch (error) {
-    console.error('Error updating event:', error);
-    // Simular actualización exitosa para desarrollo
-    const updatedEvent: Event = {
-      _id: id,
-      name: eventData.name || 'Evento Actualizado',
-      title: eventData.title || '',
-      description: eventData.description || '',
-      date: eventData.date || new Date().toISOString(),
-      location: eventData.location || '',
-      status: eventData.status || 'draft',
-      type: eventData.type || '',
-      capacity: eventData.capacity || 0,
-      price: eventData.price || 0,
-      organizer: 'admin@mussikon.com',
-      imageUrl: eventData.imageUrl || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    console.log('Backend no disponible, simulando actualización de evento');
-    return updatedEvent;
-  }
-};
-
-// Eliminar evento
-export const deleteEvent = async (id: string): Promise<void> => {
-  try {
-    await del(`/events/${id}`);
-  } catch (error) {
-    console.error('Error deleting event:', error);
-    console.log('Backend no disponible, simulando eliminación de evento');
-    // Simular eliminación exitosa para desarrollo
-  }
-};
-
-// Obtener eventos por estado
-export const getEventsByStatus = async (status: Event['status']): Promise<Event[]> => {
-  try {
-    const backendStatus = mapFrontendStatusToBackend(status);
-    let endpoint = '';
-    
-    switch (backendStatus) {
-      case 'pending_musician':
-        endpoint = '/events/my-pending';
-        break;
-      case 'musician_assigned':
-        endpoint = '/events/my-assigned';
-        break;
-      case 'completed':
-        endpoint = '/events/my-completed';
-        break;
-      default:
-        return getAllEvents();
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_EVENTS}?${params.toString()}`;
+      const response = await apiService.get<{ events: any[]; total: number; page: number; limit: number; totalPages: number }>(url);
+      
+      return {
+        events: response.data?.events?.map(mapBackendEventToFrontend) || [],
+        total: response.data?.total || 0,
+        page: response.data?.page || 1,
+        limit: response.data?.limit || 20,
+        totalPages: response.data?.totalPages || 1
+      };
+    } catch (error) {
+      console.error('Error al obtener eventos:', error);
+      throw error;
     }
-    
-    const response = await get(endpoint);
-    const backendEvents = (response as any).data || [];
-    return backendEvents.map(mapBackendEventToFrontend);
-  } catch (error) {
-    console.error('Error fetching events by status:', error);
-    return [];
+  },
+
+  // Obtener evento por ID
+  async getEventById(id: string): Promise<Event> {
+    try {
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_EVENT_BY_ID, { id });
+      const response = await apiService.get<{ event: any }>(url);
+      
+      return mapBackendEventToFrontend(response.data?.event);
+    } catch (error) {
+      console.error('Error al obtener evento por ID:', error);
+      throw error;
+    }
+  },
+
+  // Crear nuevo evento
+  async createEvent(eventData: CreateEventData): Promise<Event> {
+    try {
+      const backendData = mapFrontendEventToBackend(eventData);
+      const response = await apiService.post<{ event: any }>(API_CONFIG.ENDPOINTS.CREATE_ADMIN_EVENT, backendData);
+      
+      return mapBackendEventToFrontend(response.data?.event);
+    } catch (error) {
+      console.error('Error al crear evento:', error);
+      throw error;
+    }
+  },
+
+  // Actualizar evento
+  async updateEvent(id: string, eventData: UpdateEventData): Promise<Event> {
+    try {
+      const backendData = mapFrontendEventToBackend(eventData);
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.UPDATE_ADMIN_EVENT, { id });
+      const response = await apiService.put<{ event: any }>(url, backendData);
+      
+      return mapBackendEventToFrontend(response.data?.event);
+    } catch (error) {
+      console.error('Error al actualizar evento:', error);
+      throw error;
+    }
+  },
+
+  // Eliminar evento
+  async deleteEvent(id: string): Promise<void> {
+    try {
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.DELETE_ADMIN_EVENT, { id });
+      await apiService.delete(url);
+    } catch (error) {
+      console.error('Error al eliminar evento:', error);
+      throw error;
+    }
+  },
+
+  // Obtener estadísticas de eventos
+  async getEventStats(): Promise<EventStats> {
+    try {
+      const response = await apiService.get<{ stats: EventStats }>(API_CONFIG.ENDPOINTS.EVENT_STATS);
+      return response.data?.stats || {
+        totalEvents: 0,
+        publishedEvents: 0,
+        cancelledEvents: 0,
+        completedEvents: 0,
+        draftEvents: 0,
+        totalAttendees: 0,
+        averageBudget: 0,
+        topCategories: [],
+        topLocations: [],
+        eventsByMonth: []
+      };
+    } catch (error) {
+      console.error('Error al obtener estadísticas de eventos:', error);
+      throw error;
+    }
+  },
+
+  // Obtener eventos por estado
+  async getEventsByStatus(status: string): Promise<Event[]> {
+    try {
+      const params = new URLSearchParams({ status });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_EVENTS}?${params.toString()}`;
+      const response = await apiService.get<{ events: any[] }>(url);
+      
+      return response.data?.events?.map(mapBackendEventToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener eventos por estado:', error);
+      throw error;
+    }
+  },
+
+  // Obtener eventos por categoría
+  async getEventsByCategory(category: string): Promise<Event[]> {
+    try {
+      const params = new URLSearchParams({ category });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_EVENTS}?${params.toString()}`;
+      const response = await apiService.get<{ events: any[] }>(url);
+      
+      return response.data?.events?.map(mapBackendEventToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener eventos por categoría:', error);
+      throw error;
+    }
+  },
+
+  // Obtener eventos por ubicación
+  async getEventsByLocation(location: string): Promise<Event[]> {
+    try {
+      const params = new URLSearchParams({ location });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_EVENTS}?${params.toString()}`;
+      const response = await apiService.get<{ events: any[] }>(url);
+      
+      return response.data?.events?.map(mapBackendEventToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener eventos por ubicación:', error);
+      throw error;
+    }
+  },
+
+  // Obtener eventos por organizador
+  async getEventsByOrganizer(organizerId: string): Promise<Event[]> {
+    try {
+      const params = new URLSearchParams({ organizerId });
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_EVENTS}?${params.toString()}`;
+      const response = await apiService.get<{ events: any[] }>(url);
+      
+      return response.data?.events?.map(mapBackendEventToFrontend) || [];
+    } catch (error) {
+      console.error('Error al obtener eventos por organizador:', error);
+      throw error;
+    }
+  },
+
+  // Obtener conteo de eventos
+  async getEventsCount(filters?: EventFilters): Promise<number> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.status) params.append('status', filters.status);
+        if (filters.category) params.append('category', filters.category);
+        if (filters.location) params.append('location', filters.location);
+        if (filters.organizerId) params.append('organizerId', filters.organizerId);
+      }
+      
+      const url = `${API_CONFIG.ENDPOINTS.ADMIN_EVENTS}/count?${params.toString()}`;
+      const response = await apiService.get<{ count: number }>(url);
+      
+      return response.data?.count || 0;
+    } catch (error) {
+      console.error('Error al obtener conteo de eventos:', error);
+      throw error;
+    }
   }
 };
 
-// Obtener eventos por rango de fechas
-export const getEventsByDateRange = async (startDate: string, endDate: string): Promise<Event[]> => {
-  try {
-    const allEvents = await getAllEvents();
-    return allEvents.filter(event => {
-      const eventDate = new Date(event.date);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      return eventDate >= start && eventDate <= end;
-    });
-  } catch (error) {
-    console.error('Error fetching events by date range:', error);
-    return [];
-  }
-};
-
-// Obtener conteo de eventos
-export const getEventsCount = async (): Promise<number> => {
-  try {
-    const events = await getAllEvents();
-    return events.length;
-  } catch (error) {
-    console.error('Error getting events count:', error);
-    return 0;
-  }
-}; 
+// Exportar funciones individuales para compatibilidad
+export const {
+  getAllEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  getEventStats,
+  getEventsByStatus,
+  getEventsByCategory,
+  getEventsByLocation,
+  getEventsByOrganizer,
+  getEventsCount
+} = eventsService; 

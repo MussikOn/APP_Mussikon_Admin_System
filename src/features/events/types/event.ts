@@ -1,33 +1,38 @@
 export interface Event {
-  _id?: string;
-  name: string;
-  title?: string;
-  description?: string;
+  _id: string;
+  title: string;
+  description: string;
   date: string;
-  fecha?: string;
-  location?: string;
-  status: 'draft' | 'published' | 'cancelled';
-  type?: string;
-  capacity?: number;
-  price?: number;
-  organizer?: string;
-  imageUrl?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  time: string;
+  location: string;
+  category: string;
+  status: 'borrador' | 'publicado' | 'cancelado' | 'completado';
+  organizerId: string;
+  organizerName: string;
+  budget?: number;
+  attendees?: number;
+  maxAttendees?: number;
+  images?: string[];
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateEventData {
-  name: string;
-  title?: string;
-  description?: string;
+  title: string;
+  description: string;
   date: string;
-  location?: string;
-  status: 'draft' | 'published' | 'cancelled';
-  type?: string;
-  capacity?: number;
-  price?: number;
-  organizer?: string;
-  imageUrl?: string;
+  time: string;
+  location: string;
+  category: string;
+  status: 'borrador' | 'publicado' | 'cancelado' | 'completado';
+  organizerId: string;
+  organizerName: string;
+  budget?: number;
+  attendees?: number;
+  maxAttendees?: number;
+  images?: string[];
+  tags?: string[];
 }
 
 export interface UpdateEventData extends Partial<CreateEventData> {
@@ -35,27 +40,31 @@ export interface UpdateEventData extends Partial<CreateEventData> {
 }
 
 export interface EventFilters {
-  search: string;
-  status: Event['status'] | 'all';
-  type: string;
-  dateRange: {
+  search?: string;
+  status?: Event['status'];
+  category?: string;
+  location?: string;
+  dateRange?: {
     start: string;
     end: string;
   };
 }
 
 export interface EventFormData {
-  name: string;
   title: string;
   description: string;
   date: string;
+  time: string;
   location: string;
+  category: string;
   status: Event['status'];
-  type: string;
-  capacity: number;
-  price: number;
-  organizer: string;
-  imageUrl: string;
+  organizerId: string;
+  organizerName: string;
+  budget?: number;
+  attendees?: number;
+  maxAttendees?: number;
+  images?: string[];
+  tags?: string[];
 }
 
 export const EVENT_TYPES = [
@@ -69,7 +78,8 @@ export const EVENT_TYPES = [
 ] as const;
 
 export const EVENT_STATUSES = [
-  { value: 'draft', label: 'Borrador' },
-  { value: 'published', label: 'Publicado' },
-  { value: 'cancelled', label: 'Cancelado' }
+  { value: 'borrador', label: 'Borrador' },
+  { value: 'publicado', label: 'Publicado' },
+  { value: 'cancelado', label: 'Cancelado' },
+  { value: 'completado', label: 'Completado' }
 ] as const; 

@@ -3,6 +3,7 @@
 // Tipo del backend
 export interface BackendMusicianRequest {
   id?: string;
+  _id?: string;
   userId: string;
   eventType: string;
   date: string;

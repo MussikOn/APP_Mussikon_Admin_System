@@ -22,7 +22,7 @@ const Auth = () => {
         return;
       }
       // Usar los nombres de campo correctos
-      const data = await login(email, password);
+      const data = await login({ userEmail: email, userPassword: password });
       if (data.token) {
         localStorage.setItem('token', data.token);
         if (data.user) {
