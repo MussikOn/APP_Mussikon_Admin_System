@@ -92,7 +92,7 @@ src/
   features/
     auth/             // Login, registro, gestión de sesión
     dashboard/        // Dashboard principal (rediseñado)
-    users/            // CRUD de usuarios
+    users/            // CRUD de usuarios (rediseñado)
     events/           // CRUD de eventos
     musicianRequests/ // CRUD de solicitudes directas
     images/           // CRUD de galería
@@ -153,6 +153,58 @@ const Dashboard: React.FC = () => {
 
 ---
 
+## Gestión de Usuarios Rediseñada
+
+### Características del Nuevo Diseño
+- **Diseño Profesional y Moderno:** Implementación completa del estilo futurista/sci-fi
+- **Tabla Material-UI:** Tabla moderna con hover effects, avatares y chips de estado
+- **Estadísticas Visuales:** Chips coloridos para roles con iconos específicos
+- **Búsqueda Avanzada:** Campo de búsqueda con iconos y efectos de glassmorphism
+- **Modales Sci-Fi:** Diálogos con gradientes y efectos futuristas para crear/editar
+- **Paginación Material-UI:** Navegación elegante entre páginas
+- **Estados Visuales:** Chips de estado activo/inactivo con iconos
+- **Responsive Design:** Adaptación completa para móviles, tablets y desktop
+- **Sin CSS Obsoleto:** Eliminado el archivo CSS y reemplazado por Material-UI
+
+### Componentes del Módulo de Usuarios
+- **Header con Título:** Título con gradiente y botones de acción
+- **Filtros y Estadísticas:** Panel con búsqueda y estadísticas de roles
+- **Tabla de Usuarios:** Tabla Material-UI con avatares, chips y acciones
+- **Modales de Crear/Editar:** Diálogos con formularios Material-UI
+- **Modal de Confirmación:** Diálogo de confirmación para eliminación
+
+### Estructura del Módulo de Usuarios
+```tsx
+// src/features/users/index.tsx
+const Users: React.FC = () => {
+  const { isDark } = useTheme();
+  // Hooks para datos y estado
+  const { data: users, loading, error, execute: fetchUsers } = useApiRequest(getAllUsers);
+  
+  // Renderizado con Material-UI
+  return (
+    <Box>
+      {/* Header con título y botones */}
+      {/* Filtros y estadísticas */}
+      {/* Tabla de usuarios */}
+      {/* Paginación */}
+      {/* Modales */}
+    </Box>
+  );
+};
+```
+
+### Características Técnicas
+- **Material-UI v7.2.0:** Uso completo de componentes MUI
+- **Glassmorphism:** Efectos de vidrio translúcido en todos los paneles
+- **Gradientes Futuristas:** Gradientes vibrantes en botones y títulos
+- **Iconografía Moderna:** Iconos Material-UI para todas las acciones
+- **Estados de Loading:** Indicadores de carga con CircularProgress
+- **Manejo de Errores:** Alertas Material-UI para errores
+- **TypeScript:** Tipado estricto para prevenir errores
+
+---
+
 ## Funcionalidades y Endpoints Clave
 
 ### 1. Autenticación y Gestión de Sesión
@@ -165,12 +217,22 @@ const Dashboard: React.FC = () => {
 - Estadísticas en tiempo real de usuarios, eventos, solicitudes e imágenes.
 - Notificaciones del sistema con diferentes prioridades.
 
-### 3. Gestión de Usuarios (CRUD)
+### 3. Gestión de Usuarios (CRUD) - Rediseñado
 - POST `/auth/Register`
 - GET `/getAllUsers`
 - PUT `/auth/update/:userEmail`
 - DELETE `/auth/delete/:userEmail`
 - DELETE `/superAdmin/deleteAllUsers`
+
+**Características del Rediseño:**
+- **Material-UI Components:** Tabla moderna con hover effects y avatares
+- **Glassmorphism:** Paneles translúcidos con efectos de desenfoque
+- **Estadísticas Visuales:** Chips coloridos para roles (Admin, Organizador, Músico)
+- **Búsqueda Avanzada:** Campo de búsqueda con iconos y filtros
+- **Modales Sci-Fi:** Diálogos con gradientes y efectos futuristas
+- **Paginación Material-UI:** Navegación elegante entre páginas
+- **Estados Visuales:** Chips de estado activo/inactivo con iconos
+- **Responsive Design:** Adaptación completa para móviles y tablets
 
 ### 4. Gestión de Eventos y Matching (CRUD)
 - POST `/events/request-musician`
@@ -323,6 +385,17 @@ const handleDelete = async (email) => {
 ### 8. ¿Cómo manejo los errores de HTML nesting?
 - Se reemplazaron los componentes `Typography` anidados con `Box component="span"` para evitar advertencias de validación HTML.
 
+### 9. ¿Por qué el módulo de usuarios tiene un diseño completamente nuevo?
+- Se rediseñó completamente con Material-UI para un look profesional y moderno.
+- Se eliminó el archivo CSS obsoleto y se implementó glassmorphism y gradientes futuristas.
+- Se agregaron avatares, chips de estado y efectos hover para mejor UX.
+
+### 10. ¿Cómo funciona la nueva tabla de usuarios?
+- Usa componentes Material-UI (`Table`, `TableCell`, etc.) con efectos glassmorphism.
+- Incluye avatares generados automáticamente y chips coloridos para roles.
+- Tiene paginación Material-UI y búsqueda con iconos.
+- Los modales tienen estilo sci-fi con gradientes y efectos futuristas.
+
 ---
 
 ## Siguientes pasos sugeridos
@@ -339,9 +412,9 @@ const handleDelete = async (email) => {
 
 ---
 
-## Guía de Pruebas Manuales para el CRUD de Usuarios
+## Guía de Pruebas Manuales para el CRUD de Usuarios (Rediseñado)
 
-Sigue estos pasos para validar que todo el flujo de gestión de usuarios funciona correctamente. Puedes usar esta guía para pruebas manuales o como base para automatizar tests end-to-end en el futuro.
+Sigue estos pasos para validar que todo el flujo de gestión de usuarios funciona correctamente con el nuevo diseño Material-UI. Puedes usar esta guía para pruebas manuales o como base para automatizar tests end-to-end en el futuro.
 
 ### 1. Listar usuarios
 - Accede a la sección "Usuarios" desde el menú.
@@ -535,6 +608,57 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 - Confirma que los datos son consistentes con las métricas.
 
 ### 6. Solicitudes recientes
+- Verifica que se muestran las solicitudes de músicos pendientes.
+- Confirma que los chips de estado y avatares funcionan correctamente.
+- Prueba los botones de acción para ver detalles o procesar solicitudes.
+
+### 7. Responsive design
+- Prueba el dashboard en diferentes tamaños de pantalla.
+- Verifica que el diseño se adapta correctamente en móviles y tablets.
+- Confirma que todos los elementos son accesibles en dispositivos táctiles.
+
+---
+
+## Guía de Pruebas del Módulo de Usuarios Rediseñado
+
+### 1. Carga inicial
+- Accede a la sección "Usuarios" desde el menú.
+- Verifica que se muestra el loading spinner brevemente.
+- Confirma que la tabla se carga con todos los usuarios.
+
+### 2. Header y navegación
+- Verifica que el título tiene el gradiente futurista.
+- Confirma que el botón "Nuevo Usuario" tiene el efecto hover.
+- Prueba el botón de refresh para actualizar la lista.
+
+### 3. Filtros y estadísticas
+- Verifica que el campo de búsqueda funciona correctamente.
+- Confirma que los chips de estadísticas muestran datos correctos.
+- Prueba filtrar por diferentes criterios.
+
+### 4. Tabla de usuarios
+- Verifica que cada usuario tiene avatar y chips de estado.
+- Confirma que los roles tienen colores y iconos apropiados.
+- Prueba los botones de editar y eliminar.
+
+### 5. Modales de crear/editar
+- Verifica que los modales tienen el estilo glassmorphism.
+- Confirma que los formularios funcionan correctamente.
+- Prueba la validación de campos requeridos.
+
+### 6. Modal de confirmación
+- Verifica que el modal de eliminación tiene el estilo sci-fi.
+- Confirma que la confirmación funciona correctamente.
+- Prueba cancelar la eliminación.
+
+### 7. Paginación
+- Verifica que la paginación Material-UI funciona correctamente.
+- Confirma que los datos cambian al navegar entre páginas.
+
+### 8. Responsive design
+- Prueba el módulo en diferentes tamaños de pantalla.
+- Verifica que la tabla se adapta correctamente en móviles.
+- Confirma que todos los elementos son accesibles.
 - Verifica que se muestran las solicitudes de músicos pendientes.
 - Confirma que los iconos de estado funcionan correctamente.
 
