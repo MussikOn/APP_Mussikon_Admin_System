@@ -1,4 +1,3 @@
-// Lee el archivo START.md y continúa con el desarrollo del proyecto
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import AppRoutes from './routes';

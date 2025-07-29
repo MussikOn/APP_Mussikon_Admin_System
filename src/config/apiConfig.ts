@@ -3,7 +3,7 @@
 
 export const API_CONFIG = {
   // URL base para todas las APIs
-  BASE_URL: 'http://172.20.10.2:3001',
+  BASE_URL: 'http://192.168.100.101:3001',
   
   // Endpoints de la API
   ENDPOINTS: {
@@ -39,10 +39,26 @@ export const API_CONFIG = {
     ADMIN_MUSICIAN_REQUEST_BY_ID: '/admin/musician-requests/:id',
     DELETE_ADMIN_MUSICIAN_REQUEST: '/admin/musician-requests/:id',
     
-    // Imágenes (Admin)
-    ADMIN_IMAGES: '/admin/images',
-    ADMIN_IMAGE_BY_ID: '/admin/images/:id',
-    DELETE_ADMIN_IMAGE: '/admin/images/:id',
+    // Imágenes (Admin) - Nuevo CRUD
+    ADMIN_IMAGES: '/images',
+    ADMIN_IMAGE_BY_ID: '/images/:id',
+    DELETE_ADMIN_IMAGE: '/images/:id',
+    UPLOAD_IMAGE: '/images/upload',
+    UPDATE_IMAGE: '/images/:id',
+    IMAGE_STATS: '/images/stats',
+    IMAGE_CLEANUP: '/images/cleanup',
+    
+    // Imágenes específicas
+    PROFILE_IMAGES: '/images/profile/:userId',
+    POST_IMAGES: '/images/posts',
+    EVENT_IMAGES: '/images/events',
+    
+    // Imágenes (Legacy) - Para compatibilidad
+    LEGACY_ADMIN_IMAGES: '/imgs/getAllImg',
+    LEGACY_ADMIN_IMAGE_BY_ID: '/imgs/getUrl/:key',
+    LEGACY_DELETE_ADMIN_IMAGE: '/imgs/delete/:key',
+    LEGACY_UPLOAD_IMAGE: '/imgs/upload',
+    LEGACY_UPDATE_IMAGE_METADATA: '/imgs/update-metadata/:key',
     
     // Estadísticas y Analytics
     ADMIN_STATS: '/admin/stats',

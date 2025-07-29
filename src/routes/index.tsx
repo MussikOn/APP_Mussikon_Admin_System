@@ -11,10 +11,11 @@ import AdminTools from '../features/admin';
 import MobileUsers from '../features/mobileUsers';
 import { useAuth } from '../hooks/useAuth';
 import PrivateLayout from '../components/PrivateLayout';
+import LoadingScreen from '../components/LoadingScreen';
 
 function PrivateRoute({ children, allowedRoles }: { children: React.ReactElement, allowedRoles?: string[] }) {
   const { user, loading } = useAuth();
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" replace />;
   if (allowedRoles && !allowedRoles.includes(user.roll)) {
     // Si el usuario no tiene el rol requerido, redirige al dashboard

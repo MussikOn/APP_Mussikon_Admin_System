@@ -59,22 +59,57 @@ export const authService = {
   // Iniciar sesión
   async login(loginData: LoginData): Promise<AuthResponse> {
     try {
-      const response = await apiService.post<AuthResponse>(API_CONFIG.ENDPOINTS.LOGIN, loginData);
+      // Usar axios directamente para obtener la respuesta del backend
+      const { api } = await import('./api');
+      const response = await api.post(API_CONFIG.ENDPOINTS.LOGIN, loginData);
       
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-        if (response.data.refreshToken) {
-          localStorage.setItem('refreshToken', response.data.refreshToken);
+      // El backend devuelve directamente { msg, token }
+      const data = response.data;
+      
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        
+        // Extraer información del usuario del token JWT si es necesario
+        try {
+          const payload = JSON.parse(atob(data.token.split('.')[1]));
+          const user: User = {
+            _id: payload._id || 'unknown',
+            name: payload.name || '',
+            lastName: payload.lastName || '',
+            userEmail: payload.userEmail || '',
+            roll: payload.roll || 'admin',
+            status: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          localStorage.setItem('user', JSON.stringify(user));
+        } catch (parseError) {
+          console.warn('No se pudo parsear el token JWT:', parseError);
         }
-        if (response.data.user) {
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-        }
+        
+        return {
+          success: true,
+          message: data.msg || 'Login exitoso',
+          token: data.token,
+          user: JSON.parse(localStorage.getItem('user') || 'null')
+        };
       }
       
-      return response.data || { success: false, message: 'Error en la respuesta del servidor' };
-    } catch (error) {
+      // Si no hay token, es un error
+      return { 
+        success: false, 
+        message: data.msg || 'Error en la respuesta del servidor' 
+      };
+    } catch (error: any) {
       console.error('Error al iniciar sesión:', error);
-      throw error;
+      // Manejar errores específicos del backend
+      if (error.response?.data?.msg) {
+        throw new Error(error.response.data.msg);
+      } else if (error.message) {
+        throw error;
+      } else {
+        throw new Error('Error de conexión con el servidor');
+      }
     }
   },
 

@@ -16,7 +16,7 @@ La interfaz de la app está inspirada en sistemas de ciencia ficción y paneles 
 - **Animaciones suaves:** transiciones, hover y microinteracciones con movimiento fluido.
 - **Iconografía moderna:** íconos minimalistas y animados.
 - **Tipografía bold y geométrica:** títulos grandes, espaciado generoso.
-- **Detalles sci-fi:** líneas, divisores y acentos con efecto “láser” o “holograma”.
+- **Detalles sci-fi:** líneas, divisores y acentos con efecto "láser" o "holograma".
 - **Modo oscuro predominante:** fondo oscuro con acentos brillantes.
 - **Tarjetas flotantes:** paneles y métricas con efecto de levitación.
 - **Fondos animados:** partículas, líneas en movimiento o efectos de circuito para dar sensación de tecnología avanzada.
@@ -31,13 +31,20 @@ El objetivo es que la experiencia transmita modernidad, tecnología y elegancia,
 - Todas las llamadas a la API se realizan a través de servicios en `src/services/`.
 - Cada módulo (usuarios, eventos, imágenes, etc.) tiene su propio archivo de servicio (`usersService.ts`, `eventsService.ts`, ...).
 - Se utiliza un cliente HTTP centralizado (`httpClient.ts`) que envuelve Axios y maneja errores, autenticación y parseo de respuestas.
+- La configuración de API está centralizada en `src/config/apiConfig.ts` con URLs base y endpoints.
 - Ejemplo de uso en un servicio:
 
 ```ts
 // src/services/usersService.ts
 import { get, post, put, del } from './httpClient';
-export async function getAllUsers() { return await get('/getAllUsers'); }
-export async function createUser(data) { return await post('/auth/Register', data); }
+import { getApiUrl } from '../config/apiConfig';
+
+export async function getAllUsers() { 
+  return await get(getApiUrl('/getAllUsers')); 
+}
+export async function createUser(data) { 
+  return await post(getApiUrl('/auth/Register'), data); 
+}
 // ...
 ```
 
@@ -53,6 +60,7 @@ useEffect(() => { execute(); }, [execute]);
 ### 3. Componentes y Features
 - Cada feature (usuarios, eventos, dashboard, etc.) tiene su propio directorio en `src/features/`.
 - Los componentes usan los servicios y hooks para obtener y manipular datos.
+- Componentes reutilizables en `src/components/` como `DashboardStats`, `DashboardNotifications`, `DashboardCharts`.
 - Ejemplo de listado:
 
 ```tsx
@@ -70,14 +78,20 @@ return (
 ### 4. Manejo Global de Errores y Autenticación
 - El archivo `api.ts` configura Axios con interceptores para agregar el token JWT y manejar errores globales (401, etc).
 - El hook `useAuth` gestiona la sesión y el usuario actual.
+- El contexto `ThemeContext` maneja el tema claro/oscuro globalmente.
 
 ### 5. Estructura Recomendada de Carpetas
 ```
 src/
   components/         // Componentes UI reutilizables
+    DashboardStats.tsx
+    DashboardNotifications.tsx
+    DashboardCharts.tsx
+    PrivateLayout.tsx
+    Sidebar.tsx
   features/
     auth/             // Login, registro, gestión de sesión
-    dashboard/        // Dashboard principal
+    dashboard/        // Dashboard principal (rediseñado)
     users/            // CRUD de usuarios
     events/           // CRUD de eventos
     musicianRequests/ // CRUD de solicitudes directas
@@ -85,13 +99,56 @@ src/
     musicians/        // Perfiles de músicos
     admin/            // Herramientas superadmin
   hooks/              // Custom hooks (ej: useAuth, useApiRequest)
+  contexts/           // Context providers (ThemeContext)
   store/              // Zustand stores
   services/           // Axios API services y httpClient centralizado
+  config/             // Configuración centralizada (apiConfig.ts)
   routes/             // Definición de rutas
   theme/              // Configuración de tema y estilos globales
   utils/              // Utilidades generales
   App.tsx
   main.tsx
+```
+
+---
+
+## Dashboard Rediseñado
+
+### Características del Nuevo Dashboard
+- **Diseño Profesional y Moderno:** Implementación completa del diseño futurista/sci-fi
+- **Métricas Principales:** 4 tarjetas con estadísticas de usuarios, eventos, solicitudes e imágenes
+- **Actividad Reciente:** Lista de usuarios y eventos recientes con avatares y chips de estado
+- **Notificaciones:** Panel de notificaciones del sistema con diferentes tipos (success, warning, error, info)
+- **Gráficos:** Distribución de roles y actividad semanal
+- **Solicitudes Recientes:** Vista de solicitudes de músicos pendientes
+- **Responsive:** Diseño adaptativo para móviles, tablets y desktop
+- **Sin Transiciones Problemáticas:** Eliminadas las transiciones Material-UI que causaban errores
+
+### Componentes del Dashboard
+- **DashboardStats:** Componente reutilizable para tarjetas de métricas
+- **DashboardNotifications:** Componente para mostrar notificaciones del sistema
+- **DashboardCharts:** Componente para gráficos de datos (pie, line, bar)
+
+### Estructura del Dashboard
+```tsx
+// src/features/dashboard/index.tsx
+const Dashboard: React.FC = () => {
+  // Hooks para datos
+  const { data: usersCount, loading: loadingUsersCount } = useApiRequest(getUsersCount);
+  const { data: eventsCount, loading: loadingEventsCount } = useApiRequest(getEventsCount);
+  // ... más hooks
+
+  // Renderizado sin transiciones problemáticas
+  return (
+    <Box>
+      {/* Header con título y botones */}
+      {/* Métricas principales (4 tarjetas) */}
+      {/* Contenido principal (actividad + notificaciones) */}
+      {/* Gráficos y estadísticas */}
+      {/* Solicitudes recientes */}
+    </Box>
+  );
+};
 ```
 
 ---
@@ -105,6 +162,8 @@ src/
 
 ### 2. Dashboard General
 - Métricas y accesos rápidos a cada módulo CRUD.
+- Estadísticas en tiempo real de usuarios, eventos, solicitudes e imágenes.
+- Notificaciones del sistema con diferentes prioridades.
 
 ### 3. Gestión de Usuarios (CRUD)
 - POST `/auth/Register`
@@ -129,11 +188,52 @@ src/
 
 ---
 
+## Configuración de API
+
+### Archivo de Configuración Centralizada
+```ts
+// src/config/apiConfig.ts
+export const API_CONFIG = {
+  BASE_URL: 'http://192.168.100.101:3001',
+  ENDPOINTS: {
+    // ... todos los endpoints
+  },
+  TIMEOUT: 15000,
+  // ... más configuración
+};
+```
+
+### Uso en Servicios
+```ts
+import { getApiUrl } from '../config/apiConfig';
+
+export async function getAllUsers() {
+  return await get(getApiUrl('/getAllUsers'));
+}
+```
+
+---
+
 ## Buenas Prácticas y Diseño
-- **UI/UX:** Glassmorphism, gradientes, animaciones, responsive, feedback visual en todas las acciones.
-- **Código:** Separación estricta de lógica de red, hooks reutilizables, servicios tipados, componentes limpios.
-- **Escalabilidad:** Fácil de agregar nuevos módulos y endpoints.
-- **Mantenimiento:** Cambios en la API solo requieren modificar los servicios, no los componentes.
+
+### UI/UX
+- **Glassmorphism:** Efectos de vidrio translúcido en tarjetas y paneles
+- **Gradientes:** Uso de gradientes vibrantes para elementos importantes
+- **Animaciones:** Hover effects y microinteracciones suaves
+- **Responsive:** Diseño adaptativo para todos los dispositivos
+- **Feedback Visual:** Estados de loading, error y éxito claros
+
+### Código
+- **Separación de Responsabilidades:** Servicios para API, hooks para estado, componentes para UI
+- **Hooks Reutilizables:** `useApiRequest` para todas las peticiones HTTP
+- **Componentes Modulares:** Componentes pequeños y reutilizables
+- **TypeScript:** Tipado estricto para prevenir errores
+- **Configuración Centralizada:** URLs y endpoints en un solo lugar
+
+### Escalabilidad
+- **Fácil Agregar Módulos:** Estructura consistente para nuevos features
+- **Cambios de API:** Solo modificar servicios, no componentes
+- **Mantenimiento:** Código limpio y bien documentado
 
 ---
 
@@ -216,19 +316,26 @@ const handleDelete = async (email) => {
 ### 6. ¿Cómo adapto la UI a la arquitectura?
 - Usa los estados `loading`, `error` y `data` de los hooks para mostrar feedback visual y controlar la UI.
 
+### 7. ¿Por qué el dashboard no se renderiza correctamente?
+- Se eliminaron las transiciones Material-UI (`Fade`, `Zoom`, `Slide`) que causaban errores de `getBoundingClientRect`.
+- El dashboard ahora usa una estructura más simple y estable.
+
+### 8. ¿Cómo manejo los errores de HTML nesting?
+- Se reemplazaron los componentes `Typography` anidados con `Box component="span"` para evitar advertencias de validación HTML.
+
 ---
 
 ## Siguientes pasos sugeridos
-1. Implementar login y protección de rutas.
-2. Crear dashboard con navegación y tarjetas resumen.
-3. Desarrollar CRUD de usuarios.
-4. Desarrollar CRUD de eventos.
-5. Desarrollar CRUD de solicitudes directas.
-6. Desarrollar CRUD de imágenes.
-7. Desarrollar gestión de perfiles de músicos.
-8. Añadir herramientas de superadmin.
-9. Pulir UI/UX y añadir animaciones/diseño futurista.
-10. Testear y documentar cada módulo. 
+1. ✅ Implementar login y protección de rutas.
+2. ✅ Crear dashboard con navegación y tarjetas resumen.
+3. ✅ Desarrollar CRUD de usuarios.
+4. ✅ Desarrollar CRUD de eventos.
+5. ✅ Desarrollar CRUD de solicitudes directas.
+6. ✅ Desarrollar CRUD de imágenes.
+7. ✅ Desarrollar gestión de perfiles de músicos.
+8. ✅ Añadir herramientas de superadmin.
+9. ✅ Pulir UI/UX y añadir animaciones/diseño futurista.
+10. ✅ Testear y documentar cada módulo.
 
 ---
 
@@ -237,24 +344,24 @@ const handleDelete = async (email) => {
 Sigue estos pasos para validar que todo el flujo de gestión de usuarios funciona correctamente. Puedes usar esta guía para pruebas manuales o como base para automatizar tests end-to-end en el futuro.
 
 ### 1. Listar usuarios
-- Accede a la sección “Usuarios” desde el menú.
+- Accede a la sección "Usuarios" desde el menú.
 - Verifica que ves una tabla con los usuarios actuales.
-- Si la tabla está vacía, debe aparecer el mensaje: “No hay usuarios para mostrar”.
+- Si la tabla está vacía, debe aparecer el mensaje: "No hay usuarios para mostrar".
 
 ### 2. Crear usuario
-- Haz clic en el botón “+ Nuevo usuario”.
+- Haz clic en el botón "+ Nuevo usuario".
 - Completa todos los campos del formulario (nombre, apellido, email, rol, contraseña).
-- Haz clic en “Guardar”.
+- Haz clic en "Guardar".
 - Verifica:
   - El usuario aparece en la tabla.
   - El formulario se cierra y se limpia.
   - No aparecen errores.
-- Intenta crear otro usuario con el mismo email: debe mostrar un error de “usuario ya existe”.
+- Intenta crear otro usuario con el mismo email: debe mostrar un error de "usuario ya existe".
 
 ### 3. Editar usuario
-- Haz clic en “Editar” en cualquier usuario.
+- Haz clic en "Editar" en cualquier usuario.
 - Cambia el nombre, rol o estado.
-- Haz clic en “Guardar”.
+- Haz clic en "Guardar".
 - Verifica:
   - Los cambios se reflejan en la tabla.
   - El email no se puede editar.
@@ -262,11 +369,11 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 - Intenta guardar con campos vacíos o email inválido: debe mostrar error de validación.
 
 ### 4. Eliminar usuario
-- Haz clic en “Eliminar” en cualquier usuario.
+- Haz clic en "Eliminar" en cualquier usuario.
 - Confirma en el modal.
 - Verifica:
   - El usuario desaparece de la tabla.
-  - Si intentas eliminarlo de nuevo, debe mostrar “Usuario no encontrado”.
+  - Si intentas eliminarlo de nuevo, debe mostrar "Usuario no encontrado".
 - Refresca la lista y confirma que ya no aparece.
 
 ### 5. Buscar y paginar
@@ -282,14 +389,14 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 ## Guía de Pruebas Manuales para el CRUD de Eventos
 
 ### 1. Listar eventos
-- Accede a la sección “Eventos” desde el menú.
+- Accede a la sección "Eventos" desde el menú.
 - Verifica que ves una tabla/listado con los eventos actuales.
-- Si la tabla está vacía, debe aparecer el mensaje: “No hay eventos para mostrar”.
+- Si la tabla está vacía, debe aparecer el mensaje: "No hay eventos para mostrar".
 
 ### 2. Crear evento
-- Haz clic en el botón “+ Nuevo evento”.
+- Haz clic en el botón "+ Nuevo evento".
 - Completa todos los campos requeridos del formulario (nombre, fecha, etc.).
-- Haz clic en “Guardar”.
+- Haz clic en "Guardar".
 - Verifica:
   - El evento aparece en la tabla.
   - El formulario se cierra y se limpia.
@@ -297,20 +404,20 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 - Intenta crear un evento con datos inválidos o duplicados y verifica la validación.
 
 ### 3. Editar evento
-- Haz clic en “Editar” en cualquier evento.
+- Haz clic en "Editar" en cualquier evento.
 - Cambia algún dato (nombre, fecha, etc.).
-- Haz clic en “Guardar”.
+- Haz clic en "Guardar".
 - Verifica:
   - Los cambios se reflejan en la tabla.
   - El formulario se cierra y se limpia.
 - Intenta guardar con campos vacíos o datos inválidos: debe mostrar error de validación.
 
 ### 4. Eliminar evento
-- Haz clic en “Eliminar” en cualquier evento.
+- Haz clic en "Eliminar" en cualquier evento.
 - Confirma en el modal.
 - Verifica:
   - El evento desaparece de la tabla.
-  - Si intentas eliminarlo de nuevo, debe mostrar “Evento no encontrado”.
+  - Si intentas eliminarlo de nuevo, debe mostrar "Evento no encontrado".
 - Refresca la lista y confirma que ya no aparece.
 
 ### 5. Buscar y paginar
@@ -326,12 +433,12 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 ## Guía de Pruebas Manuales para el CRUD de Imágenes
 
 ### 1. Listar imágenes
-- Accede a la sección “Imágenes” desde el menú.
+- Accede a la sección "Imágenes" desde el menú.
 - Verifica que ves una galería o tabla con las imágenes actuales.
-- Si no hay imágenes, debe aparecer el mensaje: “No hay imágenes para mostrar”.
+- Si no hay imágenes, debe aparecer el mensaje: "No hay imágenes para mostrar".
 
 ### 2. Subir imagen
-- Haz clic en el botón “Subir imagen” o arrastra una imagen al área correspondiente.
+- Haz clic en el botón "Subir imagen" o arrastra una imagen al área correspondiente.
 - Selecciona un archivo válido y súbelo.
 - Verifica:
   - La imagen aparece en la galería/lista.
@@ -340,16 +447,16 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 - Intenta subir un archivo no permitido y verifica la validación.
 
 ### 3. Editar metadatos de imagen
-- Haz clic en “Editar” en cualquier imagen.
+- Haz clic en "Editar" en cualquier imagen.
 - Cambia los metadatos (nombre, descripción, etc.).
-- Haz clic en “Guardar”.
+- Haz clic en "Guardar".
 - Verifica que los cambios se reflejan correctamente.
 
 ### 4. Eliminar imagen
-- Haz clic en “Eliminar” en cualquier imagen.
+- Haz clic en "Eliminar" en cualquier imagen.
 - Confirma en el modal.
 - Verifica que la imagen desaparece de la galería/lista.
-- Si intentas eliminarla de nuevo, debe mostrar “Imagen no encontrada”.
+- Si intentas eliminarla de nuevo, debe mostrar "Imagen no encontrada".
 
 ### 5. Buscar y paginar
 - Usa el campo de búsqueda para filtrar imágenes.
@@ -364,14 +471,14 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 ## Guía de Pruebas Manuales para el CRUD de Solicitudes Directas de Músicos
 
 ### 1. Listar solicitudes
-- Accede a la sección “Solicitudes” desde el menú.
+- Accede a la sección "Solicitudes" desde el menú.
 - Verifica que ves una tabla/listado con las solicitudes actuales.
-- Si la tabla está vacía, debe aparecer el mensaje: “No hay solicitudes para mostrar”.
+- Si la tabla está vacía, debe aparecer el mensaje: "No hay solicitudes para mostrar".
 
 ### 2. Crear solicitud
-- Haz clic en el botón “+ Nueva solicitud”.
+- Haz clic en el botón "+ Nueva solicitud".
 - Completa todos los campos requeridos del formulario.
-- Haz clic en “Guardar”.
+- Haz clic en "Guardar".
 - Verifica:
   - La solicitud aparece en la tabla.
   - El formulario se cierra y se limpia.
@@ -379,17 +486,17 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 - Intenta crear una solicitud con datos inválidos o duplicados y verifica la validación.
 
 ### 3. Editar solicitud
-- Haz clic en “Editar” en cualquier solicitud.
+- Haz clic en "Editar" en cualquier solicitud.
 - Cambia algún dato relevante.
-- Haz clic en “Guardar”.
+- Haz clic en "Guardar".
 - Verifica que los cambios se reflejan en la tabla.
 - Intenta guardar con campos vacíos o datos inválidos: debe mostrar error de validación.
 
 ### 4. Eliminar solicitud
-- Haz clic en “Eliminar” en cualquier solicitud.
+- Haz clic en "Eliminar" en cualquier solicitud.
 - Confirma en el modal.
 - Verifica que la solicitud desaparece de la tabla.
-- Si intentas eliminarla de nuevo, debe mostrar “Solicitud no encontrada”.
+- Si intentas eliminarla de nuevo, debe mostrar "Solicitud no encontrada".
 
 ### 5. Buscar y paginar
 - Usa el campo de búsqueda para filtrar solicitudes.
@@ -398,5 +505,45 @@ Sigue estos pasos para validar que todo el flujo de gestión de usuarios funcion
 ### 6. Errores y feedback
 - Desconecta el backend y prueba crear, editar o eliminar: debe mostrar mensajes de error claros.
 - Intenta crear/editar con datos inválidos y verifica la validación.
+
+---
+
+## Guía de Pruebas del Dashboard
+
+### 1. Carga inicial
+- Accede al dashboard desde el menú principal.
+- Verifica que se muestra el loading spinner brevemente.
+- Confirma que todas las métricas se cargan correctamente.
+
+### 2. Métricas principales
+- Verifica que las 4 tarjetas de métricas muestran datos correctos.
+- Confirma que los iconos y colores son consistentes.
+- Prueba hacer clic en las tarjetas para navegar a las secciones correspondientes.
+
+### 3. Actividad reciente
+- Verifica que se muestran usuarios y eventos recientes.
+- Confirma que los avatares y chips de estado funcionan correctamente.
+- Prueba los botones de "Ver todo" para navegar a las secciones completas.
+
+### 4. Notificaciones
+- Verifica que se muestran las notificaciones del sistema.
+- Confirma que los diferentes tipos (success, warning, error, info) tienen colores apropiados.
+- Prueba las funciones de marcar como leído y descartar.
+
+### 5. Gráficos
+- Verifica que los gráficos de distribución de roles y actividad semanal se renderizan correctamente.
+- Confirma que los datos son consistentes con las métricas.
+
+### 6. Solicitudes recientes
+- Verifica que se muestran las solicitudes de músicos pendientes.
+- Confirma que los iconos de estado funcionan correctamente.
+
+### 7. Responsive design
+- Prueba el dashboard en diferentes tamaños de pantalla.
+- Verifica que el diseño se adapta correctamente a móviles y tablets.
+
+### 8. Errores de red
+- Desconecta el backend y verifica que se muestran mensajes de error apropiados.
+- Confirma que el dashboard no se rompe cuando hay problemas de conectividad.
 
 --- 

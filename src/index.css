@@ -1,54 +1,104 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
-
+/* Variables CSS para temas MussikOn */
 :root {
-  --color-bg: #181c24;
-  --color-bg-secondary: rgba(32,37,52,0.85);
+  /* Colores base */
+  --color-primary: #7f5fff;
+  --color-secondary: #00e0ff;
+  --color-accent: #ff2eec;
+  --color-purple: #b993d6;
+  --color-cyan: #00fff7;
+  --color-orange: #ff6b35;
+  
+  /* Gradientes */
+  --color-gradient-1: linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%);
+  --color-gradient-2: linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%);
+  --color-gradient-3: linear-gradient(135deg, #ff2eec 0%, #b993d6 100%);
+  --color-gradient-4: linear-gradient(135deg, #00fff7 0%, #7f5fff 100%);
+  
+  /* Tema Oscuro (por defecto) */
+  --color-bg: #0a0a23;
+  --color-bg-secondary: rgba(24,28,58,0.85);
+  --color-surface: rgba(31,38,135,0.15);
   --color-glass: rgba(255,255,255,0.10);
   --color-glass-strong: rgba(255,255,255,0.18);
-  --color-text: #fff;
-  --color-primary: #00fff7;
-  --color-secondary: #b993d6;
-  --color-accent: #ff2eec;
-  --color-glow: #00fff7cc;
-  --color-border: #2e2e3a;
-  --color-table-header: #23283a;
-  --color-gradient-1: linear-gradient(90deg, #b993d6 0%, #8ca6db 100%);
-  --color-gradient-2: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
-  --color-gradient-3: linear-gradient(90deg, #ffaf7b 0%, #d76d77 100%);
-  --color-gradient-4: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  --color-text: #ffffff;
+  --color-text-secondary: #b0b8c1;
+  --color-text-disabled: #888888;
+  --color-border: rgba(255,255,255,0.18);
+  --color-divider: rgba(255,255,255,0.12);
+  --color-glow: #7f5fffcc;
+  --color-glow-shadow: 0 0 16px 2px var(--color-glow), 0 0 32px 4px var(--color-primary);
+}
+
+/* Tema Claro */
+[data-theme="light"] {
+  --color-bg: #f8fafc;
+  --color-bg-secondary: #ffffff;
+  --color-surface: #ffffff;
+  --color-glass: rgba(0,0,0,0.05);
+  --color-glass-strong: rgba(0,0,0,0.08);
+  --color-text: #1a1a2e;
+  --color-text-secondary: #64748b;
+  --color-text-disabled: #94a3b8;
+  --color-border: rgba(0,0,0,0.08);
+  --color-divider: rgba(0,0,0,0.12);
+  --color-glow: #7f5fff66;
   --color-glow-shadow: 0 0 16px 2px var(--color-glow), 0 0 32px 4px var(--color-primary);
 }
 
 body {
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: 'Inter', 'Orbitron', Arial, sans-serif;
+  font-family: 'Poppins', 'Inter', Arial, sans-serif;
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.3s ease-in-out;
   overflow-x: hidden;
   position: relative;
 }
 
-/* Fondo animado sci-fi */
+/* Fondo animado MussikOn mejorado */
 body::before {
   content: '';
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(circle at 20% 30%, #00fff733 0%, transparent 70%),
-              radial-gradient(circle at 80% 70%, #ff2eec33 0%, transparent 70%),
-              linear-gradient(120deg, #23283a 0%, #181c24 100%);
-  animation: bg-move 12s linear infinite alternate;
-}
-@keyframes bg-move {
-  0% { background-position: 0% 0%, 100% 100%, 0% 0%; }
-  100% { background-position: 100% 100%, 0% 0%, 100% 100%; }
+  background: 
+    radial-gradient(circle at 20% 30%, #7f5fff33 0%, transparent 70%),
+    radial-gradient(circle at 80% 70%, #00e0ff33 0%, transparent 70%),
+    radial-gradient(circle at 50% 50%, #ff2eec22 0%, transparent 50%),
+    linear-gradient(120deg, #181c3a 0%, #0a0a23 100%);
+  animation: bg-move 15s linear infinite alternate;
+  opacity: 0.7;
 }
 
-/* Partículas animadas */
+/* Fondo para tema claro */
+[data-theme="light"] body::before {
+  background: 
+    radial-gradient(circle at 20% 30%, #7f5fff22 0%, transparent 70%),
+    radial-gradient(circle at 80% 70%, #00e0ff22 0%, transparent 70%),
+    radial-gradient(circle at 50% 50%, #ff2eec15 0%, transparent 50%),
+    linear-gradient(120deg, #e2e8f0 0%, #f8fafc 100%);
+  opacity: 0.5;
+}
+
+@keyframes bg-move {
+  0% { 
+    background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%; 
+    transform: scale(1);
+  }
+  50% {
+    background-position: 50% 50%, 50% 50%, 100% 100%, 50% 50%;
+    transform: scale(1.02);
+  }
+  100% { 
+    background-position: 100% 100%, 0% 0%, 0% 0%, 100% 100%; 
+    transform: scale(1);
+  }
+}
+
+/* Partículas animadas mejoradas */
 body::after {
   content: '';
   position: fixed;
@@ -56,25 +106,48 @@ body::after {
   z-index: 1;
   pointer-events: none;
   background-image:
-    repeating-linear-gradient(120deg, #00fff722 0 2px, transparent 2px 40px),
-    repeating-linear-gradient(60deg, #ff2eec22 0 2px, transparent 2px 40px);
-  opacity: 0.5;
-  animation: lines-move 18s linear infinite alternate;
-}
-@keyframes lines-move {
-  0% { background-position: 0 0, 100% 100%; }
-  100% { background-position: 100% 100%, 0 0; }
+    repeating-linear-gradient(120deg, #7f5fff22 0 2px, transparent 2px 40px),
+    repeating-linear-gradient(60deg, #00e0ff22 0 2px, transparent 2px 40px),
+    repeating-linear-gradient(90deg, #ff2eec15 0 1px, transparent 1px 30px);
+  opacity: 0.4;
+  animation: lines-move 20s linear infinite alternate;
 }
 
+/* Partículas para tema claro */
+[data-theme="light"] body::after {
+  background-image:
+    repeating-linear-gradient(120deg, #7f5fff11 0 2px, transparent 2px 40px),
+    repeating-linear-gradient(60deg, #00e0ff11 0 2px, transparent 2px 40px),
+    repeating-linear-gradient(90deg, #ff2eec08 0 1px, transparent 1px 30px);
+  opacity: 0.3;
+}
+
+@keyframes lines-move {
+  0% { 
+    background-position: 0 0, 100% 100%, 50% 50%;
+    opacity: 0.3;
+  }
+  50% {
+    background-position: 50% 50%, 50% 50%, 100% 100%;
+    opacity: 0.5;
+  }
+  100% { 
+    background-position: 100% 100%, 0 0, 0 0;
+    opacity: 0.3;
+  }
+}
+
+/* Tipografía mejorada */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Orbitron', 'Inter', Arial, sans-serif;
   letter-spacing: 1.5px;
   font-weight: 700;
   color: var(--color-primary);
   text-shadow: 0 2px 12px var(--color-glow);
+  margin: 0;
 }
 
-/* Glassmorphism panel */
+/* Glassmorphism panel mejorado */
 .glass-panel {
   background: var(--color-glass);
   box-shadow: 0 8px 32px 0 #00fff733;
@@ -83,9 +156,15 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 18px;
   border: 1.5px solid var(--color-glass-strong);
   padding: clamp(18px, 4vw, 32px);
+  transition: all 0.3s ease;
 }
 
-/* Botones sci-fi */
+.glass-panel:hover {
+  box-shadow: 0 12px 48px 0 #00fff744;
+  transform: translateY(-2px);
+}
+
+/* Botones sci-fi mejorados */
 button, .btn {
   font-family: 'Orbitron', 'Inter', Arial, sans-serif;
   background: var(--color-gradient-1);
@@ -97,16 +176,35 @@ button, .btn {
   font-weight: bold;
   letter-spacing: 1px;
   box-shadow: var(--color-glow-shadow);
-  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  transition: all 0.3s ease;
   cursor: pointer;
   outline: none;
+  position: relative;
+  overflow: hidden;
 }
+
+button::before, .btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+button:hover::before, .btn:hover::before {
+  left: 100%;
+}
+
 button:hover, .btn:hover {
   background: var(--color-gradient-2);
   box-shadow: 0 0 32px 8px var(--color-accent);
   transform: translateY(-2px) scale(1.04);
 }
 
+/* Inputs mejorados */
 input, select, textarea {
   background: var(--color-glass-strong);
   border: 1.5px solid var(--color-primary);
@@ -116,82 +214,279 @@ input, select, textarea {
   font-size: 1rem;
   outline: none;
   box-shadow: 0 2px 8px #00fff722;
-  transition: border 0.2s, box-shadow 0.2s;
-}
-input:focus, select:focus, textarea:focus {
-  border: 1.5px solid var(--color-accent);
-  box-shadow: 0 0 0 2px var(--color-accent);
+  transition: all 0.3s ease;
 }
 
-/* Tablas sci-fi */
+input:focus, select:focus, textarea:focus {
+  border: 1.5px solid var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent), 0 4px 16px #00fff744;
+  transform: translateY(-1px);
+}
+
+/* Tablas sci-fi mejoradas */
 .users-table th {
   background: var(--color-gradient-1);
   color: var(--color-primary);
   font-weight: bold;
   border-bottom: 2px solid var(--color-accent);
   text-shadow: 0 2px 8px var(--color-glow);
+  padding: 16px 12px;
 }
+
 .users-table td, .users-table th {
   border: 1px solid var(--color-border);
   background: var(--color-glass);
   color: #fff;
+  padding: 12px;
+  transition: all 0.2s ease;
 }
+
 .users-table tr:nth-child(even) {
   background: var(--color-glass-strong);
 }
+
 .users-table tr:hover {
   background: var(--color-gradient-2);
   color: #fff;
-  transition: background 0.2s, color 0.2s;
+  transform: scale(1.01);
+  box-shadow: 0 4px 16px rgba(0, 224, 255, 0.2);
 }
 
-/* Sidebar sci-fi */
+/* Sidebar sci-fi mejorado */
 .sidebar {
   background: var(--color-glass-strong);
   box-shadow: 2px 0 32px #00fff733;
   border-right: 2px solid var(--color-primary);
+  backdrop-filter: blur(12px);
 }
+
 .sidebar-link, .sidebar-link.active {
   color: #b0b8c1;
   text-shadow: 0 2px 8px var(--color-glow);
+  transition: all 0.3s ease;
 }
+
 .sidebar-link.active {
   color: var(--color-primary);
   border-left: 4px solid var(--color-accent);
   background: var(--color-gradient-2);
+  box-shadow: 0 4px 16px rgba(127, 95, 255, 0.3);
 }
+
 .sidebar-link:hover {
   color: var(--color-accent);
   background: var(--color-gradient-3);
+  transform: translateX(4px);
 }
 
-/* Responsive */
+/* Dashboard específico */
+.dashboard-card {
+  background: rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7f5fff, #00e0ff, #ff2eec);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-card:hover::before {
+  opacity: 1;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(127, 95, 255, 0.3);
+}
+
+/* Métricas cards */
+.metric-card {
+  background: rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.metric-card:hover::after {
+  opacity: 1;
+}
+
+.metric-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(127, 95, 255, 0.4);
+}
+
+/* Animaciones para elementos del dashboard */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.dashboard-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.dashboard-slide-in {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+.dashboard-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-glass);
+  border-radius: 8px;
+}
+
+/* Responsive mejorado */
 @media (max-width: 900px) {
   .glass-panel {
     padding: 4vw 2vw;
   }
+  
+  .dashboard-card {
+    margin-bottom: 16px;
+  }
 }
+
 @media (max-width: 700px) {
   .glass-panel {
     padding: 6vw 2vw;
   }
+  
   .users-table {
     font-size: 0.95rem;
     min-width: 480px;
   }
+  
   .sidebar {
     width: 60px;
     min-width: 0;
     border-radius: 0 12px 12px 0;
     box-shadow: 2px 0 12px #00fff744;
   }
+  
+  .dashboard-card {
+    border-radius: 12px;
+  }
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  background: var(--color-bg-secondary);
+/* Efectos de hover para cards */
+.card-hover-effect {
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: 8px;
+
+.card-hover-effect:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(127, 95, 255, 0.3);
+}
+
+/* Gradientes de texto */
+.gradient-text {
+  background: linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+/* Efectos de glow */
+.glow-effect {
+  box-shadow: 0 0 20px rgba(127, 95, 255, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 30px rgba(127, 95, 255, 0.5);
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.1) 25%, 
+    rgba(255,255,255,0.2) 50%, 
+    rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
