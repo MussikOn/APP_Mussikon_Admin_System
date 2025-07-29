@@ -79,7 +79,7 @@ export const API_CONFIG = {
 // Configuración de Socket.IO
 export const SOCKET_CONFIG = {
   // URL del servidor Socket.IO (misma que la API)
-  SOCKET_URL: 'http://172.20.10.2:3001',
+  SOCKET_URL: 'http://172.20.10.2:1000',
   
   // Configuración de conexión
   CONNECTION_OPTIONS: {
