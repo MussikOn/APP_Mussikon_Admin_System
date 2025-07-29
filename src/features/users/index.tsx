@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { User } from "../../services/usersService";
 import {
   getAllUsers,
@@ -7,10 +7,60 @@ import {
   deleteUserByEmail,
 } from "../../services/usersService";
 import { useApiRequest } from "../../hooks/useApiRequest";
-import "./Users.css";
+import { useTheme } from "../../contexts/ThemeContext";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  Chip,
+  Avatar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Switch,
+  Alert,
+  CircularProgress,
+  Pagination,
+  InputAdornment
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Search as SearchIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+  Email as EmailIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  Warning as WarningIcon,
+  AdminPanelSettings as AdminIcon,
+  Event as EventIcon,
+  MusicNote as MusicIcon
+} from "@mui/icons-material";
 
 const PAGE_SIZE = 10;
-const ROLES = ["admin", "organizador", "musico"];
+const ROLES = [
+  { value: "admin", label: "Administrador", icon: <AdminIcon />, color: "#00fff7" },
+  { value: "organizador", label: "Organizador", icon: <EventIcon />, color: "#b993d6" },
+  { value: "musico", label: "Músico", icon: <MusicIcon />, color: "#ff2eec" }
+];
 
 const initialForm: User = {
   name: "",
@@ -21,7 +71,8 @@ const initialForm: User = {
   userPassword: "",
 };
 
-const Users = () => {
+const Users: React.FC = () => {
+  const { isDark } = useTheme();
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -119,474 +170,609 @@ const Users = () => {
   // Eliminar usuario
   const handleDelete = async (userEmail: string) => {
     const normalizedEmail = userEmail.trim().toLowerCase();
-    console.log(`1: ${normalizedEmail}`);
     setDeleteTarget(normalizedEmail);
-    console.log(`2: ${normalizedEmail}`);
     try {
       await deleteUser(normalizedEmail);
-      console.log(`3: ${normalizedEmail}`);
       // Refresca usuarios
       const data = await fetchUsers();
-      console.log(`4: ${normalizedEmail}`);
       if (data) setUsers(data);
       setConfirmDelete(null);
-      console.log(`5: ${normalizedEmail}`);
     } catch (e) {
       // El error se maneja por errorDelete
-      console.log("errorDelete");
-      console.log(e);
     } finally {
       setDeleteTarget(null);
     }
   };
 
+  const getRoleInfo = (role: string) => {
+    return ROLES.find(r => r.value === role) || ROLES[2];
+  };
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
   return (
-    <div
-      className="users-container glass-panel"
-      style={{ boxShadow: "0 2px 8px #00fff711" }}
-    >
-      <h2 style={{ marginBottom: 24 }}>Usuarios registrados</h2>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 18,
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: '100%' }}>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box>
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                fontWeight: 800, 
+                mb: 1,
+                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: { xs: '2rem', md: '2.5rem' }
+              }}
+            >
+              Gestión de Usuarios
+            </Typography>
+            <Typography 
+              variant="h6" 
+              color="text.secondary"
+              sx={{ fontWeight: 400, opacity: 0.8 }}
+            >
+              Administra todos los usuarios de la plataforma
+            </Typography>
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Tooltip title="Actualizar lista">
+              <IconButton
+                onClick={() => fetchUsers()}
+                disabled={loadingUsers}
+                sx={{
+                  background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                  color: '#fff',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
+                    transform: 'scale(1.05)',
+                  },
+                  '&:disabled': {
+                    opacity: 0.6,
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setModalOpen(true);
+                setForm(initialForm);
+                setFormError("");
+                setEditMode(false);
+                setEditUserEmail(null);
+              }}
+              sx={{
+                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                borderRadius: 3,
+                px: 3,
+                py: 1.5,
+                fontWeight: 600,
+                textTransform: 'none',
+                boxShadow: '0 8px 32px rgba(127, 95, 255, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 12px 40px rgba(127, 95, 255, 0.4)',
+                },
+                transition: 'all 0.3s ease',
+              }}
+            >
+              Nuevo Usuario
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Filtros y Estadísticas */}
+      <Card
+        sx={{
+          background: isDark 
+            ? 'rgba(31, 38, 135, 0.15)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(12px)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
+          borderRadius: 4,
+          mb: 3,
         }}
       >
-        <input
-          type="text"
-          placeholder="Buscar por nombre, email..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          style={{
-            width: 240,
-            fontSize: 16,
-            borderRadius: 8,
-            border: "1.5px solid var(--color-primary)",
-            background: "var(--color-glass-strong)",
-            color: "#fff",
-            padding: "10px 14px",
-            marginRight: 12,
-          }}
-        />
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ color: "#b0b8c1", fontSize: 15 }}>
-            {filtered.length} usuario{filtered.length !== 1 ? "s" : ""}{" "}
-            encontrados
-          </div>
-          <button
-            className="btn"
-            style={{
-              fontSize: 15,
-              padding: "10px 18px",
-              borderRadius: 8,
-              boxShadow: "0 1px 4px #00fff711",
-            }}
-            onClick={() => {
-              setModalOpen(true);
-              setForm(initialForm);
-              setFormError("");
-              setEditMode(false);
-              setEditUserEmail(null);
-            }}
-          >
-            + Nuevo usuario
-          </button>
-        </div>
-      </div>
-      {/* Modal sci-fi */}
-      {modalOpen && (
-        <div className="modal-overlay">
-          <div
-            className="modal-glass"
-            style={{ boxShadow: "0 4px 16px #00fff722" }}
-          >
-            <h3 style={{ marginBottom: 18, color: "var(--color-primary)" }}>
-              {editMode ? "Editar usuario" : "Nuevo usuario"}
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <input
-                type="text"
-                placeholder="Nombre"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                style={{ fontSize: 16 }}
-              />
-              <input
-                type="text"
-                placeholder="Apellido"
-                value={form.lastName}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, lastName: e.target.value }))
-                }
-                style={{ fontSize: 16 }}
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={form.userEmail}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, userEmail: e.target.value }))
-                }
-                style={{ fontSize: 16 }}
-                disabled={editMode}
-              />
-              <select
-                value={form.roll}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, roll: e.target.value }))
-                }
-                style={{ fontSize: 16 }}
-              >
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-              <label style={{ color: "#b0b8c1", fontSize: 15 }}>
-                <input
-                  type="checkbox"
-                  checked={form.status}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, status: e.target.checked }))
-                  }
-                  style={{ marginRight: 8 }}
-                />{" "}
-                Activo
-              </label>
-              {!editMode && (
-                <input
-                  type="password"
-                  placeholder="Contraseña"
-                  value={form.userPassword}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, userPassword: e.target.value }))
-                  }
-                  style={{ fontSize: 16 }}
-                />
-              )}
-            </div>
-            {formError && (
-              <div style={{ color: "#ff5252", margin: "12px 0" }}>
-                {formError}
-              </div>
-            )}
-            <div
-              style={{
-                display: "flex",
-                gap: 16,
-                marginTop: 18,
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                className="btn"
-                style={{
-                  background: "var(--color-gradient-3)",
-                  boxShadow: "0 1px 4px #00fff711",
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, alignItems: 'center' }}>
+            <Box sx={{ flex: { xs: '1', md: '1' } }}>
+              <TextField
+                fullWidth
+                placeholder="Buscar por nombre, apellido o email..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
                 }}
-                onClick={() => {
-                  setModalOpen(false);
-                  setEditMode(false);
-                  setEditUserEmail(null);
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
                 }}
-                disabled={loadingUpdate || loadingCreate}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn"
-                style={{
-                  background: "var(--color-gradient-2)",
-                  boxShadow: "0 1px 4px #00fff711",
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3,
+                    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    '&:hover': {
+                      background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+                    },
+                  },
                 }}
-                onClick={handleSave}
-                disabled={loadingUpdate || loadingCreate}
-              >
-                {loadingUpdate || loadingCreate ? "Guardando..." : "Guardar"}
-              </button>
-            </div>
-          </div>
-        </div>
+              />
+            </Box>
+            <Box sx={{ flex: { xs: '1', md: '1' } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  {filtered.length} usuario{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Chip 
+                    label={`Admin: ${users.filter(u => u.roll === 'admin').length}`}
+                    size="small"
+                    icon={<AdminIcon />}
+                    sx={{ 
+                      background: 'rgba(0, 255, 247, 0.1)', 
+                      color: '#00fff7',
+                      fontWeight: 600 
+                    }} 
+                  />
+                  <Chip 
+                    label={`Organizadores: ${users.filter(u => u.roll === 'organizador').length}`}
+                    size="small"
+                    icon={<EventIcon />}
+                    sx={{ 
+                      background: 'rgba(185, 147, 214, 0.1)', 
+                      color: '#b993d6',
+                      fontWeight: 600 
+                    }} 
+                  />
+                  <Chip 
+                    label={`Músicos: ${users.filter(u => u.roll === 'musico').length}`}
+                    size="small"
+                    icon={<MusicIcon />}
+                    sx={{ 
+                      background: 'rgba(255, 46, 236, 0.1)', 
+                      color: '#ff2eec',
+                      fontWeight: 600 
+                    }} 
+                  />
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Errores */}
+      {(errorUsers || errorCreate || errorUpdate || errorDelete) && (
+        <Box sx={{ mb: 3 }}>
+          {errorUsers && <Alert severity="error" sx={{ mb: 1 }}>{errorUsers}</Alert>}
+          {errorCreate && <Alert severity="error" sx={{ mb: 1 }}>{errorCreate}</Alert>}
+          {errorUpdate && <Alert severity="error" sx={{ mb: 1 }}>{errorUpdate}</Alert>}
+          {errorDelete && <Alert severity="error" sx={{ mb: 1 }}>{errorDelete}</Alert>}
+        </Box>
       )}
+
+      {/* Loading */}
       {loadingUsers && (
-        <div style={{ color: "#00fff7", fontWeight: 600, margin: "24px 0" }}>
-          Cargando usuarios...
-        </div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
       )}
-      {errorUsers && (
-        <div style={{ color: "#ff5252", margin: "24px 0" }}>{errorUsers}</div>
-      )}
-      {errorCreate && (
-        <div style={{ color: "#ff5252", margin: "18px 0" }}>{errorCreate}</div>
-      )}
-      {errorUpdate && (
-        <div style={{ color: "#ff5252", margin: "18px 0" }}>{errorUpdate}</div>
-      )}
-      {errorDelete && (
-        <div style={{ color: "#ff5252", margin: "18px 0" }}>{errorDelete}</div>
-      )}
+
+      {/* Tabla de Usuarios */}
       {!loadingUsers && !errorUsers && (
-        <>
-          <div className="users-table-wrapper">
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Apellido</th>
-                  <th>Email</th>
-                  <th>Rol</th>
-                  <th>Estado</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      style={{
-                        textAlign: "center",
-                        color: "#b0b8c1",
-                        fontSize: 17,
-                        padding: 32,
-                      }}
-                    >
-                      No hay usuarios para mostrar.
-                    </td>
-                  </tr>
-                ) : (
-                  paginated.map((u, i) => (
-                    <tr key={i}>
-                      <td>{u.name}</td>
-                      <td>{u.lastName}</td>
-                      <td>{u.userEmail}</td>
-                      <td>{u.roll}</td>
-                      <td>{u.status ? "Activo" : "Inactivo"}</td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 12,
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <button
-                            className="btn"
-                            style={{
-                              padding: "7px 18px",
-                              fontSize: 15,
-                              background: "var(--color-gradient-1)",
-                              borderRadius: 8,
-                              minWidth: 90,
-                              boxShadow: "0 1px 4px #00fff711",
-                            }}
-                            onClick={() => {
-                              setModalOpen(true);
-                              setEditMode(true);
-                              setEditUserEmail(u.userEmail);
-                              setForm({
-                                name: u.name,
-                                lastName: u.lastName,
-                                userEmail: u.userEmail,
-                                roll: u.roll,
-                                status: u.status,
-                                userPassword: "",
-                              });
-                              setFormError("");
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            className="btn"
-                            style={{
-                              padding: "7px 18px",
-                              fontSize: 15,
-                              background: "var(--color-gradient-3)",
-                              borderRadius: 8,
-                              minWidth: 90,
-                              boxShadow: "0 1px 4px #00fff711",
-                            }}
-                            onClick={() =>
-                              setConfirmDelete({
-                                email: u.userEmail,
-                                name: u.name + " " + u.lastName,
-                              })
-                            }
-                            disabled={
-                              deleteTarget === u.userEmail && loadingDelete
-                            }
-                          >
-                            {deleteTarget === u.userEmail && loadingDelete
-                              ? "Eliminando..."
-                              : "Eliminar"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {/* Paginación */}
-          {totalPages > 1 && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 12,
-                marginTop: 18,
-              }}
-            >
-              <button
-                className="btn"
-                style={{ padding: "6px 16px", fontSize: 15 }}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Anterior
-              </button>
-              <span style={{ color: "#fff", fontWeight: 600, fontSize: 16 }}>
-                Página {page} de {totalPages}
-              </span>
-              <button
-                className="btn"
-                style={{ padding: "6px 16px", fontSize: 15 }}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Siguiente
-              </button>
-            </div>
-          )}
-        </>
-      )}
-      {/* Modal de confirmación de borrado */}
-      {confirmDelete && (
-        <div
-          className="modal-overlay"
-          style={{ animation: "fadeInSciFi 0.25s" }}
+        <Card
+          sx={{
+            background: isDark 
+              ? 'rgba(31, 38, 135, 0.15)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
+            borderRadius: 4,
+          }}
         >
-          <div
-            className="modal-glass sci-fi-modal-alert"
-            style={{
-              boxShadow: "0 4px 24px #ff525244",
-              minWidth: 340,
-              maxWidth: 400,
-              border: "2px solid var(--color-accent)",
-              background: "rgba(32,37,52,0.95)",
-              position: "relative",
-              animation: "scaleInSciFi 0.25s",
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Usuario</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Email</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Rol</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Estado</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main', textAlign: 'center' }}>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginated.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        No hay usuarios para mostrar.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginated.map((user, index) => {
+                    const roleInfo = getRoleInfo(user.roll);
+                    return (
+                      <TableRow 
+                        key={index}
+                        sx={{
+                          '&:hover': {
+                            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                          },
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar
+                              sx={{
+                                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                width: 40,
+                                height: 40,
+                              }}
+                            >
+                              {user.name?.charAt(0) || user.userEmail?.charAt(0) || 'U'}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                {user.name} {user.lastName}
+                              </Typography>
+                                                             <Typography variant="caption" color="text.secondary">
+                                 ID: {(user as any)._id || 'N/A'}
+                               </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                            <Typography variant="body2">
+                              {user.userEmail}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={roleInfo.label}
+                            icon={roleInfo.icon}
+                            size="small"
+                            sx={{
+                              background: `${roleInfo.color}20`,
+                              color: roleInfo.color,
+                              fontWeight: 600,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={user.status ? "Activo" : "Inactivo"}
+                            icon={user.status ? <CheckCircleIcon /> : <CancelIcon />}
+                            size="small"
+                            sx={{
+                              background: user.status ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 152, 0, 0.1)',
+                              color: user.status ? '#00e676' : '#ff9800',
+                              fontWeight: 600,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                            <Tooltip title="Editar usuario">
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setModalOpen(true);
+                                  setEditMode(true);
+                                  setEditUserEmail(user.userEmail);
+                                  setForm({
+                                    name: user.name,
+                                    lastName: user.lastName,
+                                    userEmail: user.userEmail,
+                                    roll: user.roll,
+                                    status: user.status,
+                                    userPassword: "",
+                                  });
+                                  setFormError("");
+                                }}
+                                sx={{
+                                  color: '#7f5fff',
+                                  '&:hover': {
+                                    background: 'rgba(127, 95, 255, 0.1)',
+                                  },
+                                }}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Eliminar usuario">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  setConfirmDelete({
+                                    email: user.userEmail,
+                                    name: user.name + " " + user.lastName,
+                                  })
+                                }
+                                disabled={deleteTarget === user.userEmail && loadingDelete}
+                                sx={{
+                                  color: '#ff2eec',
+                                  '&:hover': {
+                                    background: 'rgba(255, 46, 236, 0.1)',
+                                  },
+                                }}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Card>
+      )}
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                borderRadius: 2,
+                fontWeight: 600,
+              },
+            }}
+          />
+        </Box>
+      )}
+
+      {/* Modal de Crear/Editar Usuario */}
+      <Dialog
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: isDark 
+              ? 'rgba(31, 38, 135, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
+            borderRadius: 4,
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          fontWeight: 700,
+          fontSize: '1.5rem'
+        }}>
+          {editMode ? "Editar Usuario" : "Nuevo Usuario"}
+        </DialogTitle>
+                 <DialogContent sx={{ pt: 2 }}>
+           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+             <Box sx={{ display: 'flex', gap: 2 }}>
+               <TextField
+                 fullWidth
+                 label="Nombre"
+                 value={form.name}
+                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+               />
+               <TextField
+                 fullWidth
+                 label="Apellido"
+                 value={form.lastName}
+                 onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+               />
+             </Box>
+             <TextField
+               fullWidth
+               label="Email"
+               type="email"
+               value={form.userEmail}
+               onChange={(e) => setForm((f) => ({ ...f, userEmail: e.target.value }))}
+               disabled={editMode}
+             />
+             <Box sx={{ display: 'flex', gap: 2 }}>
+               <FormControl fullWidth>
+                 <InputLabel>Rol</InputLabel>
+                 <Select
+                   value={form.roll}
+                   onChange={(e) => setForm((f) => ({ ...f, roll: e.target.value }))}
+                   label="Rol"
+                 >
+                   {ROLES.map((role) => (
+                     <MenuItem key={role.value} value={role.value}>
+                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                         {role.icon}
+                         {role.label}
+                       </Box>
+                     </MenuItem>
+                   ))}
+                 </Select>
+               </FormControl>
+               <FormControlLabel
+                 control={
+                   <Switch
+                     checked={form.status}
+                     onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked }))}
+                     color="primary"
+                   />
+                 }
+                 label="Usuario Activo"
+               />
+             </Box>
+             {!editMode && (
+               <TextField
+                 fullWidth
+                 label="Contraseña"
+                 type="password"
+                 value={form.userPassword}
+                 onChange={(e) => setForm((f) => ({ ...f, userPassword: e.target.value }))}
+               />
+             )}
+           </Box>
+          {formError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {formError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button
+            onClick={() => setModalOpen(false)}
+            disabled={loadingCreate || loadingUpdate}
+            sx={{
+              color: 'text.secondary',
+              '&:hover': {
+                background: 'rgba(0,0,0,0.04)',
+              },
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                marginBottom: 12,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 48,
-                  color: "var(--color-accent)",
-                  textShadow: "0 0 16px #ff2eec99",
-                  marginBottom: 8,
-                }}
-              >
-                ⚠️
-              </span>
-              <h3
-                style={{
-                  color: "var(--color-accent)",
-                  marginBottom: 10,
-                  textAlign: "center",
-                  letterSpacing: 1,
-                }}
-              >
-                ¿Eliminar usuario?
-              </h3>
-            </div>
-            <div
-              style={{
-                color: "#fff",
-                marginBottom: 18,
-                fontSize: 18,
-                textAlign: "center",
-                textShadow: "0 2px 8px #ff2eec33",
-              }}
-            >
-              ¿Seguro que deseas eliminar a{" "}
-              <span style={{ color: "var(--color-primary)", fontWeight: 700 }}>
-                {confirmDelete.name}
-              </span>
-              ?
-            </div>
-            {errorDelete && (
-              <div
-                style={{
-                  color: "#ff5252",
-                  marginBottom: 10,
-                  textAlign: "center",
-                }}
-              >
-                {errorDelete}
-              </div>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={loadingCreate || loadingUpdate}
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
+              },
+            }}
+          >
+            {loadingCreate || loadingUpdate ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} color="inherit" />
+                Guardando...
+              </Box>
+            ) : (
+              "Guardar"
             )}
-            <div
-              style={{
-                display: "flex",
-                gap: 18,
-                justifyContent: "center",
-                marginTop: 8,
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de Confirmación de Eliminación */}
+      <Dialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: isDark 
+              ? 'rgba(31, 38, 135, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)',
+            border: '2px solid #ff2eec',
+            borderRadius: 4,
+          }
+        }}
+      >
+        <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <Avatar
+              sx={{
+                background: 'linear-gradient(135deg, #ff2eec 0%, #b993d6 100%)',
+                width: 64,
+                height: 64,
               }}
             >
-              <button
-                className="btn"
-                style={{
-                  background: "var(--color-gradient-1)",
-                  boxShadow: "0 1px 4px #00fff711",
-                  border: "2px solid #00fff7",
-                  color: "#fff",
-                  fontWeight: 600,
-                }}
-                onClick={() => setConfirmDelete(null)}
-                disabled={deleteTarget === confirmDelete.email && loadingDelete}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn"
-                style={{
-                  background: "var(--color-gradient-3)",
-                  boxShadow: "0 1px 4px #ff2eec33",
-                  border: "2px solid #ff2eec",
-                  color: "#fff",
-                  fontWeight: 600,
-                }}
-                onClick={() => handleDelete(confirmDelete.email)}
-                disabled={deleteTarget === confirmDelete.email && loadingDelete}
-              >
-                {deleteTarget === confirmDelete.email && loadingDelete
-                  ? "Eliminando..."
-                  : "Eliminar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              <WarningIcon sx={{ fontSize: 32 }} />
+            </Avatar>
+          </Box>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#ff2eec' }}>
+            ¿Eliminar Usuario?
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: 'center' }}>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            ¿Seguro que deseas eliminar a{" "}
+            <Typography component="span" sx={{ fontWeight: 700, color: '#7f5fff' }}>
+              {confirmDelete?.name}
+            </Typography>
+            ?
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Esta acción no se puede deshacer.
+          </Typography>
+          {errorDelete && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorDelete}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, justifyContent: 'center' }}>
+          <Button
+            onClick={() => setConfirmDelete(null)}
+            disabled={deleteTarget === confirmDelete?.email && loadingDelete}
+            sx={{
+              color: 'text.secondary',
+              '&:hover': {
+                background: 'rgba(0,0,0,0.04)',
+              },
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => confirmDelete && handleDelete(confirmDelete.email)}
+            disabled={deleteTarget === confirmDelete?.email && loadingDelete}
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #ff2eec 0%, #b993d6 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #b993d6 0%, #ff2eec 100%)',
+              },
+            }}
+          >
+            {deleteTarget === confirmDelete?.email && loadingDelete ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} color="inherit" />
+                Eliminando...
+              </Box>
+            ) : (
+              "Eliminar"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
