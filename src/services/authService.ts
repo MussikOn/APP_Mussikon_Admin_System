@@ -49,6 +49,7 @@ export interface AuthResponse {
   user?: User;
   token?: string;
   refreshToken?: string;
+  userEmail?: string; // Para respuestas de recuperación de contraseña
 }
 
 export interface RefreshTokenData {
@@ -330,3 +331,88 @@ export const {
   isSeniorAdmin,
   getPermissionLevel
 } = authService; 
+
+// Interfaces para recuperación de contraseña
+export interface ForgotPasswordData {
+  userEmail: string;
+}
+
+export interface VerifyCodeData {
+  userEmail: string;
+  code: string;
+}
+
+export interface ResetPasswordData {
+  userEmail: string;
+  code: string;
+  newPassword: string;
+}
+
+// Función para solicitar recuperación de contraseña
+export async function forgotPassword(data: ForgotPasswordData): Promise<AuthResponse> {
+  try {
+    console.log('📧 Solicitando recuperación de contraseña:', data.userEmail);
+    const { api } = await import('./api');
+    const response = await api.post(API_CONFIG.ENDPOINTS.FORGOT_PASSWORD, data);
+    
+    console.log('✅ Código de verificación enviado');
+    return {
+      success: true,
+      message: response.data.msg || 'Código de verificación enviado',
+      userEmail: response.data.userEmail
+    };
+  } catch (error: any) {
+    console.error('❌ Error al solicitar recuperación:', error);
+    const errorMessage = error.response?.data?.msg || 'Error al solicitar recuperación de contraseña';
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
+// Función para verificar código
+export async function verifyCode(data: VerifyCodeData): Promise<AuthResponse> {
+  try {
+    console.log('🔍 Verificando código para:', data.userEmail);
+    const { api } = await import('./api');
+    const response = await api.post(API_CONFIG.ENDPOINTS.VERIFY_CODE, data);
+    
+    console.log('✅ Código verificado correctamente');
+    return {
+      success: true,
+      message: response.data.msg || 'Código verificado correctamente',
+      userEmail: response.data.userEmail
+    };
+  } catch (error: any) {
+    console.error('❌ Error al verificar código:', error);
+    const errorMessage = error.response?.data?.msg || 'Error al verificar código';
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
+// Función para restablecer contraseña
+export async function resetPassword(data: ResetPasswordData): Promise<AuthResponse> {
+  try {
+    console.log('🔐 Restableciendo contraseña para:', data.userEmail);
+    const { api } = await import('./api');
+    const response = await api.post(API_CONFIG.ENDPOINTS.RESET_PASSWORD, data);
+    
+    console.log('✅ Contraseña restablecida correctamente');
+    return {
+      success: true,
+      message: response.data.msg || 'Contraseña restablecida correctamente',
+      userEmail: response.data.userEmail
+    };
+  } catch (error: any) {
+    console.error('❌ Error al restablecer contraseña:', error);
+    const errorMessage = error.response?.data?.msg || 'Error al restablecer contraseña';
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+} 

@@ -2,40 +2,115 @@ import { get, post, put, del } from './httpClient';
 
 export const ROLES = [
   'admin',
+  'superadmin',
   'organizador', // sinónimo de eventCreator
   'eventCreator',
   'musico',
-  'superadmin',
 ];
 
 export interface User {
+  _id?: string;
   name: string;
   lastName: string;
   userEmail: string;
   roll: string;
   status: boolean;
   userPassword?: string;
+  create_at?: string;
+  update_at?: string;
+  delete_at?: string;
 }
 
-export async function getAllUsers(): Promise<User[]> {
-  return await get<User[]>('/getAllUsers');
+export interface UsersResponse {
+  users: User[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
+// Obtener todos los usuarios con paginación
+export async function getAllUsers(page: number = 1, limit: number = 20): Promise<UsersResponse> {
+  try {
+    const response = await get<UsersResponse>(`/admin/users?page=${page}&limit=${limit}`);
+    console.log('📊 Usuarios obtenidos:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error al obtener usuarios:', error);
+    throw error;
+  }
+}
+
+// Obtener conteo de usuarios
 export async function getUsersCount(): Promise<number> {
-  const users = await getAllUsers();
-  return Array.isArray(users) ? users.length : 0;
+  try {
+    const response = await getAllUsers(1, 1000); // Obtener todos para contar
+    return response.total || response.users.length;
+  } catch (error) {
+    console.error('❌ Error al obtener conteo de usuarios:', error);
+    return 0;
+  }
 }
 
+// Crear usuario
 export async function createUser(form: User): Promise<any> {
-  console.log(`form: ${form}`);
-  console.log(form);
-  return await post<any>('/auth/Register', form);
+  try {
+    console.log('📝 Creando usuario:', form);
+    const response = await post<any>('/admin/users', form);
+    console.log('✅ Usuario creado:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error al crear usuario:', error);
+    throw error;
+  }
 }
 
-export async function updateUser(email: string, form: Partial<User>): Promise<any> {
-  return await put<any>(`/auth/update/${encodeURIComponent(email)}`, { ...form, password: undefined });
+// Actualizar usuario
+export async function updateUser(id: string, form: Partial<User>): Promise<any> {
+  try {
+    console.log('📝 Actualizando usuario:', { id, form });
+    const response = await put<any>(`/admin/users/${id}`, form);
+    console.log('✅ Usuario actualizado:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error al actualizar usuario:', error);
+    throw error;
+  }
 }
 
-export async function deleteUserByEmail(email: string): Promise<any> {
-  return await del<any>('/auth/delete', { data: { userEmail: email } });
+// Eliminar usuario
+export async function deleteUserByEmail(id: string): Promise<any> {
+  try {
+    console.log('🗑️ Eliminando usuario:', id);
+    const response = await del<any>(`/admin/users/${id}`);
+    console.log('✅ Usuario eliminado:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error al eliminar usuario:', error);
+    throw error;
+  }
+}
+
+// Obtener usuario por ID
+export async function getUserById(id: string): Promise<User> {
+  try {
+    const response = await get<User>(`/admin/users/${id}`);
+    console.log('👤 Usuario obtenido:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error al obtener usuario:', error);
+    throw error;
+  }
+}
+
+// Obtener estadísticas de usuarios
+export async function getUsersStats(): Promise<any> {
+  try {
+    const response = await get<any>('/admin/users/stats');
+    console.log('📊 Estadísticas de usuarios:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error al obtener estadísticas:', error);
+    throw error;
+  }
 } 

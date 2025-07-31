@@ -209,13 +209,28 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const fetchAllData = () => {
-    fetchUsersCount();
-    fetchEventsCount();
-    fetchRequestsCount();
-    fetchImagesCount();
-    fetchRecentUsers();
-    fetchRecentEvents();
-    fetchRecentRequests();
+    // Agregar manejo de errores individual para cada llamada
+    fetchUsersCount().catch(err => {
+      console.warn('Error fetching users count:', err);
+    });
+    fetchEventsCount().catch(err => {
+      console.warn('Error fetching events count:', err);
+    });
+    fetchRequestsCount().catch(err => {
+      console.warn('Error fetching requests count:', err);
+    });
+    fetchImagesCount().catch(err => {
+      console.warn('Error fetching images count:', err);
+    });
+    fetchRecentUsers().catch(err => {
+      console.warn('Error fetching recent users:', err);
+    });
+    fetchRecentEvents().catch(err => {
+      console.warn('Error fetching recent events:', err);
+    });
+    fetchRecentRequests().catch(err => {
+      console.warn('Error fetching recent requests:', err);
+    });
   };
 
   // Procesar datos recientes y roles

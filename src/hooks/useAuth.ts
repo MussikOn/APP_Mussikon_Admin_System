@@ -42,7 +42,11 @@ export function useAuth() {
             }
           }
         } else {
-          throw new Error('Token inválido o expirado');
+          // En lugar de lanzar error, simplemente limpiar y continuar
+          console.warn('Token inválido o expirado, limpiando sesión');
+          setUser(null);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
       } catch (err: any) {
         console.warn('Error al verificar sesión:', err.message);
@@ -62,6 +66,8 @@ export function useAuth() {
     try {
       const data = await authService.login({ userEmail: email, userPassword: password });
       if (data.success && data.user) {
+        console.log('🔐 Usuario logueado con rol:', data.user.roll);
+        console.log('🔐 Datos completos del usuario:', data.user);
         setUser(data.user);
         return { success: true };
       } else {

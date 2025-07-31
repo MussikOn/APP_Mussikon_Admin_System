@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
-import type { User } from "../../services/usersService";
+import React, { useEffect, useState, useCallback } from "react";
+import type { User, UsersResponse } from "../../services/usersService";
 import {
   getAllUsers,
   createUser,
   updateUser,
   deleteUserByEmail,
+  getUsersStats,
 } from "../../services/usersService";
 import { useApiRequest } from "../../hooks/useApiRequest";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -38,7 +39,8 @@ import {
   Alert,
   CircularProgress,
   Pagination,
-  InputAdornment
+  InputAdornment,
+  Snackbar
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -52,12 +54,14 @@ import {
   Warning as WarningIcon,
   AdminPanelSettings as AdminIcon,
   Event as EventIcon,
-  MusicNote as MusicIcon
+  MusicNote as MusicIcon,
+  People as PeopleIcon
 } from "@mui/icons-material";
 
 const PAGE_SIZE = 10;
 const ROLES = [
   { value: "admin", label: "Administrador", icon: <AdminIcon />, color: "#00fff7" },
+  { value: "superadmin", label: "Super Administrador", icon: <AdminIcon />, color: "#ff0000" },
   { value: "organizador", label: "Organizador", icon: <EventIcon />, color: "#b993d6" },
   { value: "musico", label: "Músico", icon: <MusicIcon />, color: "#ff2eec" }
 ];
@@ -76,16 +80,23 @@ const Users: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<User>(initialForm);
   const [formError, setFormError] = useState("");
   const [editMode, setEditMode] = useState(false);
-  const [editUserEmail, setEditUserEmail] = useState<string | null>(null);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{
-    email: string;
+    id: string;
     name: string;
   } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info';
+  }>({ open: false, message: '', severity: 'info' });
 
   // Hooks para peticiones
   const {
@@ -112,11 +123,31 @@ const Users: React.FC = () => {
     execute: deleteUser,
   } = useApiRequest(deleteUserByEmail);
 
+  // Función para cargar usuarios
+  const loadUsers = useCallback(async () => {
+    try {
+      console.log('🔄 Cargando usuarios, página:', page);
+      const response = await fetchUsers(page, PAGE_SIZE);
+      if (response) {
+        console.log('✅ Usuarios cargados:', response);
+        setUsers(response.users || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalUsers(response.total || 0);
+      }
+    } catch (error) {
+      console.error('❌ Error al cargar usuarios:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error al cargar usuarios',
+        severity: 'error'
+      });
+    }
+  }, [fetchUsers, page]);
+
+  // Cargar usuarios al montar el componente y cuando cambie la página
   useEffect(() => {
-    fetchUsers().then((data) => {
-      if (data) setUsers(data);
-    });
-  }, [fetchUsers]);
+    loadUsers();
+  }, [loadUsers]);
 
   // Filtro de búsqueda
   const filtered = users.filter((u) =>
@@ -124,10 +155,8 @@ const Users: React.FC = () => {
       .toLowerCase()
       .includes(search.toLowerCase())
   );
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Validación simple
+  // Validación del formulario
   const validate = () => {
     if (!form.name.trim() || !form.lastName.trim() || !form.userEmail.trim())
       return "Completa todos los campos obligatorios.";
@@ -146,50 +175,111 @@ const Users: React.FC = () => {
       setFormError(err);
       return;
     }
+
     try {
-      if (editMode && editUserEmail) {
-        await updateUserReq(editUserEmail, form);
+      if (editMode && editUserId) {
+        console.log('📝 Editando usuario:', editUserId, form);
+        await updateUserReq(editUserId, form);
+        setSnackbar({
+          open: true,
+          message: 'Usuario actualizado correctamente',
+          severity: 'success'
+        });
       } else {
+        console.log('📝 Creando usuario:', form);
         await createUserReq(form);
+        setSnackbar({
+          open: true,
+          message: 'Usuario creado correctamente',
+          severity: 'success'
+        });
       }
+      
       setModalOpen(false);
       setForm(initialForm);
       setEditMode(false);
-      setEditUserEmail(null);
+      setEditUserId(null);
       setPage(1);
-      // Refresca usuarios
-      const data = await fetchUsers();
-      if (data) setUsers(data);
+      loadUsers(); // Recargar usuarios
     } catch (e) {
+      console.error('❌ Error al guardar usuario:', e);
       setFormError(
         editMode ? "Error al editar usuario" : "Error al crear usuario"
       );
+      setSnackbar({
+        open: true,
+        message: editMode ? 'Error al editar usuario' : 'Error al crear usuario',
+        severity: 'error'
+      });
     }
   };
 
   // Eliminar usuario
-  const handleDelete = async (userEmail: string) => {
-    const normalizedEmail = userEmail.trim().toLowerCase();
-    setDeleteTarget(normalizedEmail);
+  const handleDelete = async (userId: string) => {
+    setDeleteTarget(userId);
     try {
-      await deleteUser(normalizedEmail);
-      // Refresca usuarios
-      const data = await fetchUsers();
-      if (data) setUsers(data);
+      console.log('🗑️ Eliminando usuario:', userId);
+      await deleteUser(userId);
+      setSnackbar({
+        open: true,
+        message: 'Usuario eliminado correctamente',
+        severity: 'success'
+      });
+      loadUsers(); // Recargar usuarios
       setConfirmDelete(null);
     } catch (e) {
-      // El error se maneja por errorDelete
+      console.error('❌ Error al eliminar usuario:', e);
+      setSnackbar({
+        open: true,
+        message: 'Error al eliminar usuario',
+        severity: 'error'
+      });
     } finally {
       setDeleteTarget(null);
     }
   };
 
+  // Obtener información del rol
   const getRoleInfo = (role: string) => {
-    return ROLES.find(r => r.value === role) || ROLES[2];
+    return ROLES.find(r => r.value === role) || ROLES[3]; // Default a músico
   };
 
+  // Cambiar página
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+  };
+
+  // Abrir modal para crear usuario
+  const handleCreateUser = () => {
+    setModalOpen(true);
+    setForm(initialForm);
+    setFormError("");
+    setEditMode(false);
+    setEditUserId(null);
+  };
+
+  // Abrir modal para editar usuario
+  const handleEditUser = (user: User) => {
+    setModalOpen(true);
+    setEditMode(true);
+    setEditUserId(user._id || '');
+    setForm({
+      name: user.name,
+      lastName: user.lastName,
+      userEmail: user.userEmail,
+      roll: user.roll,
+      status: user.status,
+      userPassword: "",
+    });
+    setFormError("");
+  };
+
+  // Confirmar eliminación
+  const handleConfirmDelete = (user: User) => {
+    setConfirmDelete({
+      id: user._id || '',
+      name: user.name + " " + user.lastName,
+    });
   };
 
   return (
@@ -224,7 +314,7 @@ const Users: React.FC = () => {
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Tooltip title="Actualizar lista">
               <IconButton
-                onClick={() => fetchUsers()}
+                onClick={loadUsers}
                 disabled={loadingUsers}
                 sx={{
                   background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
@@ -246,13 +336,7 @@ const Users: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-            onClick={() => {
-              setModalOpen(true);
-              setForm(initialForm);
-              setFormError("");
-              setEditMode(false);
-              setEditUserEmail(null);
-            }}
+              onClick={handleCreateUser}
               sx={{
                 background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
                 borderRadius: 3,
@@ -296,7 +380,6 @@ const Users: React.FC = () => {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPage(1);
                 }}
                 InputProps={{
                   startAdornment: (
@@ -319,7 +402,7 @@ const Users: React.FC = () => {
             <Box sx={{ flex: { xs: '1', md: '1' } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                  {filtered.length} usuario{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
+                  {filtered.length} de {totalUsers} usuario{totalUsers !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Chip 
@@ -400,20 +483,32 @@ const Users: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginated.length === 0 ? (
+                {filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="h6" color="text.secondary">
-                      No hay usuarios para mostrar.
-                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <PeopleIcon sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.5 }} />
+                        <Typography variant="h6" color="text.secondary">
+                          {search ? 'No se encontraron usuarios con esa búsqueda' : 'No hay usuarios para mostrar'}
+                        </Typography>
+                        {search && (
+                          <Button
+                            variant="outlined"
+                            onClick={() => setSearch('')}
+                            sx={{ mt: 1 }}
+                          >
+                            Limpiar búsqueda
+                          </Button>
+                        )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginated.map((user, index) => {
+                  filtered.map((user, index) => {
                     const roleInfo = getRoleInfo(user.roll);
                     return (
                       <TableRow 
-                        key={index}
+                        key={user._id || index}
                         sx={{
                           '&:hover': {
                             background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
@@ -438,9 +533,9 @@ const Users: React.FC = () => {
                               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                                 {user.name} {user.lastName}
                               </Typography>
-                                                             <Typography variant="caption" color="text.secondary">
-                                 ID: {(user as any)._id || 'N/A'}
-                               </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                ID: {user._id || 'N/A'}
+                              </Typography>
                             </Box>
                           </Box>
                         </TableCell>
@@ -481,20 +576,7 @@ const Users: React.FC = () => {
                             <Tooltip title="Editar usuario">
                               <IconButton
                                 size="small"
-                            onClick={() => {
-                              setModalOpen(true);
-                              setEditMode(true);
-                                  setEditUserEmail(user.userEmail);
-                              setForm({
-                                    name: user.name,
-                                    lastName: user.lastName,
-                                    userEmail: user.userEmail,
-                                    roll: user.roll,
-                                    status: user.status,
-                                userPassword: "",
-                              });
-                              setFormError("");
-                            }}
+                                onClick={() => handleEditUser(user)}
                                 sx={{
                                   color: '#7f5fff',
                                   '&:hover': {
@@ -508,13 +590,8 @@ const Users: React.FC = () => {
                             <Tooltip title="Eliminar usuario">
                               <IconButton
                                 size="small"
-                            onClick={() =>
-                              setConfirmDelete({
-                                    email: user.userEmail,
-                                    name: user.name + " " + user.lastName,
-                                  })
-                                }
-                                disabled={deleteTarget === user.userEmail && loadingDelete}
+                                onClick={() => handleConfirmDelete(user)}
+                                disabled={deleteTarget === user._id && loadingDelete}
                                 sx={{
                                   color: '#ff2eec',
                                   '&:hover': {
@@ -537,8 +614,8 @@ const Users: React.FC = () => {
         </Card>
       )}
 
-          {/* Paginación */}
-          {totalPages > 1 && (
+      {/* Paginación */}
+      {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <Pagination
             count={totalPages}
@@ -582,69 +659,69 @@ const Users: React.FC = () => {
         }}>
           {editMode ? "Editar Usuario" : "Nuevo Usuario"}
         </DialogTitle>
-                 <DialogContent sx={{ pt: 2 }}>
-           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-             <Box sx={{ display: 'flex', gap: 2 }}>
-               <TextField
-                 fullWidth
-                 label="Nombre"
-                 value={form.name}
-                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-               />
-               <TextField
-                 fullWidth
-                 label="Apellido"
-                 value={form.lastName}
-                 onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
-               />
-             </Box>
-             <TextField
-               fullWidth
-               label="Email"
-               type="email"
-               value={form.userEmail}
-               onChange={(e) => setForm((f) => ({ ...f, userEmail: e.target.value }))}
-               disabled={editMode}
-             />
-             <Box sx={{ display: 'flex', gap: 2 }}>
-               <FormControl fullWidth>
-                 <InputLabel>Rol</InputLabel>
-                 <Select
-                   value={form.roll}
-                   onChange={(e) => setForm((f) => ({ ...f, roll: e.target.value }))}
-                   label="Rol"
-                 >
-                   {ROLES.map((role) => (
-                     <MenuItem key={role.value} value={role.value}>
-                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                         {role.icon}
-                         {role.label}
-                       </Box>
-                     </MenuItem>
-                   ))}
-                 </Select>
-               </FormControl>
-               <FormControlLabel
-                 control={
-                   <Switch
-                     checked={form.status}
-                     onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked }))}
-                     color="primary"
-                   />
-                 }
-                 label="Usuario Activo"
-               />
-             </Box>
-             {!editMode && (
-               <TextField
-                 fullWidth
-                 label="Contraseña"
-                 type="password"
-                 value={form.userPassword}
-                 onChange={(e) => setForm((f) => ({ ...f, userPassword: e.target.value }))}
-               />
-             )}
-           </Box>
+        <DialogContent sx={{ pt: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Nombre"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+              <TextField
+                fullWidth
+                label="Apellido"
+                value={form.lastName}
+                onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={form.userEmail}
+              onChange={(e) => setForm((f) => ({ ...f, userEmail: e.target.value }))}
+              disabled={editMode}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <FormControl fullWidth>
+                <InputLabel>Rol</InputLabel>
+                <Select
+                  value={form.roll}
+                  onChange={(e) => setForm((f) => ({ ...f, roll: e.target.value }))}
+                  label="Rol"
+                >
+                  {ROLES.map((role) => (
+                    <MenuItem key={role.value} value={role.value}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {role.icon}
+                        {role.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.status}
+                    onChange={(e) => setForm((f) => ({ ...f, status: e.target.checked }))}
+                    color="primary"
+                  />
+                }
+                label="Usuario Activo"
+              />
+            </Box>
+            {!editMode && (
+              <TextField
+                fullWidth
+                label="Contraseña"
+                type="password"
+                value={form.userPassword}
+                onChange={(e) => setForm((f) => ({ ...f, userPassword: e.target.value }))}
+              />
+            )}
+          </Box>
           {formError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {formError}
@@ -722,7 +799,7 @@ const Users: React.FC = () => {
         </DialogTitle>
         <DialogContent sx={{ textAlign: 'center' }}>
           <Typography variant="body1" sx={{ mb: 2 }}>
-              ¿Seguro que deseas eliminar a{" "}
+            ¿Seguro que deseas eliminar a{" "}
             <Typography component="span" sx={{ fontWeight: 700, color: '#7f5fff' }}>
               {confirmDelete?.name}
             </Typography>
@@ -731,28 +808,28 @@ const Users: React.FC = () => {
           <Typography variant="body2" color="text.secondary">
             Esta acción no se puede deshacer.
           </Typography>
-            {errorDelete && (
+          {errorDelete && (
             <Alert severity="error" sx={{ mt: 2 }}>
-                {errorDelete}
+              {errorDelete}
             </Alert>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 3, justifyContent: 'center' }}>
           <Button
             onClick={() => setConfirmDelete(null)}
-            disabled={deleteTarget === confirmDelete?.email && loadingDelete}
+            disabled={deleteTarget === confirmDelete?.id && loadingDelete}
             sx={{
               color: 'text.secondary',
               '&:hover': {
                 background: 'rgba(0,0,0,0.04)',
               },
             }}
-              >
-                Cancelar
+          >
+            Cancelar
           </Button>
           <Button
-            onClick={() => confirmDelete && handleDelete(confirmDelete.email)}
-            disabled={deleteTarget === confirmDelete?.email && loadingDelete}
+            onClick={() => confirmDelete && handleDelete(confirmDelete.id)}
+            disabled={deleteTarget === confirmDelete?.id && loadingDelete}
             variant="contained"
             sx={{
               background: 'linear-gradient(135deg, #ff2eec 0%, #b993d6 100%)',
@@ -761,7 +838,7 @@ const Users: React.FC = () => {
               },
             }}
           >
-            {deleteTarget === confirmDelete?.email && loadingDelete ? (
+            {deleteTarget === confirmDelete?.id && loadingDelete ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={16} color="inherit" />
                 Eliminando...
@@ -772,6 +849,22 @@ const Users: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

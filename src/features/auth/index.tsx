@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
+import ForgotPassword from './ForgotPassword';
 import {
   Box,
   Card,
@@ -13,9 +14,10 @@ import {
   IconButton,
   InputAdornment,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Link
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Lock as LockIcon } from '@mui/icons-material';
 import './Login.css';
 
 const Auth = () => {
@@ -24,6 +26,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const { login } = useAuth();
@@ -66,6 +69,13 @@ const Auth = () => {
     }
   };
 
+  // Si se muestra la pantalla de recuperación de contraseña
+  if (showForgotPassword) {
+    return (
+      <ForgotPassword onBack={() => setShowForgotPassword(false)} />
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -98,36 +108,36 @@ const Auth = () => {
           boxShadow: isDark 
             ? '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
             : '0 8px 32px 0 rgba(0, 0, 0, 0.12)',
+          borderRadius: 4,
         }}
       >
         <CardContent sx={{ p: 0 }}>
-          <Typography
-            variant="h4"
-            component="h1"
-            sx={{
-              textAlign: 'center',
-              mb: 4,
-              fontWeight: 800,
-              background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            MussikOn Admin
-          </Typography>
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <LockIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+              Iniciar Sesión
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Accede a tu cuenta de administrador
+            </Typography>
+          </Box>
 
-          <Box component="form" onSubmit={handleLogin} sx={{ mt: 2 }}>
+          {/* Formulario de Login */}
+          <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <TextField
               fullWidth
               label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              autoFocus
-              autoComplete="username"
               required
-              sx={{ mb: 3 }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                },
+              }}
             />
 
             <TextField
@@ -136,7 +146,6 @@ const Auth = () => {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
               required
               InputProps={{
                 endAdornment: (
@@ -144,42 +153,85 @@ const Auth = () => {
                     <IconButton
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
-                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
-              sx={{ mb: 3 }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                },
+              }}
             />
 
+            {/* Link para recuperar contraseña */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => setShowForgotPassword(true)}
+                sx={{
+                  color: 'primary.main',
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </Box>
+
+            {/* Mensaje de error */}
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert severity="error" sx={{ borderRadius: 2 }}>
                 {error}
               </Alert>
             )}
 
+            {/* Botón de login */}
             <Button
               type="submit"
               fullWidth
               variant="contained"
               disabled={loading}
               sx={{
+                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                borderRadius: 3,
                 py: 1.5,
+                fontWeight: 600,
+                textTransform: 'none',
                 fontSize: '1.1rem',
-                fontWeight: 700,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(127, 95, 255, 0.3)',
+                },
+                transition: 'all 0.3s ease',
               }}
             >
               {loading ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CircularProgress size={20} color="inherit" />
-                  Entrando...
+                  Iniciando sesión...
                 </Box>
               ) : (
-                'Entrar'
+                'Iniciar Sesión'
               )}
             </Button>
+          </Box>
+
+          {/* Footer */}
+          <Box sx={{ textAlign: 'center', mt: 4, pt: 3, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
+            <Typography variant="body2" color="text.secondary">
+              Sistema de Administración MusikOn
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              © 2025 Todos los derechos reservados
+            </Typography>
           </Box>
         </CardContent>
       </Card>

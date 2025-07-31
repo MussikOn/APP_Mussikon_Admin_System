@@ -75,29 +75,30 @@ const createApiInstance = (): AxiosInstance => {
       return response;
     },
     async (error: AxiosError) => {
-      // const originalRequest = error.config as any; // Variable no utilizada
-      
       console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status}`);
 
-      // Si el token expiró (401), intentar logout
+      // Manejar errores específicos
       if (error.response?.status === 401) {
-        try {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          // Redirigir al login
-          window.location.href = '/login';
-          console.log('🔐 Token expirado, usuario deslogueado');
-        } catch (logoutError) {
-          console.error('Error al hacer logout:', logoutError);
+        const errorMessage = (error.response?.data as any)?.message || '';
+        if (errorMessage.includes('Token inválido') || errorMessage.includes('expirado')) {
+          try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            console.log('🔐 Token expirado, datos limpiados');
+          } catch (logoutError) {
+            console.error('Error al limpiar datos de sesión:', logoutError);
+          }
         }
+      } else if (error.response?.status === 403) {
+        console.log('🚫 Error 403 - Acceso denegado. Rol del usuario:', JSON.parse(localStorage.getItem('user') || '{}').roll);
+        console.log('🚫 Respuesta del servidor:', error.response?.data);
       }
 
       // Crear error personalizado
       const apiError = new ApiError(
         (error.response?.data as any)?.msg || 
         (error.response?.data as any)?.message || 
-        error.message || 
-        'Error de conexión',
+        error.message || 'Error de red',
         error.response?.status,
         error.code,
         error.response?.data
@@ -110,93 +111,69 @@ const createApiInstance = (): AxiosInstance => {
   return instance;
 };
 
-// Instancia principal de la API
+// Instancia de API
 export const api = createApiInstance();
 
-// Función para reintentos automáticos
+// Función para reintentar requests fallidos
 const retryRequest = async (
   requestFn: () => Promise<any>,
   maxRetries?: number,
   delay?: number
 ): Promise<any> => {
   const retryConfig = getRetryConfig();
-  const maxRetriesValue = maxRetries || retryConfig.maxRetries;
-  const delayValue = delay || retryConfig.retryDelay;
-  let lastError: any;
+  const retries = maxRetries || retryConfig.maxRetries;
+  const retryDelay = delay || retryConfig.retryDelay;
 
-  for (let attempt = 1; attempt <= maxRetriesValue; attempt++) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       return await requestFn();
-    } catch (error) {
-      lastError = error;
-      
-      if (attempt === maxRetriesValue) {
+    } catch (error: any) {
+      if (attempt === retries) {
         throw error;
       }
 
-      // Esperar antes del siguiente intento
-      await new Promise(resolve => setTimeout(resolve, delayValue * attempt));
-      console.log(`🔄 Reintento ${attempt}/${maxRetriesValue} para ${requestFn.name}`);
+      // Solo reintentar en ciertos tipos de errores
+      if (error.status === 500 || error.status === 502 || error.status === 503 || error.status === 504) {
+        console.log(`🔄 Reintento ${attempt}/${retries} para ${error.config?.url || 'request'}`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+      } else {
+        throw error;
+      }
     }
   }
-
-  throw lastError;
 };
 
-// Funciones helper para métodos HTTP
+// Servicio de API con métodos HTTP
 export const apiService = {
-  // GET
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return retryRequest(async () => {
-      const response = await api.get(url, config);
-      return response.data;
-    });
+    return retryRequest(() => api.get(url, config));
   },
 
-  // POST
   async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return retryRequest(async () => {
-      const response = await api.post(url, data, config);
-      return response.data;
-    });
+    return retryRequest(() => api.post(url, data, config));
   },
 
-  // PUT
   async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return retryRequest(async () => {
-      const response = await api.put(url, data, config);
-      return response.data;
-    });
+    return retryRequest(() => api.put(url, data, config));
   },
 
-  // DELETE
   async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return retryRequest(async () => {
-      const response = await api.delete(url, config);
-      return response.data;
-    });
+    return retryRequest(() => api.delete(url, config));
   },
 
-  // PATCH
   async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return retryRequest(async () => {
-      const response = await api.patch(url, data, config);
-      return response.data;
-    });
+    return retryRequest(() => api.patch(url, data, config));
   },
 
-  // POST con FormData (para subida de archivos)
   async postFormData<T = any>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return retryRequest(async () => {
-      const response = await api.post(url, formData, {
-        ...config,
-        headers: {
-          ...config?.headers,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    });
+    const formConfig = {
+      ...config,
+      headers: {
+        ...config?.headers,
+        'Content-Type': 'multipart/form-data',
+      },
+    };
+    return retryRequest(() => api.post(url, formData, formConfig));
   },
 };
 

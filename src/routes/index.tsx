@@ -15,12 +15,32 @@ import LoadingScreen from '../components/LoadingScreen';
 
 function PrivateRoute({ children, allowedRoles }: { children: React.ReactElement, allowedRoles?: string[] }) {
   const { user, loading } = useAuth();
-  if (loading) return <LoadingScreen />;
-  if (!user) return <Navigate to="/login" replace />;
+  
+  // Mostrar pantalla de carga mientras se verifica la autenticación
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  
+  // Si no hay usuario, redirigir al login
+  if (!user) {
+    console.log('🔐 Usuario no autenticado, redirigiendo al login');
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Log del rol del usuario para debugging
+  console.log('🔍 Usuario autenticado con rol:', user.roll);
+  if (allowedRoles) {
+    console.log('🔍 Roles permitidos:', allowedRoles);
+    console.log('🔍 ¿Usuario tiene rol permitido?', allowedRoles.includes(user.roll));
+  }
+  
+  // Si hay roles específicos requeridos y el usuario no los tiene
   if (allowedRoles && !allowedRoles.includes(user.roll)) {
-    // Si el usuario no tiene el rol requerido, redirige al dashboard
+    console.log(`🚫 Usuario ${user.roll} no tiene permisos para esta ruta, redirigiendo al dashboard`);
     return <Navigate to="/" replace />;
   }
+  
+  // Usuario autenticado y autorizado
   return <PrivateLayout>{children}</PrivateLayout>;
 }
 

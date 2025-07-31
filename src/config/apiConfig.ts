@@ -1,9 +1,24 @@
 // Configuración centralizada para API y sockets
 // Solo editar aquí para cambiar la URL base
 
+// Función para obtener la URL base del backend
+const getBaseUrl = (): string => {
+  // Prioridad: 1. Variable de entorno, 2. URL hardcodeada
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    console.log('🌐 Usando URL del backend desde variable de entorno:', envUrl);
+    return envUrl;
+  }
+  
+  // URL por defecto (puede ser cambiada aquí)
+  const defaultUrl = 'http://localhost:3001';
+  console.log('🌐 Usando URL del backend por defecto:', defaultUrl);
+  return defaultUrl;
+};
+
 export const API_CONFIG = {
   // URL base para todas las APIs
-  BASE_URL: 'http://172.20.10.2:3001',
+  BASE_URL: getBaseUrl(),
   
   // Endpoints de la API
   ENDPOINTS: {
@@ -11,6 +26,9 @@ export const API_CONFIG = {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
     REFRESH_TOKEN: '/auth/refresh',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    VERIFY_CODE: '/auth/verify-code',
+    RESET_PASSWORD: '/auth/reset-password',
     
     // Usuarios Móviles (Admin)
     MOBILE_USERS: '/admin/users',
@@ -123,7 +141,7 @@ export const API_CONFIG = {
   },
   
   // Configuración de timeout
-  TIMEOUT: 15000, // 15 segundos para admin
+  TIMEOUT: 30000, // 15 segundos para admin
   
   // Headers por defecto
   DEFAULT_HEADERS: {
@@ -148,7 +166,7 @@ export const API_CONFIG = {
 // Configuración de Socket.IO
 export const SOCKET_CONFIG = {
   // URL del servidor Socket.IO (misma que la API)
-  SOCKET_URL: 'http://172.20.10.2:3001',
+  SOCKET_URL: 'http://192.168.54.131:3001',
   
   // Configuración de conexión
   CONNECTION_OPTIONS: {
