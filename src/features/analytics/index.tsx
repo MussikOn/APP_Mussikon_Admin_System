@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { analyticsService, AnalyticsFilters, AnalyticsResponse } from '../../services/searchService';
-import { useApiRequest } from '../../hooks/useApiRequest';
+import { analyticsService } from '../../services/searchService';
+import type { AnalyticsFilters, AnalyticsResponse } from '../../services/searchService';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
   FormControl,
   InputLabel,
   Select,
@@ -17,8 +16,7 @@ import {
   Alert,
   Chip,
   IconButton,
-  Tooltip,
-  Divider
+  Tooltip
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
@@ -140,9 +138,6 @@ const Analytics: React.FC = () => {
   const [eventsData, setEventsData] = useState<AnalyticsResponse | null>(null);
   const [requestsData, setRequestsData] = useState<AnalyticsResponse | null>(null);
 
-  // Hook para manejar las peticiones API
-  const { execute: executeAnalytics } = useApiRequest();
-
   // Cargar todos los datos de analytics
   const loadAnalyticsData = useCallback(async () => {
     setLoading(true);
@@ -150,23 +145,23 @@ const Analytics: React.FC = () => {
 
     try {
       const [dashboard, users, events, requests] = await Promise.all([
-        executeAnalytics(() => analyticsService.getDashboardAnalytics(filters)),
-        executeAnalytics(() => analyticsService.getUsersAnalytics(filters)),
-        executeAnalytics(() => analyticsService.getEventsAnalytics(filters)),
-        executeAnalytics(() => analyticsService.getRequestsAnalytics(filters))
+        analyticsService.getDashboardAnalytics(filters),
+        analyticsService.getUsersAnalytics(filters),
+        analyticsService.getEventsAnalytics(filters),
+        analyticsService.getRequestsAnalytics(filters)
       ]);
 
-      if (dashboard?.data) setDashboardData(dashboard.data);
-      if (users?.data) setUsersData(users.data);
-      if (events?.data) setEventsData(events.data);
-      if (requests?.data) setRequestsData(requests.data);
+      if (dashboard) setDashboardData(dashboard as AnalyticsResponse);
+      if (users) setUsersData(users as AnalyticsResponse);
+      if (events) setEventsData(events as AnalyticsResponse);
+      if (requests) setRequestsData(requests as AnalyticsResponse);
     } catch (err) {
       setError('Error al cargar los datos de analytics');
       console.error('Error en analytics:', err);
     } finally {
       setLoading(false);
     }
-  }, [filters, executeAnalytics]);
+  }, [filters]);
 
   // Cargar datos al montar el componente y cuando cambien los filtros
   useEffect(() => {
@@ -310,116 +305,106 @@ const Analytics: React.FC = () => {
       )}
 
       {/* Métricas principales */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mb: 4 }}>
         {metrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <MetricCard {...metric} />
-          </Grid>
+          <MetricCard key={index} {...metric} />
         ))}
-      </Grid>
+      </Box>
 
       {/* Gráficos */}
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
         {/* Gráfico de usuarios */}
-        <Grid item xs={12} lg={6}>
-          <Card sx={{ 
-            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-          }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6" sx={{ color: '#00fff7', fontWeight: 600 }}>
-                  <PeopleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                  Crecimiento de Usuarios
-                </Typography>
-                <Tooltip title="Configurar gráfico">
-                  <IconButton size="small" sx={{ color: '#00fff7' }}>
-                    <TimelineIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <SimpleChart data={usersData?.data} type="line" />
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card sx={{ 
+          background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography variant="h6" sx={{ color: '#00fff7', fontWeight: 600 }}>
+                <PeopleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Crecimiento de Usuarios
+              </Typography>
+              <Tooltip title="Configurar gráfico">
+                <IconButton size="small" sx={{ color: '#00fff7' }}>
+                  <TimelineIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <SimpleChart data={usersData?.data} type="line" />
+          </CardContent>
+        </Card>
 
         {/* Gráfico de eventos */}
-        <Grid item xs={12} lg={6}>
-          <Card sx={{ 
-            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-          }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6" sx={{ color: '#00ff88', fontWeight: 600 }}>
-                  <EventIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                  Eventos por Categoría
-                </Typography>
-                <Tooltip title="Configurar gráfico">
-                  <IconButton size="small" sx={{ color: '#00ff88' }}>
-                    <TimelineIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <SimpleChart data={eventsData?.data} type="pie" />
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card sx={{ 
+          background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography variant="h6" sx={{ color: '#00ff88', fontWeight: 600 }}>
+                <EventIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Eventos por Categoría
+              </Typography>
+              <Tooltip title="Configurar gráfico">
+                <IconButton size="small" sx={{ color: '#00ff88' }}>
+                  <TimelineIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <SimpleChart data={eventsData?.data} type="pie" />
+          </CardContent>
+        </Card>
 
         {/* Gráfico de solicitudes */}
-        <Grid item xs={12} lg={6}>
-          <Card sx={{ 
-            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-          }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6" sx={{ color: '#ff2eec', fontWeight: 600 }}>
-                  <MusicIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                  Solicitudes por Estado
-                </Typography>
-                <Tooltip title="Configurar gráfico">
-                  <IconButton size="small" sx={{ color: '#ff2eec' }}>
-                    <TimelineIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <SimpleChart data={requestsData?.data} type="bar" />
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card sx={{ 
+          background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography variant="h6" sx={{ color: '#ff2eec', fontWeight: 600 }}>
+                <MusicIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Solicitudes por Estado
+              </Typography>
+              <Tooltip title="Configurar gráfico">
+                <IconButton size="small" sx={{ color: '#ff2eec' }}>
+                  <TimelineIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <SimpleChart data={requestsData?.data} type="bar" />
+          </CardContent>
+        </Card>
 
         {/* Gráfico de tendencias */}
-        <Grid item xs={12} lg={6}>
-          <Card sx={{ 
-            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-          }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6" sx={{ color: '#b993d6', fontWeight: 600 }}>
-                  <TrendingUpIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                  Tendencias Generales
-                </Typography>
-                <Tooltip title="Configurar gráfico">
-                  <IconButton size="small" sx={{ color: '#b993d6' }}>
-                    <TimelineIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <SimpleChart data={dashboardData?.data} type="line" />
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+        <Card sx={{ 
+          background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography variant="h6" sx={{ color: '#b993d6', fontWeight: 600 }}>
+                <TrendingUpIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Tendencias Generales
+              </Typography>
+              <Tooltip title="Configurar gráfico">
+                <IconButton size="small" sx={{ color: '#b993d6' }}>
+                  <TimelineIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <SimpleChart data={dashboardData?.data} type="line" />
+          </CardContent>
+        </Card>
+      </Box>
 
       {/* Información adicional */}
       <Box sx={{ mt: 4 }}>
@@ -433,38 +418,32 @@ const Analytics: React.FC = () => {
             <Typography variant="h6" sx={{ color: '#00fff7', mb: 2, fontWeight: 600 }}>
               📈 Resumen de Rendimiento
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" sx={{ color: '#00ff88', fontWeight: 700, mb: 1 }}>
-                    98.5%
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
-                    Tasa de Uptime
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" sx={{ color: '#ff2eec', fontWeight: 700, mb: 1 }}>
-                    2.3s
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
-                    Tiempo de Respuesta Promedio
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" sx={{ color: '#b993d6', fontWeight: 700, mb: 1 }}>
-                    1,847
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
-                    Usuarios Activos Hoy
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+              <Box sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ color: '#00ff88', fontWeight: 700, mb: 1 }}>
+                  98.5%
+                </Typography>
+                <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
+                  Tasa de Uptime
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ color: '#ff2eec', fontWeight: 700, mb: 1 }}>
+                  2.3s
+                </Typography>
+                <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
+                  Tiempo de Respuesta Promedio
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ color: '#b993d6', fontWeight: 700, mb: 1 }}>
+                  1,847
+                </Typography>
+                <Typography variant="body2" sx={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
+                  Usuarios Activos Hoy
+                </Typography>
+              </Box>
+            </Box>
           </CardContent>
         </Card>
       </Box>

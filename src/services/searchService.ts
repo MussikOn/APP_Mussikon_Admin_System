@@ -1,4 +1,4 @@
-import { get, post } from './api';
+import { apiService } from './api';
 
 // Tipos para búsqueda
 export interface SearchFilters {
@@ -70,27 +70,32 @@ export interface AnalyticsResponse {
 export const searchService = {
   // Búsqueda global en toda la plataforma
   async globalSearch(filters: SearchFilters): Promise<SearchResponse> {
-    return get('/search/global', { params: filters });
+    const response = await apiService.get('/search/global', { params: filters });
+    return response.data;
   },
 
   // Búsqueda de eventos
   async searchEvents(filters: SearchFilters): Promise<SearchResponse> {
-    return get('/search/events', { params: filters });
+    const response = await apiService.get('/search/events', { params: filters });
+    return response.data;
   },
 
   // Búsqueda de usuarios
   async searchUsers(filters: SearchFilters): Promise<SearchResponse> {
-    return get('/search/users', { params: filters });
+    const response = await apiService.get('/search/users', { params: filters });
+    return response.data;
   },
 
   // Búsqueda de solicitudes de músicos
   async searchMusicianRequests(filters: SearchFilters): Promise<SearchResponse> {
-    return get('/search/musician-requests', { params: filters });
+    const response = await apiService.get('/search/musician-requests', { params: filters });
+    return response.data;
   },
 
   // Búsqueda por ubicación
   async searchByLocation(filters: SearchFilters): Promise<SearchResponse> {
-    return get('/search/location', { params: filters });
+    const response = await apiService.get('/search/location', { params: filters });
+    return response.data;
   },
 };
 
@@ -98,50 +103,58 @@ export const searchService = {
 export const analyticsService = {
   // Analytics del dashboard principal
   async getDashboardAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/dashboard', { params: filters });
+    const response = await apiService.get('/analytics/dashboard', { params: filters });
+    return response.data;
   },
 
   // Analytics de eventos
   async getEventsAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/events', { params: filters });
+    const response = await apiService.get('/analytics/events', { params: filters });
+    return response.data;
   },
 
   // Analytics de solicitudes
   async getRequestsAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/requests', { params: filters });
+    const response = await apiService.get('/analytics/requests', { params: filters });
+    return response.data;
   },
 
   // Analytics de usuarios
   async getUsersAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/users', { params: filters });
+    const response = await apiService.get('/analytics/users', { params: filters });
+    return response.data;
   },
 
   // Analytics de la plataforma
   async getPlatformAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/platform', { params: filters });
+    const response = await apiService.get('/analytics/platform', { params: filters });
+    return response.data;
   },
 
   // Reportes de tendencias
   async getTrendsAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/trends', { params: filters });
+    const response = await apiService.get('/analytics/trends', { params: filters });
+    return response.data;
   },
 
   // Reportes de rendimiento por ubicación
   async getLocationPerformanceAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/location-performance', { params: filters });
+    const response = await apiService.get('/analytics/location-performance', { params: filters });
+    return response.data;
   },
 
   // Reportes de usuarios más activos
   async getTopUsersAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
-    return get('/analytics/top-users', { params: filters });
+    const response = await apiService.get('/analytics/top-users', { params: filters });
+    return response.data;
   },
 
   // Exportación de reportes
   async exportAnalytics(filters?: AnalyticsFilters, format: 'csv' | 'json' = 'json'): Promise<Blob> {
-    const response = await get('/analytics/export', { 
+    const response = await apiService.get('/analytics/export', { 
       params: { ...filters, format },
       responseType: 'blob'
     });
-    return response;
+    return response.data;
   },
 }; 

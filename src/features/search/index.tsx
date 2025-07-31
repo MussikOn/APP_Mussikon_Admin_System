@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { searchService, SearchFilters, SearchResult } from '../../services/searchService';
-import { useApiRequest } from '../../hooks/useApiRequest';
+import { searchService } from '../../services/searchService';
+import type { SearchFilters, SearchResult } from '../../services/searchService';
 import {
   Box,
   Card,
@@ -21,26 +21,21 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Slider,
-  Grid,
   CircularProgress,
   Alert,
   Divider,
   Tooltip,
-  InputAdornment,
-  Snackbar
+  InputAdornment
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
   FilterList as FilterIcon,
-  LocationOn as LocationIcon,
   Event as EventIcon,
   Person as PersonIcon,
   MusicNote as MusicIcon,
   TrendingUp as TrendingIcon,
-  Download as DownloadIcon,
-  Refresh as RefreshIcon
+  Download as DownloadIcon
 } from '@mui/icons-material';
 
 const Search: React.FC = () => {
@@ -55,9 +50,6 @@ const Search: React.FC = () => {
     limit: 20,
     page: 1
   });
-
-  // Hook para manejar las peticiones API
-  const { execute: executeSearch } = useApiRequest();
 
   // Función para realizar búsqueda
   const handleSearch = useCallback(async () => {
@@ -75,17 +67,17 @@ const Search: React.FC = () => {
 
       let response;
       if (category === 'all') {
-        response = await executeSearch(() => searchService.globalSearch(searchFilters));
+        response = await searchService.globalSearch(searchFilters);
       } else if (category === 'events') {
-        response = await executeSearch(() => searchService.searchEvents(searchFilters));
+        response = await searchService.searchEvents(searchFilters);
       } else if (category === 'users') {
-        response = await executeSearch(() => searchService.searchUsers(searchFilters));
+        response = await searchService.searchUsers(searchFilters);
       } else if (category === 'requests') {
-        response = await executeSearch(() => searchService.searchMusicianRequests(searchFilters));
+        response = await searchService.searchMusicianRequests(searchFilters);
       }
 
-      if (response?.data) {
-        setResults(response.data.results || []);
+      if (response && 'data' in response) {
+        setResults((response.data as any).results || []);
       }
     } catch (err) {
       setError('Error al realizar la búsqueda');
@@ -93,7 +85,7 @@ const Search: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [query, category, filters, executeSearch]);
+  }, [query, category, filters]);
 
   // Búsqueda automática con debounce
   useEffect(() => {
@@ -150,7 +142,7 @@ const Search: React.FC = () => {
         category: category === 'all' ? undefined : category
       };
 
-      const response = await searchService.globalSearch(searchFilters);
+      await searchService.globalSearch(searchFilters);
       
       // Crear archivo CSV
       const csvContent = [
@@ -203,103 +195,97 @@ const Search: React.FC = () => {
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
       }}>
         <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar eventos, usuarios, solicitudes..."
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: '#00fff7' }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: query && (
-                    <InputAdornment position="end">
-                      <IconButton onClick={handleClear} size="small">
-                        <ClearIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar eventos, usuarios, solicitudes..."
+              variant="outlined"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: '#00fff7' }} />
+                  </InputAdornment>
+                ),
+                endAdornment: query && (
+                  <InputAdornment position="end">
+                    <IconButton onClick={handleClear} size="small">
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                  '&:hover fieldset': {
+                    borderColor: '#00fff7',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00ff88',
+                  },
+                }
+              }}
+            />
+            
+            <FormControl fullWidth>
+              <InputLabel>Categoría</InputLabel>
+              <Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as any)}
+                label="Categoría"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-                    '&:hover fieldset': {
-                      borderColor: '#00fff7',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00ff88',
-                    },
+                  borderRadius: 3,
+                  background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                }}
+              >
+                <MenuItem value="all">Todas</MenuItem>
+                <MenuItem value="events">Eventos</MenuItem>
+                <MenuItem value="users">Usuarios</MenuItem>
+                <MenuItem value="requests">Solicitudes</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setShowFilters(!showFilters)}
+                startIcon={<FilterIcon />}
+                sx={{
+                  borderRadius: 3,
+                  borderColor: '#00fff7',
+                  color: '#00fff7',
+                  '&:hover': {
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0,255,247,0.1)',
                   }
                 }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Categoría</InputLabel>
-                <Select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as any)}
-                  label="Categoría"
-                  sx={{
-                    borderRadius: 3,
-                    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-                  }}
-                >
-                  <MenuItem value="all">Todas</MenuItem>
-                  <MenuItem value="events">Eventos</MenuItem>
-                  <MenuItem value="users">Usuarios</MenuItem>
-                  <MenuItem value="requests">Solicitudes</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              >
+                Filtros
+              </Button>
+              
+              {results.length > 0 && (
                 <Button
                   variant="outlined"
-                  onClick={() => setShowFilters(!showFilters)}
-                  startIcon={<FilterIcon />}
+                  onClick={handleExport}
+                  startIcon={<DownloadIcon />}
                   sx={{
                     borderRadius: 3,
-                    borderColor: '#00fff7',
-                    color: '#00fff7',
+                    borderColor: '#00ff88',
+                    color: '#00ff88',
                     '&:hover': {
-                      borderColor: '#00ff88',
-                      backgroundColor: 'rgba(0,255,247,0.1)',
+                      borderColor: '#00fff7',
+                      backgroundColor: 'rgba(0,255,136,0.1)',
                     }
                   }}
                 >
-                  Filtros
+                  Exportar
                 </Button>
-                
-                {results.length > 0 && (
-                  <Button
-                    variant="outlined"
-                    onClick={handleExport}
-                    startIcon={<DownloadIcon />}
-                    sx={{
-                      borderRadius: 3,
-                      borderColor: '#00ff88',
-                      color: '#00ff88',
-                      '&:hover': {
-                        borderColor: '#00fff7',
-                        backgroundColor: 'rgba(0,255,136,0.1)',
-                      }
-                    }}
-                  >
-                    Exportar
-                  </Button>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
+              )}
+            </Box>
+          </Box>
 
           {/* Filtros avanzados */}
           {showFilters && (
@@ -307,53 +293,47 @@ const Search: React.FC = () => {
               <Typography variant="h6" sx={{ mb: 2, color: '#00fff7' }}>
                 Filtros Avanzados
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Estado"
-                    placeholder="Filtrar por estado"
-                    value={filters.status || ''}
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Instrumento"
-                    placeholder="Filtrar por instrumento"
-                    value={filters.instrument || ''}
-                    onChange={(e) => setFilters({ ...filters, instrument: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Rol"
-                    placeholder="Filtrar por rol"
-                    value={filters.role || ''}
-                    onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-                      }
-                    }}
-                  />
-                </Grid>
-              </Grid>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Estado"
+                  placeholder="Filtrar por estado"
+                  value={filters.status || ''}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                    }
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label="Instrumento"
+                  placeholder="Filtrar por instrumento"
+                  value={filters.instrument || ''}
+                  onChange={(e) => setFilters({ ...filters, instrument: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                    }
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label="Rol"
+                  placeholder="Filtrar por rol"
+                  value={filters.role || ''}
+                  onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                    }
+                  }}
+                />
+              </Box>
             </Box>
           )}
         </CardContent>

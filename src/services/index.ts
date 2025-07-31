@@ -17,13 +17,11 @@ export { contentService } from './contentService';
 // Exportar tipos de los servicios
 export type {
   SearchFilters,
-  SearchResults,
+  SearchResult,
+  SearchResponse,
   AnalyticsFilters,
-  DashboardAnalytics,
-  UserAnalytics,
-  EventAnalytics,
-  RequestAnalytics,
-  ExportFilters
+  AnalyticsData,
+  AnalyticsResponse
 } from './searchService';
 
 export type {
