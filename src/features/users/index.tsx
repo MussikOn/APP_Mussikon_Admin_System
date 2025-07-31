@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
-import type { User, UsersResponse } from "../../services/usersService";
+import type { User } from "../../services/usersService";
 import {
   getAllUsers,
   createUser,
   updateUser,
   deleteUserByEmail,
-  getUsersStats,
 } from "../../services/usersService";
 import { useApiRequest } from "../../hooks/useApiRequest";
 import { useTheme } from "../../contexts/ThemeContext";

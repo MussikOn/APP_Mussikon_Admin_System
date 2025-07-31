@@ -9,6 +9,8 @@ import Images from '../features/images';
 import Musicians from '../features/musicians';
 import AdminTools from '../features/admin';
 import MobileUsers from '../features/mobileUsers';
+import Search from '../features/search';
+import Analytics from '../features/analytics';
 import { useAuth } from '../hooks/useAuth';
 import PrivateLayout from '../components/PrivateLayout';
 import LoadingScreen from '../components/LoadingScreen';
@@ -55,6 +57,8 @@ const AppRoutes = () => (
       <Route path="/images" element={<PrivateRoute><Images /></PrivateRoute>} />
       <Route path="/musicians" element={<PrivateRoute><Musicians /></PrivateRoute>} />
       <Route path="/mobile-users" element={<PrivateRoute><MobileUsers /></PrivateRoute>} />
+      <Route path="/search" element={<PrivateRoute><Search /></PrivateRoute>} />
+      <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute allowedRoles={['superadmin']}><AdminTools /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

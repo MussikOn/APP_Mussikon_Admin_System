@@ -63,12 +63,20 @@ export const API_CONFIG = {
     
     // Búsqueda Avanzada (Admin)
     ADMIN_SEARCH_GLOBAL: '/admin/search/global',
+    SEARCH_EVENTS: '/search/events',
+    SEARCH_USERS: '/search/users',
+    SEARCH_MUSICIAN_REQUESTS: '/search/musician-requests',
+    SEARCH_LOCATION: '/search/location',
     
     // Analytics (Admin)
     ADMIN_ANALYTICS_DASHBOARD: '/admin/analytics/dashboard',
     ADMIN_ANALYTICS_USERS: '/admin/analytics/users',
     ADMIN_ANALYTICS_EVENTS: '/admin/analytics/events',
     ADMIN_ANALYTICS_REQUESTS: '/admin/analytics/requests',
+    ADMIN_ANALYTICS_PLATFORM: '/analytics/platform',
+    ADMIN_ANALYTICS_TRENDS: '/analytics/trends',
+    ADMIN_ANALYTICS_LOCATION_PERFORMANCE: '/analytics/location-performance',
+    ADMIN_ANALYTICS_TOP_USERS: '/analytics/top-users',
     ADMIN_ANALYTICS_EXPORT: '/admin/analytics/export',
     
     // Imágenes (Admin) - Nuevo CRUD

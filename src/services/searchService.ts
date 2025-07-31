@@ -1,271 +1,147 @@
-import { apiService } from './api';
-import { API_CONFIG } from '../config/apiConfig';
+import { get, post } from './api';
 
-// Interfaces para búsqueda y analytics
+// Tipos para búsqueda
 export interface SearchFilters {
-  query: string;
-  types?: string[];
-  page?: number;
+  query?: string;
+  category?: 'events' | 'users' | 'requests' | 'all';
+  location?: {
+    lat: number;
+    lng: number;
+    radius: number;
+  };
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  status?: string;
+  instrument?: string;
+  role?: string;
   limit?: number;
+  page?: number;
 }
 
-export interface SearchResults {
-  users?: any[];
-  events?: any[];
-  requests?: any[];
+export interface SearchResult {
+  id: string;
+  type: 'event' | 'user' | 'request';
+  title: string;
+  description: string;
+  relevance: number;
+  metadata: Record<string, any>;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
   total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }
 
+// Tipos para analytics
 export interface AnalyticsFilters {
-  period?: 'day' | 'week' | 'month' | 'quarter';
-  groupBy?: 'role' | 'status' | 'category' | 'instrument';
+  period?: 'day' | 'week' | 'month' | 'year';
   startDate?: string;
   endDate?: string;
+  groupBy?: 'hour' | 'day' | 'week' | 'month';
+  category?: string;
 }
 
-export interface DashboardAnalytics {
-  users: {
+export interface AnalyticsData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    backgroundColor?: string;
+    borderColor?: string;
+  }[];
+}
+
+export interface AnalyticsResponse {
+  data: AnalyticsData;
+  summary: {
     total: number;
-    active: number;
-    recent: number;
-    growth: string;
+    change: number;
+    percentage: number;
   };
-  events: {
-    total: number;
-    active: number;
-    recent: number;
-    growth: string;
-  };
-  requests: {
-    total: number;
-    pending: number;
-    completionRate: string;
-  };
-  images: {
-    total: number;
-  };
-  system: {
-    uptime: number;
-    memory: any;
-    timestamp: string;
-  };
+  metadata: Record<string, any>;
 }
 
-export interface UserAnalytics {
-  byRole?: Record<string, number>;
-  byStatus?: Record<string, number>;
-  total: number;
-  active: number;
-  inactive: number;
-  recent: number;
-  period: string;
-}
-
-export interface EventAnalytics {
-  byStatus?: Record<string, number>;
-  byCategory?: Record<string, number>;
-  total: number;
-  active: number;
-  completed: number;
-  cancelled: number;
-  recent: number;
-  period: string;
-}
-
-export interface RequestAnalytics {
-  byInstrument?: Record<string, number>;
-  byStatus?: Record<string, number>;
-  total: number;
-  pending: number;
-  assigned: number;
-  completed: number;
-  cancelled: number;
-  recent: number;
-  period: string;
-  completionRate: string;
-}
-
-export interface ExportFilters {
-  type: 'users' | 'events' | 'requests';
-  filters?: Record<string, any>;
-  format?: 'csv' | 'json';
-}
-
-// Servicio de búsqueda y analytics
+// Servicio de búsqueda
 export const searchService = {
-  /**
-   * Búsqueda global en toda la plataforma
-   */
-  async globalSearch(filters: SearchFilters): Promise<SearchResults> {
-    try {
-      const params = new URLSearchParams();
-      params.append('query', filters.query);
-      
-      if (filters.types) {
-        params.append('types', filters.types.join(','));
-      }
-      
-      if (filters.page) {
-        params.append('page', filters.page.toString());
-      }
-      
-      if (filters.limit) {
-        params.append('limit', filters.limit.toString());
-      }
-
-      const response = await apiService.get(
-        `${API_CONFIG.ENDPOINTS.ADMIN_SEARCH_GLOBAL}?${params.toString()}`
-      );
-
-      return response.data.data;
-    } catch (error) {
-      console.error('Error en búsqueda global:', error);
-      throw error;
-    }
+  // Búsqueda global en toda la plataforma
+  async globalSearch(filters: SearchFilters): Promise<SearchResponse> {
+    return get('/search/global', { params: filters });
   },
 
-  /**
-   * Obtener analytics del dashboard
-   */
-  async getDashboardAnalytics(): Promise<DashboardAnalytics> {
-    try {
-      const response = await apiService.get(
-        API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_DASHBOARD
-      );
-
-      return response.data.data;
-    } catch (error) {
-      console.error('Error obteniendo analytics del dashboard:', error);
-      throw error;
-    }
+  // Búsqueda de eventos
+  async searchEvents(filters: SearchFilters): Promise<SearchResponse> {
+    return get('/search/events', { params: filters });
   },
 
-  /**
-   * Obtener analytics de usuarios
-   */
-  async getUserAnalytics(filters: AnalyticsFilters): Promise<UserAnalytics> {
-    try {
-      const params = new URLSearchParams();
-      
-      if (filters.period) {
-        params.append('period', filters.period);
-      }
-      
-      if (filters.groupBy) {
-        params.append('groupBy', filters.groupBy);
-      }
-
-      const response = await apiService.get(
-        `${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_USERS}?${params.toString()}`
-      );
-
-      return response.data.data;
-    } catch (error) {
-      console.error('Error obteniendo analytics de usuarios:', error);
-      throw error;
-    }
+  // Búsqueda de usuarios
+  async searchUsers(filters: SearchFilters): Promise<SearchResponse> {
+    return get('/search/users', { params: filters });
   },
 
-  /**
-   * Obtener analytics de eventos
-   */
-  async getEventAnalytics(filters: AnalyticsFilters): Promise<EventAnalytics> {
-    try {
-      const params = new URLSearchParams();
-      
-      if (filters.period) {
-        params.append('period', filters.period);
-      }
-      
-      if (filters.groupBy) {
-        params.append('groupBy', filters.groupBy);
-      }
-
-      const response = await apiService.get(
-        `${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_EVENTS}?${params.toString()}`
-      );
-
-      return response.data.data;
-    } catch (error) {
-      console.error('Error obteniendo analytics de eventos:', error);
-      throw error;
-    }
+  // Búsqueda de solicitudes de músicos
+  async searchMusicianRequests(filters: SearchFilters): Promise<SearchResponse> {
+    return get('/search/musician-requests', { params: filters });
   },
 
-  /**
-   * Obtener analytics de solicitudes
-   */
-  async getRequestAnalytics(filters: AnalyticsFilters): Promise<RequestAnalytics> {
-    try {
-      const params = new URLSearchParams();
-      
-      if (filters.period) {
-        params.append('period', filters.period);
-      }
-      
-      if (filters.groupBy) {
-        params.append('groupBy', filters.groupBy);
-      }
+  // Búsqueda por ubicación
+  async searchByLocation(filters: SearchFilters): Promise<SearchResponse> {
+    return get('/search/location', { params: filters });
+  },
+};
 
-      const response = await apiService.get(
-        `${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_REQUESTS}?${params.toString()}`
-      );
-
-      return response.data.data;
-    } catch (error) {
-      console.error('Error obteniendo analytics de solicitudes:', error);
-      throw error;
-    }
+// Servicio de analytics
+export const analyticsService = {
+  // Analytics del dashboard principal
+  async getDashboardAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/dashboard', { params: filters });
   },
 
-  /**
-   * Exportar reportes
-   */
-  async exportReport(filters: ExportFilters): Promise<Blob> {
-    try {
-      const params = new URLSearchParams();
-      params.append('type', filters.type);
-      
-      if (filters.filters) {
-        params.append('filters', JSON.stringify(filters.filters));
-      }
-      
-      if (filters.format) {
-        params.append('format', filters.format);
-      }
-
-      const response = await apiService.get(
-        `${API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_EXPORT}?${params.toString()}`,
-        {
-          responseType: 'blob'
-        }
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error('Error exportando reporte:', error);
-      throw error;
-    }
+  // Analytics de eventos
+  async getEventsAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/events', { params: filters });
   },
 
-  /**
-   * Descargar reporte como archivo
-   */
-  async downloadReport(filters: ExportFilters, filename?: string): Promise<void> {
-    try {
-      const blob = await this.exportReport(filters);
-      
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename || `${filters.type}_report.${filters.format || 'csv'}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error descargando reporte:', error);
-      throw error;
-    }
-  }
+  // Analytics de solicitudes
+  async getRequestsAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/requests', { params: filters });
+  },
+
+  // Analytics de usuarios
+  async getUsersAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/users', { params: filters });
+  },
+
+  // Analytics de la plataforma
+  async getPlatformAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/platform', { params: filters });
+  },
+
+  // Reportes de tendencias
+  async getTrendsAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/trends', { params: filters });
+  },
+
+  // Reportes de rendimiento por ubicación
+  async getLocationPerformanceAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/location-performance', { params: filters });
+  },
+
+  // Reportes de usuarios más activos
+  async getTopUsersAnalytics(filters?: AnalyticsFilters): Promise<AnalyticsResponse> {
+    return get('/analytics/top-users', { params: filters });
+  },
+
+  // Exportación de reportes
+  async exportAnalytics(filters?: AnalyticsFilters, format: 'csv' | 'json' = 'json'): Promise<Blob> {
+    const response = await get('/analytics/export', { 
+      params: { ...filters, format },
+      responseType: 'blob'
+    });
+    return response;
+  },
 }; 

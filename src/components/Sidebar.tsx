@@ -24,6 +24,8 @@ import {
   Person as PersonIcon,
   AdminPanelSettings as AdminPanelSettingsIcon,
   Smartphone as SmartphoneIcon,
+  Search as SearchIcon,
+  Analytics as AnalyticsIcon,
   Menu as MenuIcon,
   KeyboardArrowLeft as CollapseIcon,
   KeyboardArrowRight as ExpandIcon
@@ -81,6 +83,20 @@ const navigationItems = [
     icon: <SmartphoneIcon />,
     color: '#43cea2',
     description: 'Usuarios de la aplicación móvil'
+  },
+  { 
+    to: '/search', 
+    label: 'Búsqueda', 
+    icon: <SearchIcon />,
+    color: '#00ff88',
+    description: 'Búsqueda avanzada en toda la plataforma'
+  },
+  { 
+    to: '/analytics', 
+    label: 'Analytics', 
+    icon: <AnalyticsIcon />,
+    color: '#ff6b35',
+    description: 'Dashboard de analytics y métricas'
   },
   { 
     to: '/admin', 
