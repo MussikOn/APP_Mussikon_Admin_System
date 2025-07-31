@@ -109,6 +109,103 @@ const Analytics: React.FC = () => {
       .some(error => error?.includes('500') || error?.includes('Internal Server Error'));
   };
 
+  // Función para verificar disponibilidad del backend
+  const checkBackendAvailability = async () => {
+    console.log('🔍 Verificando disponibilidad del backend...');
+    
+    try {
+      const response = await fetch('http://localhost:3001/health', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        console.log('✅ Backend disponible');
+        return true;
+      } else {
+        console.warn('⚠️ Backend responde pero con error:', response.status);
+        return false;
+      }
+    } catch (error: any) {
+      console.error('❌ Backend no disponible:', error.message);
+      
+      if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || 
+          error.message?.includes('blocked by client')) {
+        console.warn('🚫 Backend bloqueado por cliente');
+        return 'blocked';
+      }
+      
+      return false;
+    }
+  };
+
+  // Función para manejar específicamente ERR_BLOCKED_BY_CLIENT
+  const handleBlockedByClientError = async () => {
+    console.warn('🚫 Detectado ERR_BLOCKED_BY_CLIENT - Iniciando solución automática...');
+    
+    // Verificar disponibilidad del backend
+    const backendStatus = await checkBackendAvailability();
+    
+    let alertMessage = '';
+    
+    if (backendStatus === 'blocked') {
+      alertMessage = `
+🚫 Confirmado: Backend bloqueado por extensiones del navegador
+
+🔧 Soluciones inmediatas:
+1. DESACTIVA todas las extensiones del navegador:
+   • Click derecho en iconos de extensiones → Desactivar
+   • Especialmente ad-blockers, bloqueadores de privacidad
+   
+2. USA MODO INCOGNITO:
+   • Ctrl+Shift+N (Chrome/Edge)
+   • Ctrl+Shift+P (Firefox)
+   
+3. CONFIGURA EXCEPCIONES:
+   • En ad-blocker: Agregar "localhost:3001" a excepciones
+   • En firewall: Permitir "localhost:3001"
+
+🌐 URL afectada: http://localhost:3001/analytics/events
+
+📋 Después de hacer cambios:
+• Recarga la página (F5)
+• Usa el botón "Diagnosticar" para verificar
+      `;
+    } else if (backendStatus === false) {
+      alertMessage = `
+⚠️ Backend no disponible en localhost:3001
+
+🔧 Verificaciones:
+1. ¿Está ejecutándose el servidor backend?
+2. ¿Está en el puerto correcto (3001)?
+3. ¿Hay errores en la consola del servidor?
+
+🌐 URL esperada: http://localhost:3001
+      `;
+    } else {
+      alertMessage = `
+✅ Backend disponible pero requests bloqueados
+
+🔧 El problema es específicamente con las extensiones:
+1. Desactiva extensiones una por una
+2. Recarga después de cada desactivación
+3. Identifica cuál causa el problema
+
+🌐 URL afectada: http://localhost:3001/analytics/events
+      `;
+    }
+    
+    alert(alertMessage);
+    
+    // Intentar recargar después de un delay
+    setTimeout(() => {
+      console.log('🔄 Intentando recarga automática...');
+      loadAnalyticsData();
+    }, 3000);
+  };
+
   // Función para diagnosticar problemas de conectividad
   const runDiagnostics = async () => {
     console.log('🔍 Iniciando diagnóstico de conectividad...');
@@ -151,6 +248,12 @@ const Analytics: React.FC = () => {
         });
         
         console.error(`❌ ${endpoint}: ${error.message}`);
+        
+        // Detectar específicamente ERR_BLOCKED_BY_CLIENT
+        if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || 
+            error.message?.includes('blocked by client')) {
+          console.warn(`🚫 ${endpoint}: Bloqueado por cliente - Posible ad-blocker`);
+        }
       }
     }
 
@@ -162,7 +265,20 @@ const Analytics: React.FC = () => {
       `${r.endpoint}: ${r.status ? `${r.status} ${r.statusText}` : `Error: ${r.error}`}`
     ).join('\n');
     
-    alert(`🔍 Diagnóstico completado:\n\n${report}\n\nRevisa la consola para más detalles.`);
+    // Detectar problemas específicos
+    const blockedEndpoints = results.filter(r => 
+      r.error?.includes('ERR_BLOCKED_BY_CLIENT') || 
+      r.error?.includes('blocked by client')
+    );
+    
+    let finalReport = `🔍 Diagnóstico completado:\n\n${report}`;
+    
+    if (blockedEndpoints.length > 0) {
+      finalReport += `\n\n🚫 Endpoints bloqueados: ${blockedEndpoints.length}`;
+      finalReport += `\n🔧 Recomendación: Desactiva extensiones del navegador`;
+    }
+    
+    alert(`${finalReport}\n\nRevisa la consola para más detalles.`);
   };
 
   // Cargar datos al montar el componente y cuando cambien los filtros
@@ -308,21 +424,26 @@ const Analytics: React.FC = () => {
           severity="warning" 
           sx={{ mb: 3 }}
           action={
-            <Button color="inherit" size="small" onClick={() => window.open('https://support.google.com/chrome/answer/2765944', '_blank')}>
-              Ayuda
-            </Button>
+            <Box display="flex" gap={1}>
+              <Button color="inherit" size="small" onClick={handleBlockedByClientError}>
+                Solucionar
+              </Button>
+              <Button color="inherit" size="small" onClick={() => window.open('https://support.google.com/chrome/answer/2765944', '_blank')}>
+                Ayuda
+              </Button>
+            </Box>
           }
         >
           <Typography variant="body2">
-            <strong>Problema detectado:</strong> Algunas solicitudes están siendo bloqueadas por el navegador o extensiones.
+            <strong>🚫 Problema detectado:</strong> Solicitudes bloqueadas por el navegador o extensiones.
             <br />
-            <strong>Soluciones:</strong>
+            <strong>🔧 Soluciones rápidas:</strong>
+            <br />
+            • <strong>Click en "Solucionar"</strong> para guía automática
             <br />
             • Desactiva temporalmente las extensiones del navegador (especialmente ad-blockers)
             <br />
-            • Verifica la configuración de firewall corporativo
-            <br />
-            • Intenta usar modo incógnito o un navegador diferente
+            • Usa modo incógnito (Ctrl+Shift+N) para probar
             <br />
             • Los datos se muestran desde respaldo mientras se resuelve el problema
           </Typography>

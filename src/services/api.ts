@@ -129,6 +129,14 @@ const createApiInstance = (): AxiosInstance => {
         console.error('🌐 Base URL:', getApiConfig().BASE_URL);
       }
 
+      // Detectar específicamente ERR_BLOCKED_BY_CLIENT (independiente del tipo de error)
+      if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || 
+          error.message?.includes('blocked by client') ||
+          error.message?.includes('ERR_BLOCKED_BY_CLIENT')) {
+        console.warn('🚫 Request bloqueado por cliente - Posible ad-blocker o extensión');
+        console.warn('🚫 Soluciones: Desactivar extensiones, usar modo incógnito, configurar excepciones');
+      }
+
       // Crear error personalizado
       const apiError = new ApiError(
         (error.response?.data as any)?.msg || 

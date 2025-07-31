@@ -23,6 +23,16 @@
 - **Cambios:** Activación automática de datos de respaldo
 - **Beneficio:** La aplicación sigue funcionando mientras se resuelve el problema
 
+#### D. Herramienta de Solución Automática
+- **Archivo:** `src/features/analytics/index.tsx`
+- **Cambios:** Función `handleBlockedByClientError()` con verificación de backend
+- **Beneficio:** Diagnóstico automático y guía específica de solución
+
+#### E. Verificación de Backend
+- **Archivo:** `src/features/analytics/index.tsx`
+- **Cambios:** Función `checkBackendAvailability()` para verificar estado del servidor
+- **Beneficio:** Distinción entre problemas de backend y bloqueo de cliente
+
 ### ✅ 2. Error `500 Internal Server Error` para `/analytics/dashboard`
 
 **Problema:** El servidor backend devolvía errores internos.
@@ -61,6 +71,11 @@
 - **Archivo:** `ANALYTICS_TROUBLESHOOTING.md`
 - **Contenido:** Guía paso a paso para resolver problemas
 - **Beneficio:** Autoservicio para usuarios y desarrolladores
+
+### 🚫 Guía Específica para ERR_BLOCKED_BY_CLIENT
+- **Archivo:** `ERR_BLOCKED_BY_CLIENT_SOLUTION.md`
+- **Contenido:** Solución específica para el error de bloqueo por cliente
+- **Beneficio:** Resolución rápida del problema más común
 
 ## Archivos Modificados
 

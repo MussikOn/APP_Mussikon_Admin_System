@@ -172,10 +172,51 @@ export const analyticsService = {
       if (error.code === 'ERR_BLOCKED_BY_CLIENT') {
         console.warn('📊 Request de eventos bloqueado por cliente - Usando datos de respaldo');
         console.warn('📊 Posibles causas: ad-blocker, extensión de privacidad, firewall corporativo');
+        
+        // Intentar con URL alternativa si está disponible
+        const alternativeUrl = this.tryAlternativeConnection('/analytics/events', filters);
+        if (alternativeUrl) {
+          console.log('📊 Intentando conexión alternativa...');
+          try {
+            const altResponse = await fetch(alternativeUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+              }
+            });
+            
+            if (altResponse.ok) {
+              const data = await altResponse.json();
+              console.log('📊 Conexión alternativa exitosa');
+              return data;
+            }
+          } catch (altError) {
+            console.warn('📊 Conexión alternativa también falló:', altError);
+          }
+        }
       }
       
       return analyticsService.getFallbackEventsData(filters);
     }
+  },
+
+  // Función para intentar conexión alternativa
+  tryAlternativeConnection(endpoint: string, filters?: AnalyticsFilters): string | null {
+    const baseUrl = 'http://localhost:3001';
+    const params = new URLSearchParams();
+    
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value.toString());
+      });
+    }
+    
+    const queryString = params.toString();
+    const url = `${baseUrl}${endpoint}${queryString ? `?${queryString}` : ''}`;
+    
+    // Verificar si el endpoint está disponible
+    return url;
   },
 
   // Analytics de solicitudes
