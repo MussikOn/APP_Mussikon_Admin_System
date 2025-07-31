@@ -17,13 +17,38 @@ export function useAuth() {
         // Verificar si el token es válido usando el servicio de auth
         if (authService.isAuthenticated() && !authService.isTokenExpired()) {
           const currentUser = authService.getCurrentUser();
-          setUser(currentUser);
+          if (currentUser) {
+            setUser(currentUser);
+          } else {
+            // Si no hay usuario en localStorage pero hay token, intentar obtenerlo del token
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const userFromToken = {
+                _id: payload._id || 'unknown',
+                name: payload.name || '',
+                lastName: payload.lastName || '',
+                userEmail: payload.userEmail || '',
+                roll: payload.roll || 'admin',
+                status: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              localStorage.setItem('user', JSON.stringify(userFromToken));
+              setUser(userFromToken);
+            } catch (parseError) {
+              console.warn('No se pudo parsear el token JWT:', parseError);
+              setUser(null);
+              localStorage.removeItem('token');
+            }
+          }
         } else {
           throw new Error('Token inválido o expirado');
         }
       } catch (err: any) {
+        console.warn('Error al verificar sesión:', err.message);
         setUser(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
       } finally {
         setLoading(false);
       }
@@ -38,11 +63,15 @@ export function useAuth() {
       const data = await authService.login({ userEmail: email, userPassword: password });
       if (data.success && data.user) {
         setUser(data.user);
+        return { success: true };
       } else {
         setError(data.message || 'Respuesta inesperada del servidor.');
+        return { success: false, error: data.message };
       }
     } catch (err: any) {
-      setError(err.message || 'Error de autenticación.');
+      const errorMessage = err.message || 'Error de autenticación.';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }

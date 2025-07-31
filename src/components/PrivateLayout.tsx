@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from './Sidebar';
+import GlobalSearch from './GlobalSearch';
 import {
   Box,
   AppBar,
@@ -14,13 +15,15 @@ import {
   MenuItem,
   Divider,
   Badge,
-  Tooltip
+  Tooltip,
+  useMediaQuery
 } from '@mui/material';
 import {
   Notifications as NotificationsIcon,
   AccountCircle as AccountCircleIcon,
   Settings as SettingsIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 import ThemeToggle from './ThemeToggle';
 
@@ -29,6 +32,10 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [showSearch, setShowSearch] = React.useState(false);
+  
+  // Responsive breakpoints
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -52,6 +59,10 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const handleSettings = () => {
     handleClose();
     // Navigate to settings page
+  };
+
+  const handleSearchToggle = () => {
+    setShowSearch(!showSearch);
   };
 
   return (
@@ -82,9 +93,19 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
           }}
         >
-          <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Toolbar sx={{ 
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2
+          }}>
             {/* Left side */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2,
+              flex: 1,
+              minWidth: 0
+            }}>
               <Typography 
                 variant="h6" 
                 sx={{ 
@@ -93,14 +114,63 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
+                  fontSize: { xs: '1rem', sm: '1.25rem' }
                 }}
               >
                 MussikOn Admin
               </Typography>
+
+              {/* Global Search - Desktop/Tablet */}
+              {!isMobile && (
+                <Box sx={{ 
+                  flex: 1, 
+                  maxWidth: 500,
+                  display: { xs: 'none', md: 'block' }
+                }}>
+                  <GlobalSearch />
+                </Box>
+              )}
             </Box>
 
+            {/* Center - Mobile Search */}
+            {isMobile && showSearch && (
+              <Box sx={{ 
+                width: '100%', 
+                order: 3,
+                mt: 1
+              }}>
+                <GlobalSearch />
+              </Box>
+            )}
+
             {/* Right side */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              flexShrink: 0
+            }}>
+              {/* Mobile Search Toggle */}
+              {isMobile && (
+                <Tooltip title="Búsqueda global">
+                  <IconButton
+                    onClick={handleSearchToggle}
+                    color="inherit"
+                    aria-label="Alternar búsqueda global"
+                    sx={{ 
+                      borderRadius: '50%',
+                      '&:hover': { 
+                        background: 'rgba(255,255,255,0.1)',
+                        transform: 'scale(1.1)'
+                      },
+                      transition: 'all 0.2s ease-in-out',
+                    }}
+                  >
+                    <SearchIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+
               {/* Theme Toggle */}
               <ThemeToggle />
 
@@ -108,9 +178,14 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <Tooltip title="Notificaciones">
                 <IconButton 
                   color="inherit"
+                  aria-label="Ver notificaciones"
                   sx={{ 
                     borderRadius: '50%',
-                    '&:hover': { background: 'rgba(255,255,255,0.1)' }
+                    '&:hover': { 
+                      background: 'rgba(255,255,255,0.1)',
+                      transform: 'scale(1.1)'
+                    },
+                    transition: 'all 0.2s ease-in-out',
                   }}
                 >
                   <Badge badgeContent={3} color="error">
@@ -123,9 +198,16 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <Tooltip title="Menú de usuario">
                 <IconButton
                   onClick={handleMenu}
+                  aria-label="Abrir menú de usuario"
+                  aria-expanded={Boolean(anchorEl)}
+                  aria-haspopup="true"
                   sx={{ 
                     borderRadius: '50%',
-                    '&:hover': { background: 'rgba(255,255,255,0.1)' }
+                    '&:hover': { 
+                      background: 'rgba(255,255,255,0.1)',
+                      transform: 'scale(1.1)'
+                    },
+                    transition: 'all 0.2s ease-in-out',
                   }}
                 >
                   <Avatar 
@@ -136,6 +218,7 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                       fontSize: '0.875rem',
                       fontWeight: 600,
                     }}
+                    aria-label={`Avatar de ${user?.name || user?.email || 'Usuario'}`}
                   >
                     {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                   </Avatar>
@@ -159,8 +242,14 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     minWidth: 200,
                   }
                 }}
+                role="menu"
+                aria-label="Menú de usuario"
               >
-                <MenuItem onClick={handleProfile} sx={{ py: 1.5 }}>
+                <MenuItem 
+                  onClick={handleProfile} 
+                  sx={{ py: 1.5 }}
+                  role="menuitem"
+                >
                   <AccountCircleIcon sx={{ mr: 2, fontSize: 20 }} />
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -174,14 +263,22 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 
                 <Divider sx={{ my: 1 }} />
                 
-                <MenuItem onClick={handleSettings} sx={{ py: 1.5 }}>
+                <MenuItem 
+                  onClick={handleSettings} 
+                  sx={{ py: 1.5 }}
+                  role="menuitem"
+                >
                   <SettingsIcon sx={{ mr: 2, fontSize: 20 }} />
                   Configuración
                 </MenuItem>
                 
                 <Divider sx={{ my: 1 }} />
                 
-                <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
+                <MenuItem 
+                  onClick={handleLogout} 
+                  sx={{ py: 1.5, color: 'error.main' }}
+                  role="menuitem"
+                >
                   <LogoutIcon sx={{ mr: 2, fontSize: 20 }} />
                   Cerrar sesión
                 </MenuItem>
@@ -195,7 +292,7 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           component="main" 
           sx={{ 
             flexGrow: 1,
-            p: 3,
+            p: { xs: 2, sm: 3 },
             overflow: 'auto',
           }}
         >

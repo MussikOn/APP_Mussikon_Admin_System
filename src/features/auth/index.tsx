@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
@@ -22,10 +22,11 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,16 +39,15 @@ const Auth = () => {
         return;
       }
       
-      // Usar los nombres de campo correctos
-      const data = await login({ userEmail: email, userPassword: password });
+      const result = await login(email, password);
       
-      if (data.success && data.token) {
+      if (result.success) {
         // Login exitoso
         setError('');
         navigate('/');
       } else {
         // Login fallido
-        setError(data.message || 'Error en la autenticación.');
+        setError(result.error || 'Error en la autenticación.');
       }
     } catch (err: any) {
       console.error('Error de login:', err);

@@ -12,7 +12,8 @@ import {
   ListItemText,
   Typography,
   Divider,
-  IconButton
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -24,7 +25,8 @@ import {
   AdminPanelSettings as AdminPanelSettingsIcon,
   Smartphone as SmartphoneIcon,
   Menu as MenuIcon,
-  Close as CloseIcon
+  KeyboardArrowLeft as CollapseIcon,
+  KeyboardArrowRight as ExpandIcon
 } from '@mui/icons-material';
 
 const drawerWidth = 280;
@@ -35,49 +37,57 @@ const navigationItems = [
     to: '/', 
     label: 'Dashboard', 
     icon: <DashboardIcon />,
-    color: '#7f5fff'
+    color: '#7f5fff',
+    description: 'Panel principal con estadísticas y métricas'
   },
   { 
     to: '/users', 
     label: 'Usuarios', 
     icon: <PeopleIcon />,
-    color: '#00e0ff'
+    color: '#00e0ff',
+    description: 'Gestión de usuarios del sistema'
   },
   { 
     to: '/events', 
     label: 'Eventos', 
     icon: <EventIcon />,
-    color: '#ff2eec'
+    color: '#ff2eec',
+    description: 'Administración de eventos y conciertos'
   },
   { 
     to: '/musician-requests', 
     label: 'Solicitudes', 
     icon: <LibraryMusicIcon />,
-    color: '#b993d6'
+    color: '#b993d6',
+    description: 'Solicitudes de músicos pendientes'
   },
   { 
     to: '/images', 
     label: 'Imágenes', 
     icon: <ImageIcon />,
-    color: '#00fff7'
+    color: '#00fff7',
+    description: 'Gestión de galería de imágenes'
   },
   { 
     to: '/musicians', 
     label: 'Músicos', 
     icon: <PersonIcon />,
-    color: '#ff6b35'
+    color: '#ff6b35',
+    description: 'Perfiles y gestión de músicos'
   },
   { 
     to: '/mobile-users', 
     label: 'Usuarios Móviles', 
     icon: <SmartphoneIcon />,
-    color: '#43cea2'
+    color: '#43cea2',
+    description: 'Usuarios de la aplicación móvil'
   },
   { 
     to: '/admin', 
     label: 'Admin', 
     icon: <AdminPanelSettingsIcon />,
-    color: '#8ca6db'
+    color: '#8ca6db',
+    description: 'Herramientas de administración avanzada'
   },
 ];
 
@@ -85,7 +95,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const { isDark } = useTheme();
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -100,6 +110,13 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
     }
   };
 
+  const handleKeyPress = (event: React.KeyboardEvent, path: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleNavigation(path);
+    }
+  };
+
   const isActive = (path: string) => {
     if (path === '/') {
       return location.pathname === '/';
@@ -108,7 +125,11 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
   };
 
   const drawerContent = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box 
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      role="navigation"
+      aria-label="Navegación principal"
+    >
       {/* Header */}
       <Box
         sx={{
@@ -132,6 +153,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
                 justifyContent: 'center',
                 fontSize: '1.5rem',
               }}
+              aria-label="Logo de MussikOn"
             >
               🎵
             </Box>
@@ -151,67 +173,106 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
         )}
         
         {!isMobile && (
-          <IconButton
-            onClick={() => setCollapsed(!collapsed)}
-            sx={{
-              color: 'text.secondary',
-              '&:hover': { background: 'rgba(255,255,255,0.1)' }
-            }}
+          <Tooltip 
+            title={collapsed ? "Expandir menú" : "Contraer menú"}
+            placement="right"
           >
-            {collapsed ? <MenuIcon /> : <CloseIcon />}
-          </IconButton>
-        )}
-      </Box>
-
-      {/* Navigation */}
-      <List sx={{ flexGrow: 1, py: 1 }}>
-        {navigationItems.map((item) => (
-          <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-              onClick={() => handleNavigation(item.to)}
+            <IconButton
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label={collapsed ? "Expandir menú de navegación" : "Contraer menú de navegación"}
               sx={{
-                mx: 1,
-                borderRadius: 2,
-                minHeight: 48,
-                background: isActive(item.to) 
-                  ? `linear-gradient(135deg, ${item.color}20 0%, ${item.color}10 100%)`
-                  : 'transparent',
-                border: isActive(item.to) 
-                  ? `1px solid ${item.color}40`
-                  : '1px solid transparent',
-                '&:hover': {
-                  background: `linear-gradient(135deg, ${item.color}15 0%, ${item.color}05 100%)`,
-                  border: `1px solid ${item.color}30`,
+                color: 'text.secondary',
+                '&:hover': { 
+                  background: 'rgba(255,255,255,0.1)',
+                  transform: 'scale(1.1)'
                 },
                 transition: 'all 0.2s ease-in-out',
               }}
             >
-              <ListItemIcon
-                sx={{
-                  minWidth: collapsed ? 'auto' : 40,
-                  color: isActive(item.to) ? item.color : 'text.secondary',
-                  '& .MuiSvgIcon-root': {
-                    fontSize: collapsed ? '1.5rem' : '1.25rem',
-                  },
-                }}
+              {collapsed ? <ExpandIcon /> : <CollapseIcon />}
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
+
+      {/* Navigation */}
+      <List 
+        sx={{ flexGrow: 1, py: 1 }}
+        role="list"
+        aria-label="Enlaces de navegación"
+      >
+        {navigationItems.map((item) => {
+          const isItemActive = isActive(item.to);
+          return (
+            <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
+              <Tooltip 
+                title={collapsed ? item.label : item.description}
+                placement="right"
+                disableHoverListener={!collapsed}
               >
-                {item.icon}
-              </ListItemIcon>
-              
-              {!collapsed && (
-                <ListItemText
-                  primary={item.label}
+                <ListItemButton
+                  onClick={() => handleNavigation(item.to)}
+                  onKeyPress={(e) => handleKeyPress(e, item.to)}
+                  role="menuitem"
+                  aria-label={`${item.label} - ${item.description}`}
+                  aria-current={isItemActive ? 'page' : undefined}
+                  tabIndex={0}
                   sx={{
-                    '& .MuiTypography-root': {
-                      fontWeight: isActive(item.to) ? 600 : 500,
-                      color: isActive(item.to) ? item.color : 'text.primary',
+                    mx: 1,
+                    borderRadius: 2,
+                    minHeight: 48,
+                    background: isItemActive 
+                      ? `linear-gradient(135deg, ${item.color}20 0%, ${item.color}10 100%)`
+                      : 'transparent',
+                    border: isItemActive 
+                      ? `1px solid ${item.color}40`
+                      : '1px solid transparent',
+                    '&:hover': {
+                      background: `linear-gradient(135deg, ${item.color}15 0%, ${item.color}05 100%)`,
+                      border: `1px solid ${item.color}30`,
+                      transform: 'translateX(4px)',
                     },
+                    '&:focus': {
+                      outline: '2px solid',
+                      outlineColor: item.color,
+                      outlineOffset: '2px',
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid',
+                      outlineColor: item.color,
+                      outlineOffset: '2px',
+                    },
+                    transition: 'all 0.2s ease-in-out',
                   }}
-                />
-              )}
-            </ListItemButton>
-          </ListItem>
-        ))}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: collapsed ? 'auto' : 40,
+                      color: isItemActive ? item.color : 'text.secondary',
+                      '& .MuiSvgIcon-root': {
+                        fontSize: collapsed ? '1.5rem' : '1.25rem',
+                      },
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  
+                  {!collapsed && (
+                    <ListItemText
+                      primary={item.label}
+                      sx={{
+                        '& .MuiTypography-root': {
+                          fontWeight: isItemActive ? 600 : 500,
+                          color: isItemActive ? item.color : 'text.primary',
+                        },
+                      }}
+                    />
+                  )}
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+          );
+        })}
       </List>
 
       {/* Footer */}
@@ -253,7 +314,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
       <>
         <IconButton
           color="inherit"
-          aria-label="open drawer"
+          aria-label="Abrir menú de navegación"
           edge="start"
           onClick={handleDrawerToggle}
           sx={{
@@ -270,7 +331,9 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
               background: isDark 
                 ? 'rgba(31, 38, 135, 0.95)'
                 : 'rgba(255, 255, 255, 0.95)',
+              transform: 'scale(1.1)',
             },
+            transition: 'all 0.2s ease-in-out',
           }}
         >
           <MenuIcon />
@@ -299,6 +362,31 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) =>
           {drawerContent}
         </Drawer>
       </>
+    );
+  }
+
+  // Tablet drawer - responsive behavior
+  if (isTablet) {
+    return (
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: collapsed ? collapsedDrawerWidth : Math.min(drawerWidth, 240),
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: collapsed ? collapsedDrawerWidth : Math.min(drawerWidth, 240),
+            background: isDark 
+              ? 'rgba(31, 38, 135, 0.95)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
+            transition: 'width 0.3s ease-in-out',
+            overflowX: 'hidden',
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
     );
   }
 

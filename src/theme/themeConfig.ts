@@ -164,7 +164,7 @@ const baseTheme: ThemeOptions = {
   },
 };
 
-// Tema Oscuro (MussikOn Dark)
+// Tema Oscuro (MussikOn Dark) - Mejorado para accesibilidad
 export const darkTheme = createTheme({
   ...baseTheme,
   palette: {
@@ -175,18 +175,42 @@ export const darkTheme = createTheme({
       default: '#0a0a23',
       paper: 'rgba(24, 28, 58, 0.95)',
     },
-    // Custom palette extensions
-    // Note: These are not part of the standard MUI palette but can be used in sx props
+    // Custom palette extensions con mejor contraste
     text: {
-      primary: '#ffffff',
-      secondary: '#b0b8c1',
-      disabled: '#888888',
+      primary: '#ffffff', // Contraste 15:1 con fondo
+      secondary: '#e0e0e0', // Mejorado de #b0b8c1 para mejor contraste
+      disabled: '#a0a0a0', // Mejorado de #888888
     },
-    divider: 'rgba(255, 255, 255, 0.12)',
+    divider: 'rgba(255, 255, 255, 0.2)', // Mejorado de 0.12
     action: {
       active: mussikOnColors.primary.main,
-      hover: 'rgba(127, 95, 255, 0.08)',
-      selected: 'rgba(127, 95, 255, 0.16)',
+      hover: 'rgba(127, 95, 255, 0.12)', // Mejorado de 0.08
+      selected: 'rgba(127, 95, 255, 0.2)', // Mejorado de 0.16
+    },
+    // Colores de estado mejorados
+    error: {
+      main: '#ff6b6b',
+      light: '#ff8e8e',
+      dark: '#e53e3e',
+      contrastText: '#ffffff',
+    },
+    warning: {
+      main: '#ffd93d',
+      light: '#ffe066',
+      dark: '#f6ad55',
+      contrastText: '#000000',
+    },
+    success: {
+      main: '#51cf66',
+      light: '#69db7c',
+      dark: '#40c057',
+      contrastText: '#ffffff',
+    },
+    info: {
+      main: '#74c0fc',
+      light: '#91d5ff',
+      dark: '#4dabf7',
+      contrastText: '#ffffff',
     },
   },
   components: {
@@ -198,11 +222,22 @@ export const darkTheme = createTheme({
           transition: 'all 0.3s ease-in-out',
           background: 'rgba(31, 38, 135, 0.15)',
           backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.25)', // Mejorado contraste
           boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: '0 16px 48px rgba(0, 0, 0, 0.16)',
+            border: '1px solid rgba(255, 255, 255, 0.35)', // Mejor contraste en hover
+          },
+          '&:focus': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
+          },
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
           },
         },
       },
@@ -214,7 +249,7 @@ export const darkTheme = createTheme({
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
           background: 'rgba(24, 28, 58, 0.95)',
           backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
+          border: '1px solid rgba(255, 255, 255, 0.25)', // Mejorado contraste
         },
       },
     },
@@ -226,15 +261,118 @@ export const darkTheme = createTheme({
             transition: 'all 0.2s ease-in-out',
             background: 'rgba(24, 28, 58, 0.7)',
             '& fieldset': {
-              borderColor: 'rgba(255, 255, 255, 0.23)',
+              borderColor: 'rgba(255, 255, 255, 0.3)', // Mejorado contraste
             },
             '&:hover fieldset': {
               borderColor: mussikOnColors.primary.main,
             },
             '&.Mui-focused fieldset': {
               borderColor: mussikOnColors.primary.main,
+              borderWidth: '2px',
+            },
+            '& input': {
+              color: '#ffffff', // Asegurar contraste
+            },
+            '& label': {
+              color: '#e0e0e0', // Mejor contraste
+              '&.Mui-focused': {
+                color: mussikOnColors.primary.main,
+              },
             },
           },
+          '& .MuiFormHelperText-root': {
+            color: '#e0e0e0', // Mejor contraste
+          },
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          fontWeight: 700,
+          padding: '12px 24px',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+          },
+          '&:focus': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
+          },
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
+          },
+        },
+        contained: {
+          background: mussikOnColors.gradients.primary,
+          color: '#ffffff',
+          '&:hover': {
+            background: mussikOnColors.gradients.secondary,
+          },
+        },
+        outlined: {
+          borderColor: mussikOnColors.primary.main,
+          color: mussikOnColors.primary.main,
+          '&:hover': {
+            background: 'rgba(127, 95, 255, 0.12)',
+          },
+        },
+        text: {
+          color: mussikOnColors.primary.main,
+          '&:hover': {
+            background: 'rgba(127, 95, 255, 0.12)',
+          },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'scale(1.1)',
+          },
+          '&:focus': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
+          },
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          fontWeight: 600,
+          fontSize: '0.75rem',
+          '&:focus': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
+          },
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: mussikOnColors.primary.main,
+            outlineOffset: '2px',
+          },
+        },
+      },
+    },
+    MuiLinearProgress: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'rgba(255, 255, 255, 0.2)', // Mejor contraste
         },
       },
     },

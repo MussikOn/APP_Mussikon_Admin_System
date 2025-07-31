@@ -94,7 +94,10 @@ const createApiInstance = (): AxiosInstance => {
 
       // Crear error personalizado
       const apiError = new ApiError(
-        (error.response?.data as any)?.message || error.message || 'Error de conexión',
+        (error.response?.data as any)?.msg || 
+        (error.response?.data as any)?.message || 
+        error.message || 
+        'Error de conexión',
         error.response?.status,
         error.code,
         error.response?.data

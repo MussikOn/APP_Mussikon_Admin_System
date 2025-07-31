@@ -189,12 +189,13 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
                   
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                        <Box component="span" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                      <Typography component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography component="span" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
                           {notification.title}
-                        </Box>
+                        </Typography>
                         {!notification.read && (
                           <Box
+                            component="span"
                             sx={{
                               width: 8,
                               height: 8,
@@ -203,17 +204,17 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
                             }}
                           />
                         )}
-                      </Box>
+                      </Typography>
                     }
                     secondary={
-                      <Box>
-                        <Box component="span" sx={{ fontSize: '0.875rem', color: 'text.secondary', display: 'block', mb: 1 }}>
+                      <Typography component="span">
+                        <Typography component="span" sx={{ fontSize: '0.875rem', color: 'text.secondary', display: 'block', mb: 1 }}>
                           {notification.message}
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                        </Typography>
+                        <Typography component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
                             {formatTimestamp(notification.timestamp)}
-                          </Box>
+                          </Typography>
                           <Chip
                             label={notification.type}
                             size="small"
@@ -225,8 +226,8 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
                               height: 18,
                             }}
                           />
-                        </Box>
-                      </Box>
+                        </Typography>
+                      </Typography>
                     }
                   />
                   

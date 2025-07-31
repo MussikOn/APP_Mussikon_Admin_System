@@ -246,13 +246,13 @@ const Users: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => {
-                setModalOpen(true);
-                setForm(initialForm);
-                setFormError("");
-                setEditMode(false);
-                setEditUserEmail(null);
-              }}
+            onClick={() => {
+              setModalOpen(true);
+              setForm(initialForm);
+              setFormError("");
+              setEditMode(false);
+              setEditUserEmail(null);
+            }}
               sx={{
                 background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
                 borderRadius: 3,
@@ -404,7 +404,7 @@ const Users: React.FC = () => {
                   <TableRow>
                     <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
                       <Typography variant="h6" color="text.secondary">
-                        No hay usuarios para mostrar.
+                      No hay usuarios para mostrar.
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -481,20 +481,20 @@ const Users: React.FC = () => {
                             <Tooltip title="Editar usuario">
                               <IconButton
                                 size="small"
-                                onClick={() => {
-                                  setModalOpen(true);
-                                  setEditMode(true);
+                            onClick={() => {
+                              setModalOpen(true);
+                              setEditMode(true);
                                   setEditUserEmail(user.userEmail);
-                                  setForm({
+                              setForm({
                                     name: user.name,
                                     lastName: user.lastName,
                                     userEmail: user.userEmail,
                                     roll: user.roll,
                                     status: user.status,
-                                    userPassword: "",
-                                  });
-                                  setFormError("");
-                                }}
+                                userPassword: "",
+                              });
+                              setFormError("");
+                            }}
                                 sx={{
                                   color: '#7f5fff',
                                   '&:hover': {
@@ -508,8 +508,8 @@ const Users: React.FC = () => {
                             <Tooltip title="Eliminar usuario">
                               <IconButton
                                 size="small"
-                                onClick={() =>
-                                  setConfirmDelete({
+                            onClick={() =>
+                              setConfirmDelete({
                                     email: user.userEmail,
                                     name: user.name + " " + user.lastName,
                                   })
@@ -537,8 +537,8 @@ const Users: React.FC = () => {
         </Card>
       )}
 
-      {/* Paginación */}
-      {totalPages > 1 && (
+          {/* Paginación */}
+          {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <Pagination
             count={totalPages}
@@ -722,7 +722,7 @@ const Users: React.FC = () => {
         </DialogTitle>
         <DialogContent sx={{ textAlign: 'center' }}>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            ¿Seguro que deseas eliminar a{" "}
+              ¿Seguro que deseas eliminar a{" "}
             <Typography component="span" sx={{ fontWeight: 700, color: '#7f5fff' }}>
               {confirmDelete?.name}
             </Typography>
@@ -731,9 +731,9 @@ const Users: React.FC = () => {
           <Typography variant="body2" color="text.secondary">
             Esta acción no se puede deshacer.
           </Typography>
-          {errorDelete && (
+            {errorDelete && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              {errorDelete}
+                {errorDelete}
             </Alert>
           )}
         </DialogContent>
@@ -747,8 +747,8 @@ const Users: React.FC = () => {
                 background: 'rgba(0,0,0,0.04)',
               },
             }}
-          >
-            Cancelar
+              >
+                Cancelar
           </Button>
           <Button
             onClick={() => confirmDelete && handleDelete(confirmDelete.email)}

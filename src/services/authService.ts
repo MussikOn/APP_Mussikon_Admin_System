@@ -45,6 +45,7 @@ export interface User {
 export interface AuthResponse {
   success: boolean;
   message: string;
+  msg?: string; // Campo que devuelve el backend
   user?: User;
   token?: string;
   refreshToken?: string;
@@ -63,35 +64,40 @@ export const authService = {
       const { api } = await import('./api');
       const response = await api.post(API_CONFIG.ENDPOINTS.LOGIN, loginData);
       
-      // El backend devuelve directamente { msg, token }
+      // El backend devuelve { msg, token, user }
       const data = response.data;
       
       if (data.token) {
         localStorage.setItem('token', data.token);
         
-        // Extraer información del usuario del token JWT si es necesario
-        try {
-          const payload = JSON.parse(atob(data.token.split('.')[1]));
-          const user: User = {
-            _id: payload._id || 'unknown',
-            name: payload.name || '',
-            lastName: payload.lastName || '',
-            userEmail: payload.userEmail || '',
-            roll: payload.roll || 'admin',
-            status: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          localStorage.setItem('user', JSON.stringify(user));
-        } catch (parseError) {
-          console.warn('No se pudo parsear el token JWT:', parseError);
+        // Usar los datos del usuario que devuelve el backend
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        } else {
+          // Si el backend no devuelve user, extraer del token JWT
+          try {
+            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            const user: User = {
+              _id: payload._id || 'unknown',
+              name: payload.name || '',
+              lastName: payload.lastName || '',
+              userEmail: payload.userEmail || '',
+              roll: payload.roll || 'admin',
+              status: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem('user', JSON.stringify(user));
+          } catch (parseError) {
+            console.warn('No se pudo parsear el token JWT:', parseError);
+          }
         }
         
         return {
           success: true,
           message: data.msg || 'Login exitoso',
           token: data.token,
-          user: JSON.parse(localStorage.getItem('user') || 'null')
+          user: data.user || JSON.parse(localStorage.getItem('user') || 'null')
         };
       }
       
@@ -118,20 +124,36 @@ export const authService = {
     try {
       const response = await apiService.post<AuthResponse>(API_CONFIG.ENDPOINTS.REGISTER, registerData);
       
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-        if (response.data.refreshToken) {
-          localStorage.setItem('refreshToken', response.data.refreshToken);
+      // El backend devuelve { msg, token, user }
+      const data = response.data;
+      
+      if (data?.token) {
+        localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
         }
-        if (response.data.user) {
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-        }
+        
+        return {
+          success: true,
+          message: data.msg || 'Usuario registrado exitosamente',
+          token: data.token,
+          user: data.user
+        };
       }
       
-      return response.data || { success: false, message: 'Error en la respuesta del servidor' };
-    } catch (error) {
+      return { 
+        success: false, 
+        message: data?.msg || 'Error en la respuesta del servidor' 
+      };
+    } catch (error: any) {
       console.error('Error al registrar usuario:', error);
-      throw error;
+      if (error.response?.data?.msg) {
+        throw new Error(error.response.data.msg);
+      } else if (error.message) {
+        throw error;
+      } else {
+        throw new Error('Error de conexión con el servidor');
+      }
     }
   },
 
@@ -210,6 +232,12 @@ export const authService = {
     
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      // Si el token no tiene campo exp, no expira
+      if (!payload.exp) {
+        return false;
+      }
+      
       const currentTime = Date.now() / 1000;
       return payload.exp < currentTime;
     } catch (error) {

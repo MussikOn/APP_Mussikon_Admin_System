@@ -3,7 +3,7 @@
 
 export const API_CONFIG = {
   // URL base para todas las APIs
-  BASE_URL: 'http://192.168.100.101:3001',
+  BASE_URL: 'http://172.20.10.2:3001',
   
   // Endpoints de la API
   ENDPOINTS: {
@@ -20,6 +20,7 @@ export const API_CONFIG = {
     DELETE_MOBILE_USER: '/admin/users/:id',
     BLOCK_MOBILE_USER: '/admin/users/:id/block',
     UNBLOCK_MOBILE_USER: '/admin/users/:id/unblock',
+    MOBILE_USERS_STATS: '/admin/users/stats',
     
     // Eventos (Admin)
     ADMIN_EVENTS: '/admin/events',
@@ -37,21 +38,34 @@ export const API_CONFIG = {
     // Solicitudes de Músicos (Admin)
     ADMIN_MUSICIAN_REQUESTS: '/admin/musician-requests',
     ADMIN_MUSICIAN_REQUEST_BY_ID: '/admin/musician-requests/:id',
+    CREATE_ADMIN_MUSICIAN_REQUEST: '/admin/musician-requests',
+    UPDATE_ADMIN_MUSICIAN_REQUEST: '/admin/musician-requests/:id',
     DELETE_ADMIN_MUSICIAN_REQUEST: '/admin/musician-requests/:id',
+    ADMIN_MUSICIAN_REQUESTS_STATS: '/admin/musician-requests/stats',
+    
+    // Búsqueda Avanzada (Admin)
+    ADMIN_SEARCH_GLOBAL: '/admin/search/global',
+    
+    // Analytics (Admin)
+    ADMIN_ANALYTICS_DASHBOARD: '/admin/analytics/dashboard',
+    ADMIN_ANALYTICS_USERS: '/admin/analytics/users',
+    ADMIN_ANALYTICS_EVENTS: '/admin/analytics/events',
+    ADMIN_ANALYTICS_REQUESTS: '/admin/analytics/requests',
+    ADMIN_ANALYTICS_EXPORT: '/admin/analytics/export',
     
     // Imágenes (Admin) - Nuevo CRUD
-    ADMIN_IMAGES: '/images',
-    ADMIN_IMAGE_BY_ID: '/images/:id',
-    DELETE_ADMIN_IMAGE: '/images/:id',
-    UPLOAD_IMAGE: '/images/upload',
-    UPDATE_IMAGE: '/images/:id',
-    IMAGE_STATS: '/images/stats',
-    IMAGE_CLEANUP: '/images/cleanup',
+    ADMIN_IMAGES: '/imgs',
+    ADMIN_IMAGE_BY_ID: '/imgs/:id',
+    DELETE_ADMIN_IMAGE: '/imgs/:id',
+    UPLOAD_IMAGE: '/imgs/upload',
+    UPDATE_IMAGE: '/imgs/:id',
+    IMAGE_STATS: '/imgs/stats',
+    IMAGE_CLEANUP: '/imgs/cleanup',
     
     // Imágenes específicas
-    PROFILE_IMAGES: '/images/profile/:userId',
-    POST_IMAGES: '/images/posts',
-    EVENT_IMAGES: '/images/events',
+    PROFILE_IMAGES: '/imgs/profile/:userId',
+    POST_IMAGES: '/imgs/posts',
+    EVENT_IMAGES: '/imgs/events',
     
     // Imágenes (Legacy) - Para compatibilidad
     LEGACY_ADMIN_IMAGES: '/imgs/getAllImg',
@@ -60,13 +74,52 @@ export const API_CONFIG = {
     LEGACY_UPLOAD_IMAGE: '/imgs/upload',
     LEGACY_UPDATE_IMAGE_METADATA: '/imgs/update-metadata/:key',
     
+    // Notificaciones
+    NOTIFICATIONS: '/notifications',
+    NOTIFICATION_BY_ID: '/notifications/:id',
+    MARK_NOTIFICATION_READ: '/notifications/:id/read',
+    MARK_ALL_NOTIFICATIONS_READ: '/notifications/read-all',
+    DELETE_NOTIFICATION: '/notifications/:id',
+    UNREAD_COUNT: '/notifications/unread-count',
+    CREATE_NOTIFICATION: '/notifications',
+    BULK_NOTIFICATION: '/notifications/bulk',
+    NOTIFICATION_STATS: '/notifications/stats',
+    
+    // Pagos
+    PAYMENT_METHODS: '/payments/methods',
+    PAYMENT_METHOD_BY_ID: '/payments/methods/:id',
+    CREATE_PAYMENT_METHOD: '/payments/methods',
+    UPDATE_PAYMENT_METHOD: '/payments/methods/:id',
+    SET_DEFAULT_PAYMENT_METHOD: '/payments/methods/:id/default',
+    DELETE_PAYMENT_METHOD: '/payments/methods/:id',
+    PAYMENT_INTENTS: '/payments/intents',
+    CREATE_PAYMENT_INTENT: '/payments/intents',
+    PROCESS_PAYMENT: '/payments/process',
+    PAYMENT_INVOICES: '/payments/invoices',
+    CREATE_PAYMENT_INVOICE: '/payments/invoices',
+    PAYMENT_INVOICE_BY_ID: '/payments/invoices/:id',
+    MARK_INVOICE_PAID: '/payments/invoices/:id/pay',
+    PAYMENT_REFUNDS: '/payments/refunds',
+    PROCESS_REFUND: '/payments/refunds',
+    PAYMENT_STATS: '/payments/stats',
+    VALIDATE_PAYMENT_METHOD: '/payments/validate',
+    PAYMENT_GATEWAYS: '/payments/gateways',
+    
+    // Geolocalización
+    GEOLOCATION_SEARCH: '/geolocation/search',
+    NEARBY_EVENTS: '/geolocation/nearby-events',
+    NEARBY_MUSICIANS: '/geolocation/nearby-musicians',
+    OPTIMIZE_ROUTE: '/geolocation/optimize-route',
+    GEOCODE_ADDRESS: '/geolocation/geocode',
+    REVERSE_GEOCODE: '/geolocation/reverse-geocode',
+    CALCULATE_DISTANCE: '/geolocation/distance',
+    IS_WITHIN_RADIUS: '/geolocation/is-within-radius',
+    GEOLOCATION_STATS: '/geolocation/stats',
+    
     // Estadísticas y Analytics
     ADMIN_STATS: '/admin/stats',
     USER_STATS: '/admin/users/stats',
     EVENT_STATS: '/admin/events/stats',
-    
-    // Notificaciones
-    NOTIFICATIONS: '/notifications',
   },
   
   // Configuración de timeout
@@ -95,7 +148,7 @@ export const API_CONFIG = {
 // Configuración de Socket.IO
 export const SOCKET_CONFIG = {
   // URL del servidor Socket.IO (misma que la API)
-  SOCKET_URL: 'http://172.20.10.2:1000',
+  SOCKET_URL: 'http://172.20.10.2:3001',
   
   // Configuración de conexión
   CONNECTION_OPTIONS: {
@@ -127,6 +180,17 @@ export const SOCKET_CONFIG = {
     REQUEST_CREATED: 'request_created',
     REQUEST_UPDATED: 'request_updated',
     REQUEST_DELETED: 'request_deleted',
+    
+    // Notificaciones
+    NOTIFICATION_CREATED: 'notification_created',
+    NOTIFICATION_READ: 'notification_read',
+    NOTIFICATION_DELETED: 'notification_deleted',
+    
+    // Pagos
+    PAYMENT_PROCESSED: 'payment_processed',
+    PAYMENT_FAILED: 'payment_failed',
+    INVOICE_CREATED: 'invoice_created',
+    REFUND_PROCESSED: 'refund_processed',
     
     // Chat
     MESSAGE_SENT: 'message_sent',

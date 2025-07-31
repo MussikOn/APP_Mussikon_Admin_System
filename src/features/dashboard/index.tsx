@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getAllUsers, getUsersCount } from '../../services/usersService';
-import { getAllEvents, getEventsCount } from '../../services/eventsService';
-import { getAllRequests, getRequestsCount } from '../../services/musicianRequestsService';
-import { getImagesCount } from '../../services/imagesService';
+import { mobileUsersService } from '../../services/mobileUsersService';
+import { eventsService } from '../../services/eventsService';
+import { musicianRequestsService } from '../../services/musicianRequestsService';
+import { imagesService } from '../../services/imagesService';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { useTheme } from '../../contexts/ThemeContext';
 import DashboardNotifications from '../../components/DashboardNotifications';
@@ -141,48 +141,63 @@ const Dashboard: React.FC = () => {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Métricas
+  // Métricas principales
   const {
-    data: usersCount,
+    data: usersData,
     loading: loadingUsersCount,
     error: errorUsersCount,
     execute: fetchUsersCount
-  } = useApiRequest(getUsersCount);
+  } = useApiRequest(async () => {
+    const response = await mobileUsersService.getAllUsers(undefined, 1, 1);
+    return response.total;
+  });
+  
   const {
-    data: eventsCount,
+    data: eventsData,
     loading: loadingEventsCount,
     error: errorEventsCount,
     execute: fetchEventsCount
-  } = useApiRequest(getEventsCount);
+  } = useApiRequest(async () => {
+    const response = await eventsService.getAllEvents(undefined, 1, 1);
+    return response.total;
+  });
+  
   const {
-    data: requestsCount,
+    data: requestsData,
     loading: loadingRequestsCount,
     error: errorRequestsCount,
     execute: fetchRequestsCount
-  } = useApiRequest(getRequestsCount);
+  } = useApiRequest(async () => {
+    const response = await musicianRequestsService.getAllRequests(undefined, 1, 1);
+    return response.total;
+  });
+  
   const {
-    data: imagesCount,
+    data: imagesData,
     loading: loadingImagesCount,
     error: errorImagesCount,
     execute: fetchImagesCount
-  } = useApiRequest(getImagesCount);
+  } = useApiRequest(async () => {
+    const images = await imagesService.getAllImages();
+    return images.length;
+  });
 
   // Recientes y roles
   const {
-    data: usersData,
+    data: usersDataRecent,
     loading: loadingRecentUsers,
     execute: fetchRecentUsers
-  } = useApiRequest(getAllUsers);
+  } = useApiRequest(mobileUsersService.getAllUsers);
   const {
-    data: eventsData,
+    data: eventsDataRecent,
     loading: loadingRecentEvents,
     execute: fetchRecentEvents
-  } = useApiRequest(getAllEvents);
+  } = useApiRequest(eventsService.getAllEvents);
   const {
-    data: requestsData,
+    data: requestsDataRecent,
     loading: loadingRecentRequests,
     execute: fetchRecentRequests
-  } = useApiRequest(getAllRequests);
+  } = useApiRequest(musicianRequestsService.getAllRequests);
 
   useEffect(() => {
     fetchAllData();
@@ -204,9 +219,9 @@ const Dashboard: React.FC = () => {
   };
 
   // Procesar datos recientes y roles
-  const recentUsers = usersData ? usersData.slice(-3).reverse() : [];
-  const recentEvents = eventsData?.events ? eventsData.events.slice(-3).reverse() : [];
-  const recentRequests = requestsData?.requests ? requestsData.requests.slice(-3).reverse() : [];
+  const recentUsers = usersDataRecent?.users ? usersDataRecent.users.slice(-3).reverse() : [];
+  const recentEvents = eventsDataRecent?.events ? eventsDataRecent.events.slice(-3).reverse() : [];
+  const recentRequests = requestsDataRecent?.requests ? requestsDataRecent.requests.slice(-3).reverse() : [];
 
   const handleCardClick = (path: string) => {
     navigate(path);
@@ -251,7 +266,7 @@ const Dashboard: React.FC = () => {
       {/* Header Mejorado */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-          <Box>
+        <Box>
             <Typography 
               variant="h3" 
               sx={{ 
@@ -264,8 +279,8 @@ const Dashboard: React.FC = () => {
                 fontSize: { xs: '2rem', md: '2.5rem' }
               }}
             >
-              Dashboard
-            </Typography>
+            Dashboard
+          </Typography>
             <Typography 
               variant="h6" 
               color="text.secondary"
@@ -284,8 +299,8 @@ const Dashboard: React.FC = () => {
                 month: 'long', 
                 day: 'numeric' 
               })}
-            </Typography>
-          </Box>
+          </Typography>
+        </Box>
           
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Tooltip title="Actualizar datos">
@@ -308,8 +323,8 @@ const Dashboard: React.FC = () => {
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
-            
-            <Button
+        
+        <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => navigate('/users')}
@@ -330,7 +345,7 @@ const Dashboard: React.FC = () => {
               }}
             >
               Nuevo Usuario
-            </Button>
+        </Button>
           </Box>
         </Box>
       </Box>
@@ -343,7 +358,7 @@ const Dashboard: React.FC = () => {
         mb: 4 
       }}>
         {metricCards.map((card, index) => {
-          const counts = [usersCount, eventsCount, requestsCount, imagesCount];
+          const counts = [usersData, eventsData, requestsData, imagesData];
           const loadings = [loadingUsersCount, loadingEventsCount, loadingRequestsCount, loadingImagesCount];
           const errors = [errorUsersCount, errorEventsCount, errorRequestsCount, errorImagesCount];
           
@@ -356,7 +371,7 @@ const Dashboard: React.FC = () => {
                 background: isDark 
                   ? 'rgba(31, 38, 135, 0.15)'
                   : 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(12px)',
+        backdropFilter: 'blur(12px)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
                 borderRadius: 4,
                 transition: 'all 0.3s ease-in-out',
@@ -389,8 +404,8 @@ const Dashboard: React.FC = () => {
                       height: 56,
                       borderRadius: '16px',
                       background: card.gradient,
-                      display: 'flex',
-                      alignItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
                       justifyContent: 'center',
                       color: '#fff',
                       transition: 'all 0.3s ease',
@@ -441,25 +456,25 @@ const Dashboard: React.FC = () => {
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
         {/* Actividad Reciente */}
         <Box sx={{ flex: { lg: 2 } }}>
-          <Card
-            sx={{
-              background: isDark 
-                ? 'rgba(31, 38, 135, 0.15)'
-                : 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(12px)',
-              border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
+        <Card
+          sx={{
+            background: isDark 
+              ? 'rgba(31, 38, 135, 0.15)'
+              : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
               borderRadius: 4,
               height: '100%',
-            }}
-          >
+          }}
+        >
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 700 }}>
                   Actividad Reciente
-                </Typography>
-                <Button
-                  size="small"
-                  onClick={() => navigate('/users')}
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => navigate('/users')}
                   sx={{ 
                     color: '#7f5fff',
                     fontWeight: 600,
@@ -467,11 +482,11 @@ const Dashboard: React.FC = () => {
                       background: 'rgba(127, 95, 255, 0.1)',
                     }
                   }}
-                >
+              >
                   Ver todo
-                </Button>
-              </Box>
-              
+              </Button>
+            </Box>
+            
               <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <Chip 
                   label="Usuarios" 
@@ -506,9 +521,9 @@ const Dashboard: React.FC = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                   <CircularProgress />
                 </Box>
-              ) : (
+            ) : (
                 <List sx={{ p: 0 }}>
-                  {recentUsers.map((user: any, index: number) => (
+                {recentUsers.map((user: any, index: number) => (
                     <ListItem 
                       key={user.userEmail || index}
                       sx={{ 
@@ -543,8 +558,8 @@ const Dashboard: React.FC = () => {
                           </Typography>
                         }
                         secondary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                            <Typography variant="body2" color="text.secondary">
+                          <Typography component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                            <Typography component="span" variant="body2" color="text.secondary">
                               {user.userEmail || user.email}
                             </Typography>
                             <Chip
@@ -558,19 +573,19 @@ const Dashboard: React.FC = () => {
                                 fontSize: '0.7rem',
                               }}
                             />
-                          </Box>
+                          </Typography>
                         }
                       />
                       <IconButton size="small">
                         <MoreVertIcon />
                       </IconButton>
                     </ListItem>
-                  ))}
-                  
+                ))}
+
                   {recentEvents.map((event: any, index: number) => (
                     <ListItem 
                       key={event._id || index}
-                      sx={{ 
+          sx={{
                         px: 0, 
                         py: 1.5,
                         borderRadius: 2,
@@ -601,9 +616,9 @@ const Dashboard: React.FC = () => {
                           </Typography>
                         }
                         secondary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                          <Typography component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                             <TimeIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography component="span" variant="body2" color="text.secondary">
                               {event.date || event.fecha || event.createdAt || 'Sin fecha'}
                             </Typography>
                             <Chip
@@ -618,18 +633,18 @@ const Dashboard: React.FC = () => {
                                 fontSize: '0.7rem',
                               }}
                             />
-                          </Box>
+                          </Typography>
                         }
                       />
                       <IconButton size="small">
                         <MoreVertIcon />
                       </IconButton>
                     </ListItem>
-                  ))}
-                </List>
-              )}
-            </CardContent>
-          </Card>
+                ))}
+              </List>
+            )}
+          </CardContent>
+        </Card>
         </Box>
 
         {/* Notificaciones */}
@@ -734,7 +749,7 @@ const Dashboard: React.FC = () => {
                       </Box>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         {request.status || 'Pendiente'}
-                      </Typography>
+            </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {getStatusIcon(request.status)}
                         <Typography variant="caption" color="text.secondary">
