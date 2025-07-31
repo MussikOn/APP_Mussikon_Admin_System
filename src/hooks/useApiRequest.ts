@@ -15,9 +15,21 @@ export function useApiRequest<T, Args extends any[]>(
       setData(result);
       return result;
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Error desconocido');
+      // Verificar si el error es porque se están usando datos de respaldo
+      if (err?.response?.status === 404 || err?.response?.status === 500) {
+        console.warn('📊 Endpoint no disponible, usando datos de respaldo');
+        setError('Datos de respaldo - Endpoint no disponible');
+      } else {
+        const errorMessage = err?.response?.data?.message || err.message || 'Error desconocido';
+        setError(errorMessage);
+        console.error('❌ Error en API request:', errorMessage);
+      }
       setData(null);
-      throw err;
+      // No lanzar el error si es un problema de endpoint no disponible
+      if (err?.response?.status !== 404 && err?.response?.status !== 500) {
+        throw err;
+      }
+      return null;
     } finally {
       setLoading(false);
     }

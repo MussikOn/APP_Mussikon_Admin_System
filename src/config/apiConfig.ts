@@ -62,13 +62,13 @@ export const API_CONFIG = {
     ADMIN_MUSICIAN_REQUESTS_STATS: '/admin/musician-requests/stats',
     
     // Búsqueda Avanzada (Admin)
-    ADMIN_SEARCH_GLOBAL: '/admin/search/global',
+    ADMIN_SEARCH_GLOBAL: '/search/global',
     SEARCH_EVENTS: '/search/events',
     SEARCH_USERS: '/search/users',
     SEARCH_MUSICIAN_REQUESTS: '/search/musician-requests',
     SEARCH_LOCATION: '/search/location',
     
-    // Analytics (Admin)
+    // Analytics (Admin) - CORREGIDO: Usar rutas exactas del backend
     ADMIN_ANALYTICS_DASHBOARD: '/analytics/dashboard',
     ADMIN_ANALYTICS_USERS: '/analytics/users',
     ADMIN_ANALYTICS_EVENTS: '/analytics/events',
@@ -149,7 +149,7 @@ export const API_CONFIG = {
   },
   
   // Configuración de timeout
-  TIMEOUT: 30000, // 15 segundos para admin
+  TIMEOUT: 30000, // 30 segundos para admin
   
   // Headers por defecto
   DEFAULT_HEADERS: {
@@ -174,7 +174,7 @@ export const API_CONFIG = {
 // Configuración de Socket.IO
 export const SOCKET_CONFIG = {
   // URL del servidor Socket.IO (misma que la API)
-  SOCKET_URL: 'http://192.168.54.131:3001',
+  SOCKET_URL: 'http://localhost:3001',
   
   // Configuración de conexión
   CONNECTION_OPTIONS: {
