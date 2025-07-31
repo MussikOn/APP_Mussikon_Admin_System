@@ -69,15 +69,15 @@ export const API_CONFIG = {
     SEARCH_LOCATION: '/search/location',
     
     // Analytics (Admin)
-    ADMIN_ANALYTICS_DASHBOARD: '/admin/analytics/dashboard',
-    ADMIN_ANALYTICS_USERS: '/admin/analytics/users',
-    ADMIN_ANALYTICS_EVENTS: '/admin/analytics/events',
-    ADMIN_ANALYTICS_REQUESTS: '/admin/analytics/requests',
+    ADMIN_ANALYTICS_DASHBOARD: '/analytics/dashboard',
+    ADMIN_ANALYTICS_USERS: '/analytics/users',
+    ADMIN_ANALYTICS_EVENTS: '/analytics/events',
+    ADMIN_ANALYTICS_REQUESTS: '/analytics/requests',
     ADMIN_ANALYTICS_PLATFORM: '/analytics/platform',
     ADMIN_ANALYTICS_TRENDS: '/analytics/trends',
     ADMIN_ANALYTICS_LOCATION_PERFORMANCE: '/analytics/location-performance',
     ADMIN_ANALYTICS_TOP_USERS: '/analytics/top-users',
-    ADMIN_ANALYTICS_EXPORT: '/admin/analytics/export',
+    ADMIN_ANALYTICS_EXPORT: '/analytics/export',
     
     // Imágenes (Admin) - Nuevo CRUD
     ADMIN_IMAGES: '/imgs',
