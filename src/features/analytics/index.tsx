@@ -11,7 +11,8 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  Button
+  Button,
+  AlertTitle
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
@@ -27,6 +28,7 @@ import {
 } from '@mui/icons-material';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { analyticsService, type AnalyticsFilters } from '../../services/searchService';
+import { useAuth } from '../../hooks/useAuth';
 
 const Analytics: React.FC = () => {
   const [filters, setFilters] = useState<AnalyticsFilters>({
@@ -43,6 +45,8 @@ const Analytics: React.FC = () => {
   const usersRequest = useApiRequest(analyticsService.getUsersAnalytics.bind(analyticsService));
   const platformRequest = useApiRequest(analyticsService.getPlatformAnalytics.bind(analyticsService));
   const trendsRequest = useApiRequest(analyticsService.getTrendsAnalytics.bind(analyticsService));
+
+  const { user } = useAuth();
 
   // Función para cargar datos de analytics
   const loadAnalyticsData = async () => {
@@ -97,188 +101,123 @@ const Analytics: React.FC = () => {
   };
 
   // Función para detectar errores específicos
-  const hasBlockedByClientError = () => {
-    return [eventsRequest.error, dashboardRequest.error, requestsRequest.error, 
-            usersRequest.error, platformRequest.error, trendsRequest.error]
-      .some(error => error?.includes('ERR_BLOCKED_BY_CLIENT') || error?.includes('Network Error'));
+  const hasBlockedByClientError = (error: any): boolean => {
+    return error?.code === 'ERR_BLOCKED_BY_CLIENT' || 
+           error?.message?.includes('ERR_BLOCKED_BY_CLIENT') ||
+           error?.message?.includes('blocked by client');
   };
 
-  const hasServerError = () => {
-    return [eventsRequest.error, dashboardRequest.error, requestsRequest.error, 
-            usersRequest.error, platformRequest.error, trendsRequest.error]
-      .some(error => error?.includes('500') || error?.includes('Internal Server Error'));
+  const hasServerError = (error: any): boolean => {
+    return error?.response?.status >= 500 || 
+           error?.code === 'ERR_NETWORK' ||
+           error?.message?.includes('Network Error');
+  };
+
+  const hasPermissionError = (error: any): boolean => {
+    return error?.response?.status === 403 || 
+           error?.response?.status === 401;
+  };
+
+  // Función para obtener mensaje de error específico
+  const getErrorMessage = (error: any): string => {
+    if (hasBlockedByClientError(error)) {
+      return '🚨 Error: La petición fue bloqueada por el navegador o extensiones';
+    }
+    if (hasPermissionError(error)) {
+      return '🚫 Error: No tienes permisos para acceder a estos datos';
+    }
+    if (hasServerError(error)) {
+      return '🔧 Error: Problema de conectividad con el servidor';
+    }
+    return error?.message || 'Error desconocido';
+  };
+
+  // Función para obtener sugerencias de solución
+  const getErrorSuggestions = (error: any): string[] => {
+    const suggestions: string[] = [];
+    
+    if (hasBlockedByClientError(error)) {
+      suggestions.push('🔒 Desactiva temporalmente las extensiones del navegador (ad blockers, privacy extensions)');
+      suggestions.push('🌐 Verifica que el backend esté corriendo en http://localhost:3001');
+      suggestions.push('🔄 Intenta recargar la página con Ctrl+F5 (hard refresh)');
+      suggestions.push('🔧 Verifica la configuración de firewall/antivirus');
+      suggestions.push('🌐 Intenta con otro navegador o modo incógnito');
+    }
+    
+    if (hasPermissionError(error)) {
+      suggestions.push('🔑 Verifica que tu sesión esté activa');
+      suggestions.push('👤 Contacta al administrador para solicitar permisos');
+      suggestions.push('🔄 Cierra sesión y vuelve a iniciar sesión');
+    }
+    
+    if (hasServerError(error)) {
+      suggestions.push('🌐 Verifica tu conexión a internet');
+      suggestions.push('🔌 Asegúrate de que el backend esté corriendo');
+      suggestions.push('🔧 Contacta al equipo técnico si el problema persiste');
+    }
+    
+    return suggestions;
+  };
+
+  // Función para manejar errores de bloqueo por cliente
+  const handleBlockedByClientError = () => {
+    console.warn('🚨 ERR_BLOCKED_BY_CLIENT detectado!');
+    console.warn('🔧 Soluciones recomendadas:');
+    console.warn('   1. Desactiva temporalmente las extensiones del navegador');
+    console.warn('   2. Verifica que el backend esté corriendo en http://localhost:3001');
+    console.warn('   3. Intenta con modo incógnito');
+    console.warn('   4. Verifica la configuración de firewall/antivirus');
   };
 
   // Función para verificar disponibilidad del backend
   const checkBackendAvailability = async () => {
-    console.log('🔍 Verificando disponibilidad del backend...');
-    
     try {
       const response = await fetch('http://localhost:3001/health', {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
       });
       
       if (response.ok) {
-        console.log('✅ Backend disponible');
+        console.log('✅ Backend está disponible');
         return true;
       } else {
         console.warn('⚠️ Backend responde pero con error:', response.status);
         return false;
       }
-    } catch (error: any) {
-      console.error('❌ Backend no disponible:', error.message);
-      
-      if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || 
-          error.message?.includes('blocked by client')) {
-        console.warn('🚫 Backend bloqueado por cliente');
-        return 'blocked';
-      }
-      
+    } catch (error) {
+      console.error('❌ Backend no está disponible:', error);
       return false;
     }
   };
 
-  // Función para manejar específicamente ERR_BLOCKED_BY_CLIENT
-  const handleBlockedByClientError = async () => {
-    console.warn('🚫 Detectado ERR_BLOCKED_BY_CLIENT - Iniciando solución automática...');
-    
-    // Verificar disponibilidad del backend
-    const backendStatus = await checkBackendAvailability();
-    
-    let alertMessage = '';
-    
-    if (backendStatus === 'blocked') {
-      alertMessage = `
-🚫 Confirmado: Backend bloqueado por extensiones del navegador
-
-🔧 Soluciones inmediatas:
-1. DESACTIVA todas las extensiones del navegador:
-   • Click derecho en iconos de extensiones → Desactivar
-   • Especialmente ad-blockers, bloqueadores de privacidad
-   
-2. USA MODO INCOGNITO:
-   • Ctrl+Shift+N (Chrome/Edge)
-   • Ctrl+Shift+P (Firefox)
-   
-3. CONFIGURA EXCEPCIONES:
-   • En ad-blocker: Agregar "localhost:3001" a excepciones
-   • En firewall: Permitir "localhost:3001"
-
-🌐 URL afectada: http://localhost:3001/analytics/events
-
-📋 Después de hacer cambios:
-• Recarga la página (F5)
-• Usa el botón "Diagnosticar" para verificar
-      `;
-    } else if (backendStatus === false) {
-      alertMessage = `
-⚠️ Backend no disponible en localhost:3001
-
-🔧 Verificaciones:
-1. ¿Está ejecutándose el servidor backend?
-2. ¿Está en el puerto correcto (3001)?
-3. ¿Hay errores en la consola del servidor?
-
-🌐 URL esperada: http://localhost:3001
-      `;
-    } else {
-      alertMessage = `
-✅ Backend disponible pero requests bloqueados
-
-🔧 El problema es específicamente con las extensiones:
-1. Desactiva extensiones una por una
-2. Recarga después de cada desactivación
-3. Identifica cuál causa el problema
-
-🌐 URL afectada: http://localhost:3001/analytics/events
-      `;
-    }
-    
-    alert(alertMessage);
-    
-    // Intentar recargar después de un delay
-    setTimeout(() => {
-      console.log('🔄 Intentando recarga automática...');
-      loadAnalyticsData();
-    }, 3000);
-  };
-
-  // Función para diagnosticar problemas de conectividad
+  // Función para ejecutar diagnósticos
   const runDiagnostics = async () => {
-    console.log('🔍 Iniciando diagnóstico de conectividad...');
+    console.log('🔍 Iniciando diagnósticos...');
     
-    const endpoints = [
-      '/analytics/dashboard',
-      '/analytics/events',
-      '/analytics/users',
-      '/analytics/requests',
-      '/analytics/platform',
-      '/analytics/trends'
-    ];
-
-    const results = [];
-
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(`http://localhost:3001${endpoint}?period=month&groupBy=day`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-          }
-        });
-        
-        results.push({
-          endpoint,
-          status: response.status,
-          statusText: response.statusText,
-          error: null
-        });
-        
-        console.log(`✅ ${endpoint}: ${response.status} ${response.statusText}`);
-      } catch (error: any) {
-        results.push({
-          endpoint,
-          status: null,
-          statusText: null,
-          error: error.message
-        });
-        
-        console.error(`❌ ${endpoint}: ${error.message}`);
-        
-        // Detectar específicamente ERR_BLOCKED_BY_CLIENT
-        if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || 
-            error.message?.includes('blocked by client')) {
-          console.warn(`🚫 ${endpoint}: Bloqueado por cliente - Posible ad-blocker`);
-        }
-      }
+    // Verificar backend
+    const backendAvailable = await checkBackendAvailability();
+    
+    // Verificar configuración
+    console.log('🔧 Configuración actual:');
+    console.log('   - URL del backend:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001');
+    console.log('   - Rol del usuario:', user?.role);
+    console.log('   - Token presente:', !!localStorage.getItem('token'));
+    
+    // Verificar extensiones del navegador
+    console.log('🔍 Verificando extensiones del navegador...');
+    console.log('   - Si tienes ad blockers, desactívalos temporalmente');
+    console.log('   - Si tienes extensiones de privacidad, desactívalas temporalmente');
+    
+    // Mostrar resultados
+    if (backendAvailable) {
+      console.log('✅ Diagnóstico: Backend está disponible');
+    } else {
+      console.log('❌ Diagnóstico: Backend no está disponible');
+      console.log('💡 Solución: Inicia el backend con "npm run dev" en la carpeta ../app_mussikon_express');
     }
-
-    // Mostrar resumen en consola
-    console.log('📊 Resumen de diagnóstico:', results);
-    
-    // Crear reporte
-    const report = results.map(r => 
-      `${r.endpoint}: ${r.status ? `${r.status} ${r.statusText}` : `Error: ${r.error}`}`
-    ).join('\n');
-    
-    // Detectar problemas específicos
-    const blockedEndpoints = results.filter(r => 
-      r.error?.includes('ERR_BLOCKED_BY_CLIENT') || 
-      r.error?.includes('blocked by client')
-    );
-    
-    let finalReport = `🔍 Diagnóstico completado:\n\n${report}`;
-    
-    if (blockedEndpoints.length > 0) {
-      finalReport += `\n\n🚫 Endpoints bloqueados: ${blockedEndpoints.length}`;
-      finalReport += `\n🔧 Recomendación: Desactiva extensiones del navegador`;
-    }
-    
-    alert(`${finalReport}\n\nRevisa la consola para más detalles.`);
   };
 
   // Cargar datos al montar el componente y cuando cambien los filtros
@@ -370,6 +309,91 @@ const Analytics: React.FC = () => {
     </Card>
   );
 
+  // Renderizar alertas de error mejoradas
+  const renderErrorAlerts = () => {
+    const alerts: React.ReactElement[] = [];
+
+    // Alerta para errores de bloqueo por cliente
+    if (dashboardRequest.error && hasBlockedByClientError(dashboardRequest.error)) {
+      alerts.push(
+        <Alert key="blocked-client" severity="warning" sx={{ mb: 2 }}>
+          <AlertTitle>🚨 Petición bloqueada por el navegador</AlertTitle>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            {getErrorMessage(dashboardRequest.error)}
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 1 }}>
+            {getErrorSuggestions(dashboardRequest.error).map((suggestion, index) => (
+              <li key={index}>
+                <Typography variant="body2">{suggestion}</Typography>
+              </li>
+            ))}
+          </Box>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={runDiagnostics}
+            startIcon={<BugReportIcon />}
+            sx={{ mt: 1 }}
+          >
+            Diagnosticar problemas de conectividad
+          </Button>
+        </Alert>
+      );
+    }
+
+    // Alerta para errores de permisos
+    if (dashboardRequest.error && hasPermissionError(dashboardRequest.error)) {
+      alerts.push(
+        <Alert key="permission" severity="error" sx={{ mb: 2 }}>
+          <AlertTitle>🚫 Error de permisos</AlertTitle>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            {getErrorMessage(dashboardRequest.error)}
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 1 }}>
+            {getErrorSuggestions(dashboardRequest.error).map((suggestion, index) => (
+              <li key={index}>
+                <Typography variant="body2">{suggestion}</Typography>
+              </li>
+            ))}
+          </Box>
+          <Typography variant="body2" sx={{ fontStyle: 'italic', mt: 1 }}>
+            Rol actual: <strong>{user?.role}</strong>
+          </Typography>
+        </Alert>
+      );
+    }
+
+    // Alerta para errores de servidor
+    if (dashboardRequest.error && hasServerError(dashboardRequest.error)) {
+      alerts.push(
+        <Alert key="server" severity="error" sx={{ mb: 2 }}>
+          <AlertTitle>🔧 Error de conectividad</AlertTitle>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            {getErrorMessage(dashboardRequest.error)}
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 1 }}>
+            {getErrorSuggestions(dashboardRequest.error).map((suggestion, index) => (
+              <li key={index}>
+                <Typography variant="body2">{suggestion}</Typography>
+              </li>
+            ))}
+          </Box>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={runDiagnostics}
+            startIcon={<BugReportIcon />}
+            sx={{ mt: 1 }}
+          >
+            Verificar conectividad del backend
+          </Button>
+        </Alert>
+      );
+    }
+
+    return alerts;
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Título y controles */}
@@ -419,7 +443,7 @@ const Analytics: React.FC = () => {
       </Alert>
 
       {/* Alerta de troubleshooting para ERR_BLOCKED_BY_CLIENT */}
-      {hasBlockedByClientError() && (
+      {hasBlockedByClientError(dashboardRequest.error) && (
         <Alert 
           severity="warning" 
           sx={{ mb: 3 }}
@@ -451,7 +475,7 @@ const Analytics: React.FC = () => {
       )}
 
       {/* Alerta de error del servidor */}
-      {hasServerError() && (
+      {hasServerError(dashboardRequest.error) && (
         <Alert 
           severity="error" 
           sx={{ mb: 3 }}
@@ -646,14 +670,7 @@ const Analytics: React.FC = () => {
       )}
 
       {/* Errores generales */}
-      {(dashboardRequest.error || eventsRequest.error || requestsRequest.error || 
-        usersRequest.error || platformRequest.error || trendsRequest.error) && (
-        <Box mt={3}>
-          <Alert severity="warning">
-            Algunos datos no se pudieron cargar. Verifica tu conexión y permisos.
-          </Alert>
-        </Box>
-      )}
+      {renderErrorAlerts()}
     </Box>
   );
 };

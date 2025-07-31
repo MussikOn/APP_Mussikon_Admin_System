@@ -77,31 +77,52 @@ const createApiInstance = (): AxiosInstance => {
     }
   );
 
-  // Interceptor para manejar respuestas y errores
+  // Interceptor de respuesta para manejo de errores mejorado
   instance.interceptors.response.use(
-    (response: AxiosResponse) => {
-      // Log específico para Analytics
+    (response) => {
+      // Log de respuesta exitosa para analytics
       if (response.config.url?.includes('/analytics/')) {
-        console.log(`📊 Analytics Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
-        console.log('📊 Response data:', response.data);
-      } else {
-        console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+        console.log('✅ Analytics Response:', response.config.method?.toUpperCase(), response.config.url);
       }
       return response;
     },
-    async (error: AxiosError) => {
-      // Log específico para Analytics
+    (error) => {
+      // Log detallado de errores para analytics
       if (error.config?.url?.includes('/analytics/')) {
-        console.error(`📊 Analytics Error: ${error.config.method?.toUpperCase()} ${error.config.url} - ${error.response?.status}`);
-        console.error('📊 Error details:', {
+        console.log('❌ Analytics Error:', error.config.method?.toUpperCase(), error.config.url);
+        console.log('❌ Error details:', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
           message: error.message,
           code: error.code
         });
-      } else {
-        console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status}`);
+        
+        // Detectar errores específicos
+        const specificErrors = detectSpecificErrors(error);
+        if (specificErrors.length > 0) {
+          console.log('🔍 Errores detectados:', specificErrors);
+          
+          // Obtener sugerencias
+          const suggestions = getErrorSuggestions(specificErrors);
+          if (suggestions.length > 0) {
+            console.log('💡 Sugerencias de solución:');
+            suggestions.forEach(suggestion => console.log('   ', suggestion));
+          }
+        }
+        
+        // Log específico para ERR_BLOCKED_BY_CLIENT
+        if (specificErrors.includes('ERR_BLOCKED_BY_CLIENT')) {
+          console.warn('🚨 ERR_BLOCKED_BY_CLIENT detectado!');
+          console.warn('🔧 Posibles causas:');
+          console.warn('   - Extensiones del navegador (ad blockers, privacy extensions)');
+          console.warn('   - Firewall o antivirus');
+          console.warn('   - Configuración de red corporativa');
+          console.warn('🔧 Soluciones:');
+          console.warn('   - Desactiva temporalmente las extensiones');
+          console.warn('   - Verifica la configuración de firewall');
+          console.warn('   - Intenta con otro navegador');
+        }
       }
 
       // Manejar errores específicos
@@ -218,6 +239,71 @@ export const apiService = {
     };
     return retryRequest(() => api.post(url, formData, formConfig));
   },
+};
+
+// Función para detectar errores específicos
+const detectSpecificErrors = (error: any): string[] => {
+  const errors: string[] = [];
+  
+  // Detectar ERR_BLOCKED_BY_CLIENT
+  if (error.code === 'ERR_BLOCKED_BY_CLIENT' || 
+      error.message?.includes('ERR_BLOCKED_BY_CLIENT') ||
+      error.message?.includes('blocked by client')) {
+    errors.push('ERR_BLOCKED_BY_CLIENT');
+  }
+  
+  // Detectar errores de red
+  if (error.code === 'ERR_NETWORK' || 
+      error.message?.includes('Network Error') ||
+      error.message?.includes('ERR_NETWORK')) {
+    errors.push('ERR_NETWORK');
+  }
+  
+  // Detectar errores de CORS
+  if (error.code === 'ERR_CORS' || 
+      error.message?.includes('CORS') ||
+      error.message?.includes('Access-Control-Allow-Origin')) {
+    errors.push('ERR_CORS');
+  }
+  
+  // Detectar errores de timeout
+  if (error.code === 'ECONNABORTED' || 
+      error.message?.includes('timeout') ||
+      error.message?.includes('ECONNABORTED')) {
+    errors.push('ERR_TIMEOUT');
+  }
+  
+  return errors;
+};
+
+// Función para obtener sugerencias de solución
+const getErrorSuggestions = (errors: string[]): string[] => {
+  const suggestions: string[] = [];
+  
+  if (errors.includes('ERR_BLOCKED_BY_CLIENT')) {
+    suggestions.push('🔒 Desactiva temporalmente las extensiones del navegador (ad blockers, privacy extensions)');
+    suggestions.push('🌐 Verifica que el backend esté corriendo en http://localhost:3001');
+    suggestions.push('🔄 Intenta recargar la página con Ctrl+F5 (hard refresh)');
+    suggestions.push('🔧 Verifica la configuración de firewall/antivirus');
+  }
+  
+  if (errors.includes('ERR_NETWORK')) {
+    suggestions.push('🌐 Verifica tu conexión a internet');
+    suggestions.push('🔌 Asegúrate de que el backend esté corriendo');
+    suggestions.push('🔧 Verifica la URL del backend en la configuración');
+  }
+  
+  if (errors.includes('ERR_CORS')) {
+    suggestions.push('🔧 El backend necesita configurar CORS correctamente');
+    suggestions.push('🌐 Verifica que el backend esté configurado para aceptar peticiones desde el frontend');
+  }
+  
+  if (errors.includes('ERR_TIMEOUT')) {
+    suggestions.push('⏱️ La petición tardó demasiado, verifica la conexión');
+    suggestions.push('🔧 Considera aumentar el timeout en la configuración');
+  }
+  
+  return suggestions;
 };
 
 // Exportar tipos útiles
