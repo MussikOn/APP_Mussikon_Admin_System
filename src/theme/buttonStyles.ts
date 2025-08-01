@@ -181,6 +181,27 @@ export const buttonStyles = {
     '&:focus-visible': {
       boxShadow: 'none'
     }
+  },
+
+  // Botón del navbar (para evitar interferencias entre botones cercanos)
+  navbar: {
+    borderRadius: '50%',
+    transition: 'all 0.2s ease',
+    '&:hover': { 
+      background: 'rgba(255,255,255,0.1)',
+      transform: 'scale(1.05)'
+    },
+    '&:active': {
+      transform: 'scale(1)',
+    },
+    '&:focus': {
+      outline: '2px solid rgba(255, 255, 255, 0.3)',
+      outlineOffset: '2px',
+    },
+    '&:focus-visible': {
+      outline: '2px solid rgba(255, 255, 255, 0.3)',
+      outlineOffset: '2px',
+    }
   }
 };
 

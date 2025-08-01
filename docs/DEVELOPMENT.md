@@ -406,8 +406,8 @@ import {
 #### **Breakpoints y Responsive**
 ```typescript
 // ✅ Correcto - Uso de breakpoints
-<Box 
-  sx={{ 
+<Box
+  sx={{
     display: 'grid',
     gridTemplateColumns: {
       xs: '1fr',           // 1 columna en móvil

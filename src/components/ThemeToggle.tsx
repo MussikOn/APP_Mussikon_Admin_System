@@ -21,9 +21,17 @@ const ThemeToggle: React.FC = () => {
           color: '#ffffff',
           width: 40,
           height: 40,
-          transition: 'all 0.3s ease-in-out',
+          transition: 'all 0.2s ease',
           '&:hover': {
-            transform: 'rotate(180deg) scale(1.1)',
+            transform: 'scale(1.05)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+          },
+          '&:active': {
+            transform: 'scale(1)',
+          },
+          '&:focus': {
+            outline: '2px solid rgba(255, 255, 255, 0.5)',
+            outlineOffset: '2px',
           },
         }}
       >

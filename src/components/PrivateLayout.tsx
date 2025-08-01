@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
+import { buttonStyles } from '../theme/buttonStyles';
 import Sidebar from './Sidebar';
 import GlobalSearch from './GlobalSearch';
 import {
@@ -179,14 +180,7 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <IconButton 
                   color="inherit"
                   aria-label="Ver notificaciones"
-                  sx={{ 
-                    borderRadius: '50%',
-                    '&:hover': { 
-                      background: 'rgba(255,255,255,0.1)',
-                      transform: 'scale(1.1)'
-                    },
-                    transition: 'all 0.2s ease-in-out',
-                  }}
+                  sx={buttonStyles.navbar}
                 >
                   <Badge badgeContent={3} color="error">
                     <NotificationsIcon />
@@ -201,14 +195,7 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   aria-label="Abrir menú de usuario"
                   aria-expanded={Boolean(anchorEl)}
                   aria-haspopup="true"
-                  sx={{ 
-                    borderRadius: '50%',
-                    '&:hover': { 
-                      background: 'rgba(255,255,255,0.1)',
-                      transform: 'scale(1.1)'
-                    },
-                    transition: 'all 0.2s ease-in-out',
-                  }}
+                  sx={buttonStyles.navbar}
                 >
                   <Avatar 
                     sx={{ 
