@@ -26,6 +26,10 @@ import {
   Timeline as TimelineIcon,
   BugReport as BugReportIcon
 } from '@mui/icons-material';
+import ResponsiveLayout from '../../components/ResponsiveLayout';
+import ResponsiveGrid from '../../components/ResponsiveGrid';
+import { responsiveTypography } from '../../theme/breakpoints';
+import { buttonStyles } from '../../theme/buttonStyles';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { analyticsService, type AnalyticsFilters } from '../../services/searchService';
 import { useAuth } from '../../hooks/useAuth';
@@ -424,161 +428,110 @@ const Analytics: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Título y controles */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+    <ResponsiveLayout
+      spacing="lg"
+      sx={{ maxWidth: '100%', mx: 'auto' }}
+    >
+      {/* Header */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', md: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', md: 'center' }, 
+        gap: { xs: 2, md: 0 },
+        mb: 4
+      }}>
         <Box>
-          <Typography variant="h4" gutterBottom>
-            Analytics y Reportes
+          <Typography 
+            variant="h3" 
+            sx={{ 
+              fontWeight: 700,
+              fontSize: responsiveTypography.h3,
+              mb: 1
+            }}
+          >
+            Analytics & Reportes
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body1" color="text.secondary">
             Análisis detallado del rendimiento de la plataforma
           </Typography>
         </Box>
-        <Box display="flex" gap={1}>
-          <Tooltip title="Refrescar datos">
-            <IconButton onClick={handleRefresh} color="primary">
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Exportar reporte">
-            <IconButton onClick={() => handleExport('dashboard')} color="primary">
-              <DownloadIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Diagnosticar problemas de conectividad">
-            <IconButton onClick={runDiagnostics} color="warning">
-              <BugReportIcon />
-            </IconButton>
-          </Tooltip>
+        
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={dashboardRequest.loading || eventsRequest.loading || usersRequest.loading}
+            sx={{ 
+              ...buttonStyles.secondary,
+              '&:hover': {
+                backgroundColor: 'rgba(25, 118, 210, 0.04)'
+              }
+            }}
+          >
+            Actualizar
+          </Button>
+          
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={() => handleExport('all')}
+            sx={{ 
+              ...buttonStyles.secondary,
+              '&:hover': {
+                backgroundColor: 'rgba(76, 175, 80, 0.04)'
+              }
+            }}
+          >
+            Exportar
+          </Button>
+          
+          <Button
+            variant="outlined"
+            startIcon={<BugReportIcon />}
+            onClick={runDiagnostics}
+            sx={{ 
+              ...buttonStyles.secondary,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 152, 0, 0.04)'
+              }
+            }}
+          >
+            Diagnóstico
+          </Button>
         </Box>
       </Box>
-
-      {/* Alerta de datos de respaldo */}
-      <Alert 
-        severity="info" 
-        sx={{ mb: 3 }}
-        action={
-          <Button color="inherit" size="small" onClick={() => window.open('mailto:soporte@mussikon.com?subject=Analytics Backend Issue', '_blank')}>
-            Reportar
-          </Button>
-        }
-      >
-        <Typography variant="body2">
-          <strong>Nota:</strong> Algunos datos de analytics están siendo mostrados desde nuestro sistema de respaldo. 
-          Esto puede ocurrir cuando el backend no está disponible o los endpoints de analytics no están implementados.
-          Los datos mostrados son representativos para demostración.
-        </Typography>
-      </Alert>
-
-      {/* Alerta de troubleshooting para ERR_BLOCKED_BY_CLIENT */}
-      {hasBlockedByClientError(dashboardRequest.error) && (
-        <Alert 
-          severity="warning" 
-          sx={{ mb: 3 }}
-          action={
-            <Box display="flex" gap={1}>
-              <Button color="inherit" size="small" onClick={handleBlockedByClientError}>
-                Solucionar
-              </Button>
-              <Button color="inherit" size="small" onClick={() => window.open('https://support.google.com/chrome/answer/2765944', '_blank')}>
-                Ayuda
-              </Button>
-            </Box>
-          }
-        >
-          <Typography variant="body2">
-            <strong>🚫 Problema detectado:</strong> Solicitudes bloqueadas por el navegador o extensiones.
-            <br />
-            <strong>🔧 Soluciones rápidas:</strong>
-            <br />
-            • <strong>Click en "Solucionar"</strong> para guía automática
-            <br />
-            • Desactiva temporalmente las extensiones del navegador (especialmente ad-blockers)
-            <br />
-            • Usa modo incógnito (Ctrl+Shift+N) para probar
-            <br />
-            • Los datos se muestran desde respaldo mientras se resuelve el problema
-          </Typography>
-        </Alert>
-      )}
-
-      {/* Alerta de error del servidor */}
-      {hasServerError(dashboardRequest.error) && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 3 }}
-          action={
-            <Button color="inherit" size="small" onClick={() => window.open('mailto:soporte@mussikon.com?subject=Analytics Server Error 500', '_blank')}>
-              Reportar Error
-            </Button>
-          }
-        >
-          <Typography variant="body2">
-            <strong>Error del servidor detectado:</strong> El backend está devolviendo errores 500 para algunos endpoints de analytics.
-            <br />
-            <strong>Posibles causas:</strong>
-            <br />
-            • Los endpoints de analytics no están implementados en el backend
-            <br />
-            • Error interno en el servidor
-            <br />
-            • Problema de configuración del backend
-            <br />
-            • Los datos se muestran desde respaldo mientras se resuelve el problema
-          </Typography>
-        </Alert>
-      )}
-
-      {/* Alerta de permisos insuficientes */}
-      {!canAccessUserAnalytics && (
-        <Alert 
-          severity="info" 
-          sx={{ mb: 3 }}
-          action={
-            <Button color="inherit" size="small" onClick={() => window.open('mailto:admin@mussikon.com?subject=Solicitud de permisos para analytics de usuarios', '_blank')}>
-              Solicitar permisos
-            </Button>
-          }
-        >
-          <Typography variant="body2">
-            <strong>📊 Permisos limitados:</strong> Tu rol actual ({user?.roll}) no tiene acceso a analytics de usuarios.
-            <br />
-            <strong>Métricas disponibles:</strong> Dashboard, Eventos, Solicitudes, Plataforma, Tendencias
-            <br />
-            <strong>Para acceder a analytics de usuarios:</strong> Contacta al administrador para solicitar permisos adicionales.
-          </Typography>
-        </Alert>
-      )}
 
       {/* Filtros */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <FilterIcon />
-            <Typography variant="h6">Filtros</Typography>
-          </Box>
-          
-          <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={2}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 2,
+            alignItems: { xs: 'stretch', md: 'center' }
+          }}>
             <TextField
               select
-              fullWidth
               label="Período"
-              value={filters.period || ''}
+              value={filters.period}
               onChange={(e) => handleFilterChange('period', e.target.value)}
+              sx={{ minWidth: 150 }}
             >
               <MenuItem value="day">Día</MenuItem>
               <MenuItem value="week">Semana</MenuItem>
               <MenuItem value="month">Mes</MenuItem>
+              <MenuItem value="quarter">Trimestre</MenuItem>
               <MenuItem value="year">Año</MenuItem>
             </TextField>
             
             <TextField
               select
-              fullWidth
               label="Agrupar por"
-              value={filters.groupBy || ''}
+              value={filters.groupBy}
               onChange={(e) => handleFilterChange('groupBy', e.target.value)}
+              sx={{ minWidth: 150 }}
             >
               <MenuItem value="hour">Hora</MenuItem>
               <MenuItem value="day">Día</MenuItem>
@@ -586,162 +539,86 @@ const Analytics: React.FC = () => {
               <MenuItem value="month">Mes</MenuItem>
             </TextField>
             
-            <TextField
-              fullWidth
-              label="Fecha desde"
-              type="date"
-              value={filters.startDate || ''}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-            
-            <TextField
-              fullWidth
-              label="Fecha hasta"
-              type="date"
-              value={filters.endDate || ''}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {['dashboard', 'events', 'requests', 'users', 'platform', 'trends'].map((metric) => (
+                <Chip
+                  key={metric}
+                  label={metric.charAt(0).toUpperCase() + metric.slice(1)}
+                  onClick={() => toggleMetric(metric)}
+                  color={selectedMetrics.includes(metric) ? 'primary' : 'default'}
+                  variant={selectedMetrics.includes(metric) ? 'filled' : 'outlined'}
+                  sx={{ 
+                    ...buttonStyles.chip,
+                    '&:hover': {
+                      backgroundColor: selectedMetrics.includes(metric) 
+                        ? 'rgba(25, 118, 210, 0.12)' 
+                        : 'rgba(0, 0, 0, 0.04)'
+                    }
+                  }}
+                />
+              ))}
+            </Box>
           </Box>
         </CardContent>
       </Card>
 
-      {/* Métricas seleccionables */}
-      <Box mb={3}>
-        <Typography variant="h6" gutterBottom>
-          Métricas disponibles
-        </Typography>
-        <Box display="flex" gap={1} flexWrap="wrap">
-          {[
-            { key: 'dashboard', label: 'Dashboard', icon: <BarChartIcon /> },
-            { key: 'events', label: 'Eventos', icon: <EventIcon /> },
-            { key: 'requests', label: 'Solicitudes', icon: <LibraryMusicIcon /> },
-            { key: 'users', label: 'Usuarios', icon: <PeopleIcon /> },
-            { key: 'platform', label: 'Plataforma', icon: <TrendingUpIcon /> },
-            { key: 'trends', label: 'Tendencias', icon: <TimelineIcon /> }
-          ].map((metric) => {
-            const isDisabled = metric.key === 'users' && !canAccessUserAnalytics;
-            const isSelected = selectedMetrics.includes(metric.key);
-            
-            return (
-              <Tooltip 
-                key={metric.key}
-                title={isDisabled ? 'No tienes permisos para acceder a analytics de usuarios' : `Mostrar/ocultar ${metric.label}`}
-                placement="top"
-              >
-                <span>
-                  <Chip
-                    label={metric.label}
-                    icon={metric.icon}
-                    onClick={isDisabled ? undefined : () => toggleMetric(metric.key)}
-                    color={isSelected ? 'primary' : 'default'}
-                    variant={isSelected ? 'filled' : 'outlined'}
-                    clickable={!isDisabled}
-                    disabled={isDisabled}
-                    sx={{
-                      opacity: isDisabled ? 0.5 : 1,
-                      cursor: isDisabled ? 'not-allowed' : 'pointer',
-                      '&:hover': {
-                        opacity: isDisabled ? 0.5 : 0.8,
-                      }
-                    }}
-                  />
-                </span>
-              </Tooltip>
-            );
-          })}
-        </Box>
-      </Box>
+      {/* Alertas de errores */}
+      {renderErrorAlerts()}
 
       {/* Métricas */}
-      <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(300px, 1fr))" gap={3}>
-        {selectedMetrics.includes('dashboard') && (
-          <Box>
-            {renderMetric(
-              'Dashboard General',
-              dashboardRequest.data,
-              dashboardRequest.loading,
-              dashboardRequest.error,
-              <BarChartIcon />
-            )}
-          </Box>
+      <ResponsiveGrid
+        type="metrics"
+        gap={3}
+      >
+        {selectedMetrics.includes('dashboard') && renderMetric(
+          'Dashboard Analytics',
+          dashboardRequest.data,
+          dashboardRequest.loading,
+          dashboardRequest.error,
+          <TrendingUpIcon />
         )}
         
-        {selectedMetrics.includes('events') && (
-          <Box>
-            {renderMetric(
-              'Eventos',
-              eventsRequest.data,
-              eventsRequest.loading,
-              eventsRequest.error,
-              <EventIcon />
-            )}
-          </Box>
+        {selectedMetrics.includes('events') && renderMetric(
+          'Eventos Analytics',
+          eventsRequest.data,
+          eventsRequest.loading,
+          eventsRequest.error,
+          <EventIcon />
         )}
         
-        {selectedMetrics.includes('requests') && (
-          <Box>
-            {renderMetric(
-              'Solicitudes',
-              requestsRequest.data,
-              requestsRequest.loading,
-              requestsRequest.error,
-              <LibraryMusicIcon />
-            )}
-          </Box>
+        {selectedMetrics.includes('requests') && renderMetric(
+          'Solicitudes Analytics',
+          requestsRequest.data,
+          requestsRequest.loading,
+          requestsRequest.error,
+          <LibraryMusicIcon />
         )}
         
-        {selectedMetrics.includes('users') && (
-          <Box>
-            {renderMetric(
-              'Usuarios',
-              usersRequest.data,
-              usersRequest.loading,
-              usersRequest.error,
-              <PeopleIcon />
-            )}
-          </Box>
+        {selectedMetrics.includes('users') && canAccessUserAnalytics && renderMetric(
+          'Usuarios Analytics',
+          usersRequest.data,
+          usersRequest.loading,
+          usersRequest.error,
+          <PeopleIcon />
         )}
         
-        {selectedMetrics.includes('platform') && (
-          <Box>
-            {renderMetric(
-              'Plataforma',
-              platformRequest.data,
-              platformRequest.loading,
-              platformRequest.error,
-              <TrendingUpIcon />
-            )}
-          </Box>
+        {selectedMetrics.includes('platform') && renderMetric(
+          'Plataforma Analytics',
+          platformRequest.data,
+          platformRequest.loading,
+          platformRequest.error,
+          <BarChartIcon />
         )}
         
-        {selectedMetrics.includes('trends') && (
-          <Box>
-            {renderMetric(
-              'Tendencias',
-              trendsRequest.data,
-              trendsRequest.loading,
-              trendsRequest.error,
-              <TimelineIcon />
-            )}
-          </Box>
+        {selectedMetrics.includes('trends') && renderMetric(
+          'Tendencias Analytics',
+          trendsRequest.data,
+          trendsRequest.loading,
+          trendsRequest.error,
+          <TimelineIcon />
         )}
-      </Box>
-
-      {/* Estado general */}
-      {(dashboardRequest.loading || eventsRequest.loading || requestsRequest.loading || 
-        usersRequest.loading || platformRequest.loading || trendsRequest.loading) && (
-        <Box display="flex" justifyContent="center" mt={3}>
-          <Alert severity="info">
-            Cargando datos de analytics...
-          </Alert>
-        </Box>
-      )}
-
-      {/* Errores generales */}
-      {renderErrorAlerts()}
-    </Box>
+      </ResponsiveGrid>
+    </ResponsiveLayout>
   );
 };
 

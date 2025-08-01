@@ -6,14 +6,17 @@ import {
   Alert,
   CircularProgress,
   Fab,
-  Snackbar,
-  Container
+  Snackbar
 } from '@mui/material';
 import { 
   Add, 
   Refresh, 
   People
 } from '@mui/icons-material';
+import ResponsiveLayout from '../../components/ResponsiveLayout';
+import ResponsiveGrid from '../../components/ResponsiveGrid';
+import { responsiveTypography } from '../../theme/breakpoints';
+import { buttonStyles } from '../../theme/buttonStyles';
 import { useMobileUsers } from './hooks/useMobileUsers';
 import MobileUserCard from './components/MobileUserCard';
 import MobileUserForm from './components/MobileUserForm';
@@ -188,8 +191,9 @@ const MobileUsers = () => {
 
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <div className="mobile-users-container" style={{ 
+    <ResponsiveLayout
+      spacing="lg"
+      sx={{
         background: 'linear-gradient(135deg, rgba(0, 255, 247, 0.05) 0%, rgba(0, 0, 0, 0.9) 100%)',
         borderRadius: '24px',
         padding: '32px',
@@ -197,114 +201,118 @@ const MobileUsers = () => {
         backdropFilter: 'blur(20px)',
         position: 'relative',
         overflow: 'hidden'
+      }}
+    >
+      {/* Header futurista */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', md: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', md: 'center' }, 
+        gap: { xs: 2, md: 0 },
+        mb: 4,
+        position: 'relative'
       }}>
-        {/* Header futurista */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 4,
-          position: 'relative'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box sx={{
-              width: 48,
-              height: 48,
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #00fff7, #00ff88)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(0, 255, 247, 0.4)',
-              animation: 'pulse 2s infinite'
-            }}>
-              <People sx={{ color: '#000', fontSize: 28 }} />
-            </Box>
-            <Box>
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  color: '#00fff7', 
-                  fontWeight: 800,
-                  textShadow: '0 0 20px rgba(0, 255, 247, 0.5)',
-                  fontSize: { xs: '1.8rem', md: '2.5rem' },
-                  letterSpacing: '2px'
-                }}
-              >
-                USUARIOS MÓVILES
-              </Typography>
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
-                  color: '#b0b8c1',
-                  fontSize: '0.9rem',
-                  letterSpacing: '1px',
-                  mt: 0.5
-                }}
-              >
-                Gestión y Soporte de Usuarios de la App Móvil
-              </Typography>
-            </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{
+            width: 48,
+            height: 48,
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #00fff7, #00ff88)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(0, 255, 247, 0.4)',
+            animation: 'pulse 2s infinite'
+          }}>
+            <People sx={{ color: '#000', fontSize: 28 }} />
           </Box>
-          
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              onClick={handleRefresh}
-              disabled={loading}
+          <Box>
+            <Typography 
+              variant="h3" 
               sx={{ 
-                borderColor: '#00fff7',
-                color: '#00fff7',
-                borderRadius: '12px',
-                px: 3,
-                py: 1.5,
-                fontWeight: 600,
-                textTransform: 'none',
-                fontSize: '0.9rem',
-                '&:hover': {
-                  borderColor: '#00ff88',
-                  backgroundColor: 'rgba(0, 255, 247, 0.1)',
-                  boxShadow: '0 0 15px rgba(0, 255, 247, 0.3)'
-                }
+                color: '#00fff7', 
+                fontWeight: 800,
+                textShadow: '0 0 20px rgba(0, 255, 247, 0.5)',
+                fontSize: responsiveTypography.h3,
+                letterSpacing: '2px'
               }}
             >
-              ACTUALIZAR
-            </Button>
-            
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setShowForm(true)}
+              USUARIOS MÓVILES
+            </Typography>
+            <Typography 
+              variant="subtitle1" 
               sx={{ 
-                background: 'linear-gradient(135deg, #00fff7, #00ff88)',
-                color: '#000',
-                borderRadius: '12px',
-                px: 4,
-                py: 1.5,
-                fontWeight: 700,
-                textTransform: 'none',
+                color: '#b0b8c1',
                 fontSize: '0.9rem',
-                boxShadow: '0 0 20px rgba(0, 255, 247, 0.4)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #00ff88, #00fff7)',
-                  boxShadow: '0 0 25px rgba(0, 255, 247, 0.6)',
-                  transform: 'translateY(-2px)'
-                }
+                letterSpacing: '1px',
+                mt: 0.5
               }}
             >
-              NUEVO USUARIO
-            </Button>
+              Gestión y Soporte de Usuarios de la App Móvil
+            </Typography>
           </Box>
         </Box>
+        
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={handleRefresh}
+            disabled={loading}
+            sx={{ 
+              ...buttonStyles.secondary,
+              borderColor: '#00fff7',
+              color: '#00fff7',
+              borderRadius: '12px',
+              px: 3,
+              py: 1.5,
+              fontWeight: 600,
+              textTransform: 'none',
+              fontSize: '0.9rem',
+              '&:hover': {
+                borderColor: '#00ff88',
+                backgroundColor: 'rgba(0, 255, 247, 0.1)',
+                boxShadow: '0 0 15px rgba(0, 255, 247, 0.3)'
+              }
+            }}
+          >
+            ACTUALIZAR
+          </Button>
+          
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setShowForm(true)}
+            sx={{ 
+              ...buttonStyles.primary,
+              background: 'linear-gradient(135deg, #00fff7, #00ff88)',
+              color: '#000',
+              borderRadius: '12px',
+              px: 4,
+              py: 1.5,
+              fontWeight: 700,
+              textTransform: 'none',
+              fontSize: '0.9rem',
+              boxShadow: '0 0 20px rgba(0, 255, 247, 0.4)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #00ff88, #00fff7)',
+                boxShadow: '0 0 25px rgba(0, 255, 247, 0.6)',
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            NUEVO USUARIO
+          </Button>
+        </Box>
+      </Box>
 
         {/* Estadísticas */}
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' },
-          gap: 2,
-          mb: 4
-        }}>
+        <ResponsiveGrid
+          type="metrics"
+          gap={2}
+          sx={{ mb: 4 }}
+        >
           <Box sx={{
             background: 'rgba(0, 255, 247, 0.1)',
             borderRadius: '12px',
@@ -394,7 +402,7 @@ const MobileUsers = () => {
               Músicos
             </Typography>
           </Box>
-        </Box>
+        </ResponsiveGrid>
 
         {/* Filtros */}
         <MobileUserFilters
@@ -502,21 +510,17 @@ const MobileUsers = () => {
                 </Typography>
               </Box>
             ) : (
-              <Box sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: { 
-                  xs: '1fr', 
-                  sm: 'repeat(2, 1fr)', 
-                  md: 'repeat(3, 1fr)', 
-                  lg: 'repeat(4, 1fr)' 
-                }, 
-                gap: 3,
-                animation: 'fadeIn 0.6s ease-out'
-              }}>
-                {users.map((user) => (
+              <ResponsiveGrid
+                columns={{ xs: 1, sm: 2, md: 3, lg: 4 }}
+                gap={3}
+                sx={{
+                  animation: 'fadeIn 0.6s ease-out'
+                }}
+              >
+                {users.map((user, index) => (
                   <Box key={user._id} sx={{
                     animation: 'slideIn 0.4s ease-out',
-                    animationDelay: `${users.indexOf(user) * 0.1}s`
+                    animationDelay: `${index * 0.1}s`
                   }}>
                     <MobileUserCard
                       user={user}
@@ -529,7 +533,7 @@ const MobileUsers = () => {
                     />
                   </Box>
                 ))}
-              </Box>
+              </ResponsiveGrid>
             )}
           </>
         )}
@@ -599,7 +603,7 @@ const MobileUsers = () => {
         >
           <Add sx={{ fontSize: 28 }} />
         </Fab>
-      </div>
+      </ResponsiveLayout>
 
       {/* Estilos CSS para animaciones */}
       <style>{`
@@ -618,7 +622,7 @@ const MobileUsers = () => {
           to { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-    </Container>
+    </ResponsiveLayout>
   );
 };
 

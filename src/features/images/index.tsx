@@ -49,6 +49,10 @@ import {
   PostAdd as PostIcon,
   Settings as SettingsIcon
 } from '@mui/icons-material';
+import ResponsiveLayout from '../../components/ResponsiveLayout';
+import ResponsiveGrid from '../../components/ResponsiveGrid';
+import { responsiveTypography } from '../../theme/breakpoints';
+import { buttonStyles } from '../../theme/buttonStyles';
 import { useImages } from './hooks/useImages';
 import ImageUpload from './components/ImageUpload';
 import ImageFilters from './components/ImageFilters';
@@ -296,12 +300,29 @@ const Images: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: '100%', mx: 'auto' }}>
+    <ResponsiveLayout
+      spacing="lg"
+      sx={{ maxWidth: '100%', mx: 'auto' }}
+    >
       {/* Header con estadísticas */}
       <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', md: 'center' }, 
+          gap: 2 
+        }}>
           <Box>
-            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom 
+              sx={{ 
+                fontWeight: 700,
+                fontSize: responsiveTypography.h4
+              }}
+            >
               Galería de Imágenes
             </Typography>
             <Typography variant="body1" sx={{ opacity: 0.9 }}>
@@ -314,7 +335,15 @@ const Images: React.FC = () => {
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={() => loadImages()}
-              sx={{ color: 'white', borderColor: 'white', '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255,255,255,0.1)' } }}
+              sx={{ 
+                ...buttonStyles.secondary,
+                color: 'white', 
+                borderColor: 'white', 
+                '&:hover': { 
+                  borderColor: 'white', 
+                  backgroundColor: 'rgba(255,255,255,0.1)' 
+                } 
+              }}
             >
               Actualizar
             </Button>
@@ -323,7 +352,15 @@ const Images: React.FC = () => {
               variant="outlined"
               startIcon={<SettingsIcon />}
               onClick={handleCleanup}
-              sx={{ color: 'white', borderColor: 'white', '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255,255,255,0.1)' } }}
+              sx={{ 
+                ...buttonStyles.secondary,
+                color: 'white', 
+                borderColor: 'white', 
+                '&:hover': { 
+                  borderColor: 'white', 
+                  backgroundColor: 'rgba(255,255,255,0.1)' 
+                } 
+              }}
             >
               Limpiar
             </Button>
@@ -334,7 +371,11 @@ const Images: React.FC = () => {
                 color="error"
                 startIcon={<DeleteIcon />}
                 onClick={handleBulkDelete}
-                sx={{ backgroundColor: '#ff4757', '&:hover': { backgroundColor: '#ff3742' } }}
+                sx={{ 
+                  ...buttonStyles.error,
+                  backgroundColor: '#ff4757', 
+                  '&:hover': { backgroundColor: '#ff3742' } 
+                }}
               >
                 Eliminar ({selectedImages.length})
               </Button>
@@ -345,7 +386,11 @@ const Images: React.FC = () => {
 
       {/* Estadísticas */}
       {stats && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
+        <ResponsiveGrid
+          type="metrics"
+          gap={3}
+          sx={{ mb: 3 }}
+        >
           <Card sx={{ minWidth: 250, flex: 1, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -417,7 +462,7 @@ const Images: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
-        </Box>
+        </ResponsiveGrid>
       )}
 
       {/* Tabs para diferentes vistas */}
@@ -506,8 +551,11 @@ const Images: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {filteredImages.map(image => (
+          <ResponsiveGrid
+            columns={{ xs: 1, sm: 2, md: 3, lg: 4 }}
+            gap={2}
+          >
+            {filteredImages.map((image, index) => (
               <Card 
                 key={image.id}
                 sx={{ 
@@ -633,7 +681,7 @@ const Images: React.FC = () => {
                   </CardActions>
                 </Card>
               ))}
-          </Box>
+            </ResponsiveGrid>
         )}
       </TabPanel>
 
@@ -792,7 +840,7 @@ const Images: React.FC = () => {
       >
         <UploadIcon />
       </Fab>
-    </Box>
+    </ResponsiveLayout>
   );
 };
 
