@@ -148,7 +148,7 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 2,
+              gap: 3,
               flexShrink: 0
             }}>
               {/* Mobile Search Toggle */}

@@ -193,23 +193,28 @@ export const buttonStyles = {
     transition: 'all 0.2s ease',
     position: 'relative',
     zIndex: 1,
+    boxShadow: 'none',
     '&:hover': { 
       background: 'rgba(255,255,255,0.1)',
       transform: 'scale(1.05)',
+      boxShadow: 'none',
       zIndex: 2,
     },
     '&:active': {
       transform: 'scale(1)',
+      boxShadow: 'none',
       zIndex: 3,
     },
     '&:focus': {
       outline: '2px solid rgba(255, 255, 255, 0.3)',
       outlineOffset: '2px',
+      boxShadow: 'none',
       zIndex: 2,
     },
     '&:focus-visible': {
       outline: '2px solid rgba(255, 255, 255, 0.3)',
       outlineOffset: '2px',
+      boxShadow: 'none',
       zIndex: 2,
     }
   },
@@ -224,23 +229,27 @@ export const buttonStyles = {
     transition: 'all 0.2s ease',
     position: 'relative',
     zIndex: 1,
+    boxShadow: 'none',
     '&:hover': {
       transform: 'scale(1.05)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+      boxShadow: 'none',
       zIndex: 2,
     },
     '&:active': {
       transform: 'scale(1)',
+      boxShadow: 'none',
       zIndex: 3,
     },
     '&:focus': {
       outline: '2px solid rgba(255, 255, 255, 0.5)',
       outlineOffset: '2px',
+      boxShadow: 'none',
       zIndex: 2,
     },
     '&:focus-visible': {
       outline: '2px solid rgba(255, 255, 255, 0.5)',
       outlineOffset: '2px',
+      boxShadow: 'none',
       zIndex: 2,
     }
   }
