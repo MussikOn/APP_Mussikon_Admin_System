@@ -25,16 +25,20 @@ function searchDocs() {
     return;
   }
   
-  const docs = [
-    { title: 'Autenticación', url: 'docs/features/AUTHENTICATION.md', keywords: 'login, jwt, token, auth, sesión' },
-    { title: 'Dashboard', url: 'docs/features/DASHBOARD.md', keywords: 'métricas, estadísticas, gráficos, notificaciones' },
-    { title: 'Gestión de Usuarios', url: 'docs/features/USERS.md', keywords: 'usuarios, crud, móviles, gestión' },
-    { title: 'Configuración', url: 'docs/technical/CONFIGURATION.md', keywords: 'config, setup, variables, entorno' },
-    { title: 'Arquitectura', url: 'docs/technical/ARCHITECTURE.md', keywords: 'arquitectura, estructura, diseño' },
-    { title: 'API System', url: 'docs/technical/API_SYSTEM.md', keywords: 'api, endpoints, servicios' },
-    { title: 'Despliegue', url: 'docs/deployment/GUIDE.md', keywords: 'deploy, producción, build' },
-    { title: 'Solución de Problemas', url: 'docs/troubleshooting/COMMON_ERRORS.md', keywords: 'errores, problemas, fix' }
-  ];
+                const docs = [
+                { title: 'Autenticación', url: 'docs/features/AUTHENTICATION.md', keywords: 'login, jwt, token, auth, sesión' },
+                { title: 'Dashboard', url: 'docs/features/DASHBOARD.md', keywords: 'métricas, estadísticas, gráficos, notificaciones' },
+                { title: 'Gestión de Usuarios', url: 'docs/features/USERS.md', keywords: 'usuarios, crud, móviles, gestión' },
+                { title: 'Configuración', url: 'docs/technical/CONFIGURATION.md', keywords: 'config, setup, variables, entorno' },
+                { title: 'Arquitectura', url: 'docs/technical/ARCHITECTURE.md', keywords: 'arquitectura, estructura, diseño' },
+                { title: 'API System', url: 'docs/technical/API_SYSTEM.md', keywords: 'api, endpoints, servicios' },
+                { title: 'Despliegue', url: 'docs/deployment/GUIDE.md', keywords: 'deploy, producción, build' },
+                { title: 'Solución de Problemas', url: 'docs/troubleshooting/COMMON_ERRORS.md', keywords: 'errores, problemas, fix' },
+                { title: 'Backend API', url: 'docs/backend-api/README.md', keywords: 'backend, api, express, firebase' },
+                { title: 'Endpoints Backend', url: 'docs/backend-api/endpoints/AUTHENTICATION.md', keywords: 'endpoints, autenticación, eventos' },
+                { title: 'Modelos Backend', url: 'docs/backend-api/models/DATA_MODELS.md', keywords: 'modelos, tipos, interfaces, firestore' },
+                { title: 'Setup Backend', url: 'docs/backend-api/SETUP.md', keywords: 'configuración, firebase, variables, entorno' }
+              ];
   
   const matches = docs.filter(doc => 
     doc.title.toLowerCase().includes(searchTerm) || 
@@ -276,6 +280,14 @@ VITE_APP_NAME=MussikOn Admin
 - 📖 **[Errores Comunes](docs/troubleshooting/COMMON_ERRORS.md)** - Problemas frecuentes y soluciones
 - 📖 **[Analytics Errors](docs/troubleshooting/ANALYTICS_ERRORS.md)** - Errores de analytics
 - 📖 **[Autenticación](docs/troubleshooting/AUTHENTICATION_FIXES.md)** - Problemas de autenticación
+
+### **🚀 [Documentación del Backend API](docs/backend-api/)**
+- 📖 **[Guía Completa del Backend](docs/backend-api/README.md)** - Documentación completa de la API
+- 📖 **[Autenticación y Usuarios](docs/backend-api/endpoints/AUTHENTICATION.md)** - Endpoints de autenticación
+- 📖 **[Sistema de Eventos](docs/backend-api/endpoints/EVENTS.md)** - Endpoints de eventos
+- 📖 **[Modelos de Datos](docs/backend-api/models/DATA_MODELS.md)** - Estructuras de datos
+- 📖 **[Ejemplos de Uso](docs/backend-api/examples/AUTH_EXAMPLES.md)** - Ejemplos prácticos
+- 📖 **[Configuración y Setup](docs/backend-api/SETUP.md)** - Configuración del backend
 
 ---
 
