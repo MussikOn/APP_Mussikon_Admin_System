@@ -144,11 +144,11 @@ export const buttonStyles = {
     transition: 'all 0.2s ease',
     '&:hover': { 
       background: 'rgba(255,255,255,0.1)',
-      transform: 'scale(1.05)',
+      transform: 'none',
       boxShadow: 'none'
     },
     '&:active': {
-      transform: 'scale(1)',
+      transform: 'none',
       boxShadow: 'none'
     },
     '&:focus': {
@@ -168,11 +168,11 @@ export const buttonStyles = {
     boxShadow: 'none',
     transition: 'all 0.2s ease',
     '&:hover': {
-      transform: 'scale(1.05)',
+      transform: 'none',
       boxShadow: 'none'
     },
     '&:active': {
-      transform: 'scale(1)',
+      transform: 'none',
       boxShadow: 'none'
     },
     '&:focus': {
