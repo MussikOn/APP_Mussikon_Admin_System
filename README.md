@@ -2,6 +2,64 @@
 
 > **Sistema de Administración Completo para la Plataforma MussikOn**
 
+## 🔍 **Búsqueda Rápida de Documentación**
+
+<div style="margin: 20px 0; padding: 20px; background: rgba(0, 188, 212, 0.1); border-radius: 8px; border: 1px solid rgba(0, 188, 212, 0.3);">
+  <input 
+    type="text" 
+    placeholder="🔍 Buscar en la documentación..." 
+    id="docSearch"
+    style="width: 100%; padding: 12px; border: 1px solid rgba(0, 188, 212, 0.5); border-radius: 6px; background: rgba(30, 30, 30, 0.8); color: white; font-size: 16px;"
+    onkeyup="searchDocs()"
+  />
+  <div id="searchResults" style="margin-top: 10px; display: none;"></div>
+</div>
+
+<script>
+function searchDocs() {
+  const searchTerm = document.getElementById('docSearch').value.toLowerCase();
+  const resultsDiv = document.getElementById('searchResults');
+  
+  if (searchTerm.length < 2) {
+    resultsDiv.style.display = 'none';
+    return;
+  }
+  
+  const docs = [
+    { title: 'Autenticación', url: 'docs/features/AUTHENTICATION.md', keywords: 'login, jwt, token, auth, sesión' },
+    { title: 'Dashboard', url: 'docs/features/DASHBOARD.md', keywords: 'métricas, estadísticas, gráficos, notificaciones' },
+    { title: 'Gestión de Usuarios', url: 'docs/features/USERS.md', keywords: 'usuarios, crud, móviles, gestión' },
+    { title: 'Configuración', url: 'docs/technical/CONFIGURATION.md', keywords: 'config, setup, variables, entorno' },
+    { title: 'Arquitectura', url: 'docs/technical/ARCHITECTURE.md', keywords: 'arquitectura, estructura, diseño' },
+    { title: 'API System', url: 'docs/technical/API_SYSTEM.md', keywords: 'api, endpoints, servicios' },
+    { title: 'Despliegue', url: 'docs/deployment/GUIDE.md', keywords: 'deploy, producción, build' },
+    { title: 'Solución de Problemas', url: 'docs/troubleshooting/COMMON_ERRORS.md', keywords: 'errores, problemas, fix' }
+  ];
+  
+  const matches = docs.filter(doc => 
+    doc.title.toLowerCase().includes(searchTerm) || 
+    doc.keywords.toLowerCase().includes(searchTerm)
+  );
+  
+  if (matches.length > 0) {
+    resultsDiv.innerHTML = matches.map(doc => 
+      `<div style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <a href="${doc.url}" style="color: #00BCD4; text-decoration: none; font-weight: 500;">
+          📖 ${doc.title}
+        </a>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px;">
+          ${doc.keywords}
+        </div>
+      </div>`
+    ).join('');
+    resultsDiv.style.display = 'block';
+  } else {
+    resultsDiv.innerHTML = '<div style="padding: 8px; color: rgba(255,255,255,0.7);">No se encontraron resultados</div>';
+    resultsDiv.style.display = 'block';
+  }
+}
+</script>
+
 ## 🚀 **Estado del Proyecto**
 
 **✅ COMPLETADO CON ÉXITO**  
@@ -188,35 +246,36 @@ VITE_APP_NAME=MussikOn Admin
 
 ## 📚 **Documentación Completa**
 
-### **📖 Documentación Principal**
-- 📖 **[MAIN_DOCUMENTATION.md](docs/MAIN_DOCUMENTATION.md)** - Documentación organizativa principal
+### **📖 [Índice Principal](docs/INDEX.md)**
+- 📖 **[Índice de Documentación](docs/INDEX.md)** - Navegación completa y organizada
 - 📖 **[README.md](README.md)** - Esta documentación principal
-- 📖 **[DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - Resumen del deployment
 
-### **🏗️ Documentación Técnica**
-- 📖 **[API System Documentation](API_SYSTEM_DOCUMENTATION.md)** - Sistema de API centralizado
-- 📖 **[Backend Connectivity Guide](BACKEND_CONNECTIVITY_GUIDE.md)** - Guía de conectividad
-- 📖 **[Mobile Users System](MOBILE_USERS_SYSTEM.md)** - Sistema de usuarios móviles
-- 📖 **[API Implementation Status](API_IMPLEMENTATION_STATUS.md)** - Estado de implementación
-- 📖 **[Project Final Status](PROJECT_FINAL_STATUS.md)** - Estado final del proyecto
+### **🏗️ [Documentación Técnica](docs/technical/)**
+- 📖 **[Arquitectura del Sistema](docs/technical/ARCHITECTURE.md)** - Diseño y estructura del proyecto
+- 📖 **[API System](docs/technical/API_SYSTEM.md)** - Sistema de API centralizado
+- 📖 **[Configuración](docs/technical/CONFIGURATION.md)** - Configuración completa del proyecto
+- 📖 **[Estado del Proyecto](docs/technical/PROJECT_STATUS.md)** - Estado actual y roadmap
 
-### **🔧 Documentación de Desarrollo**
-- 📖 **[Development Guidelines](docs/DEVELOPMENT.md)** - Guías de desarrollo
-- 📖 **[Architecture Documentation](docs/ARCHITECTURE.md)** - Arquitectura del sistema
-- 📖 **[Installation Guide](docs/INSTALLATION.md)** - Guía de instalación
-- 📖 **[API Endpoints](docs/API_ENDPOINTS.md)** - Documentación de endpoints
+### **🎯 [Funcionalidades](docs/features/)**
+- 📖 **[Sistema de Autenticación](docs/features/AUTHENTICATION.md)** - Login, registro y gestión de sesión
+- 📖 **[Dashboard](docs/features/DASHBOARD.md)** - Panel principal y métricas
+- 📖 **[Gestión de Usuarios](docs/features/USERS.md)** - CRUD de usuarios móviles
+- 📖 **[Solicitudes de Músicos](docs/features/MUSICIAN_REQUESTS.md)** - Gestión de solicitudes
 
-### **🚀 Documentación de Funcionalidades**
-- 📖 **[Notification System](docs/NOTIFICATION_SYSTEM.md)** - Sistema de notificaciones (NUEVO)
-- 📖 **[Authentication System](docs/AUTHENTICATION_SYSTEM.md)** - Sistema de autenticación
-- 📖 **[Dashboard System](docs/DASHBOARD_SYSTEM.md)** - Sistema de dashboard
-- 📖 **[Event Management](docs/EVENT_MANAGEMENT.md)** - Gestión de eventos
-- 📖 **[Request Management](docs/REQUEST_MANAGEMENT.md)** - Gestión de solicitudes
+### **🛠️ [Desarrollo](docs/development/)**
+- 📖 **[Guías de Desarrollo](docs/development/GUIDELINES.md)** - Estándares y mejores prácticas
+- 📖 **[Instalación](docs/development/INSTALLATION.md)** - Guía completa de instalación
+- 📖 **[Estructura del Código](docs/development/CODE_STRUCTURE.md)** - Organización del código
 
-### **📊 Documentación de Configuración**
-- 📖 **[Configuration Guide](docs/CONFIGURATION_GUIDE.md)** - Guía de configuración
-- 📖 **[Environment Setup](docs/ENVIRONMENT_SETUP.md)** - Configuración de entorno
-- 📖 **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Guía de despliegue
+### **🚀 [Despliegue](docs/deployment/)**
+- 📖 **[Guía de Despliegue](docs/deployment/GUIDE.md)** - Despliegue en producción
+- 📖 **[Configuración de Entorno](docs/deployment/ENVIRONMENT.md)** - Variables de entorno
+- 📖 **[Backend Connectivity](docs/deployment/BACKEND_CONNECTIVITY.md)** - Conectividad con backend
+
+### **🔧 [Solución de Problemas](docs/troubleshooting/)**
+- 📖 **[Errores Comunes](docs/troubleshooting/COMMON_ERRORS.md)** - Problemas frecuentes y soluciones
+- 📖 **[Analytics Errors](docs/troubleshooting/ANALYTICS_ERRORS.md)** - Errores de analytics
+- 📖 **[Autenticación](docs/troubleshooting/AUTHENTICATION_FIXES.md)** - Problemas de autenticación
 
 ---
 

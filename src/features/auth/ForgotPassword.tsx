@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks/useTheme';
 import { forgotPassword, verifyCode, resetPassword } from '../../services/authService';
 import {
   Box,
@@ -99,7 +99,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
           severity: 'error'
         });
       }
-    } catch (err) {
+    } catch {
       setError('Error al enviar el código de verificación');
       setSnackbar({
         open: true,
@@ -144,7 +144,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
           severity: 'error'
         });
       }
-    } catch (err) {
+    } catch {
       setError('Error al verificar el código');
       setSnackbar({
         open: true,
@@ -202,7 +202,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
           severity: 'error'
         });
       }
-    } catch (err) {
+    } catch {
       setError('Error al restablecer la contraseña');
       setSnackbar({
         open: true,

@@ -26,7 +26,7 @@ import {
   Image as ImageIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 interface SearchResult {
   id: string;

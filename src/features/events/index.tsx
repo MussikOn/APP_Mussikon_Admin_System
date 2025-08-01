@@ -54,7 +54,7 @@ const Events = () => {
         severity: 'success'
       });
       setShowForm(false);
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al crear evento',
@@ -75,7 +75,7 @@ const Events = () => {
       });
       setShowForm(false);
       setEditingEvent(null);
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al actualizar evento',
@@ -96,7 +96,7 @@ const Events = () => {
         message: 'Evento eliminado exitosamente',
         severity: 'success'
       });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al eliminar evento',
@@ -125,7 +125,7 @@ const Events = () => {
     clearSelectedEvent();
   };
 
-  const handleFilterChange = (filters: any) => {
+  const handleFilterChange = (filters: Record<string, unknown>) => {
     // Implementar filtrado local o llamar a API
     console.log('Filtros aplicados:', filters);
   };

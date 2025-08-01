@@ -4,6 +4,7 @@ export { mobileUsersService } from './mobileUsersService';
 export { eventsService } from './eventsService';
 export { musicianRequestsService } from './musicianRequestsService';
 export { imagesService } from './imagesService';
+export { musiciansService } from './musiciansService';
 
 // Nuevos servicios implementados
 export { searchService } from './searchService';

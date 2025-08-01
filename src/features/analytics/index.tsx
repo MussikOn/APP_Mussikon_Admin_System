@@ -29,6 +29,7 @@ import {
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { analyticsService, type AnalyticsFilters } from '../../services/searchService';
 import { useAuth } from '../../hooks/useAuth';
+import { authService } from '../../services/authService';
 
 const Analytics: React.FC = () => {
   const [filters, setFilters] = useState<AnalyticsFilters>({
@@ -48,9 +49,28 @@ const Analytics: React.FC = () => {
 
   const { user } = useAuth();
 
+  // Verificar permisos del usuario
+  const userPermissionLevel = authService.getPermissionLevel();
+  const canAccessUserAnalytics = userPermissionLevel >= 2; // Solo adminJunior y superior
+
+  // Inicializar métricas seleccionadas basadas en permisos
+  useEffect(() => {
+    const initialMetrics = ['dashboard', 'events'];
+    
+    // Solo agregar 'users' si el usuario tiene permisos suficientes
+    if (canAccessUserAnalytics) {
+      initialMetrics.push('users');
+    }
+    
+    setSelectedMetrics(initialMetrics);
+    console.log('📊 Métricas iniciales configuradas:', initialMetrics);
+  }, [canAccessUserAnalytics]);
+
   // Función para cargar datos de analytics
   const loadAnalyticsData = async () => {
     console.log('📊 Iniciando carga de datos de analytics con filtros:', filters);
+    console.log('📊 Nivel de permisos del usuario:', userPermissionLevel);
+    console.log('📊 ¿Puede acceder a analytics de usuarios?', canAccessUserAnalytics);
     
     try {
       // Cargar datos en paralelo para mejor rendimiento
@@ -74,11 +94,14 @@ const Analytics: React.FC = () => {
           return null;
         }));
       }
-      if (selectedMetrics.includes('users')) {
+      if (selectedMetrics.includes('users') && canAccessUserAnalytics) {
         promises.push(usersRequest.execute(filters).catch(error => {
           console.warn('📊 Error en users analytics, usando datos de respaldo:', error);
           return null;
         }));
+      } else if (selectedMetrics.includes('users') && !canAccessUserAnalytics) {
+        console.log('📊 Omitiendo analytics de usuarios - permisos insuficientes');
+        // No agregar la promesa para users analytics
       }
       if (selectedMetrics.includes('platform')) {
         promises.push(platformRequest.execute(filters).catch(error => {
@@ -258,6 +281,12 @@ const Analytics: React.FC = () => {
 
   // Función para alternar métricas
   const toggleMetric = (metric: string) => {
+    // Verificar permisos para analytics de usuarios
+    if (metric === 'users' && !canAccessUserAnalytics) {
+      console.warn('📊 Intento de agregar analytics de usuarios sin permisos suficientes');
+      return;
+    }
+    
     setSelectedMetrics(prev => 
       prev.includes(metric) 
         ? prev.filter(m => m !== metric)
@@ -501,6 +530,27 @@ const Analytics: React.FC = () => {
         </Alert>
       )}
 
+      {/* Alerta de permisos insuficientes */}
+      {!canAccessUserAnalytics && (
+        <Alert 
+          severity="info" 
+          sx={{ mb: 3 }}
+          action={
+            <Button color="inherit" size="small" onClick={() => window.open('mailto:admin@mussikon.com?subject=Solicitud de permisos para analytics de usuarios', '_blank')}>
+              Solicitar permisos
+            </Button>
+          }
+        >
+          <Typography variant="body2">
+            <strong>📊 Permisos limitados:</strong> Tu rol actual ({user?.roll}) no tiene acceso a analytics de usuarios.
+            <br />
+            <strong>Métricas disponibles:</strong> Dashboard, Eventos, Solicitudes, Plataforma, Tendencias
+            <br />
+            <strong>Para acceder a analytics de usuarios:</strong> Contacta al administrador para solicitar permisos adicionales.
+          </Typography>
+        </Alert>
+      )}
+
       {/* Filtros */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
@@ -570,17 +620,37 @@ const Analytics: React.FC = () => {
             { key: 'users', label: 'Usuarios', icon: <PeopleIcon /> },
             { key: 'platform', label: 'Plataforma', icon: <TrendingUpIcon /> },
             { key: 'trends', label: 'Tendencias', icon: <TimelineIcon /> }
-          ].map((metric) => (
-            <Chip
-              key={metric.key}
-              label={metric.label}
-              icon={metric.icon}
-              onClick={() => toggleMetric(metric.key)}
-              color={selectedMetrics.includes(metric.key) ? 'primary' : 'default'}
-              variant={selectedMetrics.includes(metric.key) ? 'filled' : 'outlined'}
-              clickable
-            />
-          ))}
+          ].map((metric) => {
+            const isDisabled = metric.key === 'users' && !canAccessUserAnalytics;
+            const isSelected = selectedMetrics.includes(metric.key);
+            
+            return (
+              <Tooltip 
+                key={metric.key}
+                title={isDisabled ? 'No tienes permisos para acceder a analytics de usuarios' : `Mostrar/ocultar ${metric.label}`}
+                placement="top"
+              >
+                <span>
+                  <Chip
+                    label={metric.label}
+                    icon={metric.icon}
+                    onClick={isDisabled ? undefined : () => toggleMetric(metric.key)}
+                    color={isSelected ? 'primary' : 'default'}
+                    variant={isSelected ? 'filled' : 'outlined'}
+                    clickable={!isDisabled}
+                    disabled={isDisabled}
+                    sx={{
+                      opacity: isDisabled ? 0.5 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      '&:hover': {
+                        opacity: isDisabled ? 0.5 : 0.8,
+                      }
+                    }}
+                  />
+                </span>
+              </Tooltip>
+            );
+          })}
         </Box>
       </Box>
 

@@ -35,5 +35,9 @@ export function useApiRequest<T, Args extends any[]>(
     }
   }, [apiFn]);
 
-  return { data, loading, error, execute };
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return { data, loading, error, execute, clearError };
 } 

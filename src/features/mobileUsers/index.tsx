@@ -57,7 +57,7 @@ const MobileUsers = () => {
         severity: 'success'
       });
       setShowForm(false);
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al crear usuario móvil',
@@ -83,7 +83,7 @@ const MobileUsers = () => {
       });
       setShowForm(false);
       setEditingUser(null);
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al actualizar usuario móvil',
@@ -104,7 +104,7 @@ const MobileUsers = () => {
         message: 'Usuario móvil eliminado exitosamente',
         severity: 'success'
       });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al eliminar usuario móvil',
@@ -121,7 +121,7 @@ const MobileUsers = () => {
         message: 'Usuario bloqueado exitosamente',
         severity: 'success'
       });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al bloquear usuario',
@@ -138,7 +138,7 @@ const MobileUsers = () => {
         message: 'Usuario desbloqueado exitosamente',
         severity: 'success'
       });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al desbloquear usuario',
@@ -169,7 +169,7 @@ const MobileUsers = () => {
     setSelectedUser(null);
   };
 
-  const handleFilterChange = (filters: any) => {
+  const handleFilterChange = (filters: Record<string, unknown>) => {
     console.log('Filtros aplicados:', filters);
   };
 

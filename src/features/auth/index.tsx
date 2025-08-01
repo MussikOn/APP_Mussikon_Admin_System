@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks/useTheme';
 import ThemeToggle from '../../components/ThemeToggle';
 import ForgotPassword from './ForgotPassword';
 import {
@@ -52,15 +52,15 @@ const Auth = () => {
         // Login fallido
         setError(result.error || 'Error en la autenticación.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error de login:', err);
       // Manejar diferentes tipos de errores
-      if (err.message) {
-        setError(err.message);
-      } else if (err.response?.data?.msg) {
-        setError(err.response.data.msg);
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
+      if (err && typeof err === 'object' && 'message' in err) {
+        setError((err as any).message);
+      } else if (err && typeof err === 'object' && 'response' in err && (err as any).response?.data?.msg) {
+        setError((err as any).response.data.msg);
+      } else if (err && typeof err === 'object' && 'response' in err && (err as any).response?.data?.message) {
+        setError((err as any).response.data.message);
       } else {
         setError('Error de conexión con el servidor.');
       }

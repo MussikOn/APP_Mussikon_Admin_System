@@ -135,7 +135,7 @@ const Images: React.FC = () => {
     try {
       await uploadImage(file, category, metadata);
       showSnackbar('Imagen subida exitosamente', 'success');
-    } catch (error) {
+    } catch {
       showSnackbar('Error al subir la imagen', 'error');
     }
   };
@@ -146,7 +146,7 @@ const Images: React.FC = () => {
         await deleteImage(imageId);
         setSelectedImages(prev => prev.filter(id => id !== imageId));
         showSnackbar('Imagen eliminada exitosamente', 'success');
-      } catch (error) {
+      } catch {
         showSnackbar('Error al eliminar la imagen', 'error');
       }
     }
@@ -158,7 +158,7 @@ const Images: React.FC = () => {
       setEditDialog({ open: false, image: null });
       setEditForm({});
       showSnackbar('Imagen actualizada exitosamente', 'success');
-    } catch (error) {
+    } catch {
       showSnackbar('Error al actualizar la imagen', 'error');
     }
   };
@@ -171,7 +171,7 @@ const Images: React.FC = () => {
         await Promise.all(selectedImages.map(imageId => deleteImage(imageId)));
         setSelectedImages([]);
         showSnackbar(`${selectedImages.length} imágenes eliminadas exitosamente`, 'success');
-      } catch (error) {
+      } catch {
         showSnackbar('Error al eliminar las imágenes', 'error');
       }
     }
@@ -211,7 +211,7 @@ const Images: React.FC = () => {
       try {
         const result = await cleanupExpiredImages();
         showSnackbar(`${result.deletedCount} imágenes expiradas fueron eliminadas`, 'success');
-      } catch (error) {
+      } catch {
         showSnackbar('Error al limpiar imágenes', 'error');
       }
     }

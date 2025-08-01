@@ -12,7 +12,7 @@ import {
   FilterList as FilterIcon,
   Clear as ClearIcon
 } from '@mui/icons-material';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 export interface FilterOption {
   id: string;

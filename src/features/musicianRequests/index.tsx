@@ -15,7 +15,7 @@ import RequestCard from './components/RequestCard';
 import RequestForm from './components/RequestForm';
 import RequestDetails from './components/RequestDetails';
 import RequestFiltersComponent from './components/RequestFilters';
-import type { MusicianRequest, CreateRequestData } from './types/request';
+import type { MusicianRequest, CreateRequestData, RequestFilters } from './types/request';
 
 const MusicianRequests = () => {
   const {
@@ -56,7 +56,7 @@ const MusicianRequests = () => {
         severity: 'success'
       });
       setShowForm(false);
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al crear solicitud',
@@ -77,7 +77,7 @@ const MusicianRequests = () => {
       });
       setShowForm(false);
       setEditingRequest(null);
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al actualizar solicitud',
@@ -98,7 +98,7 @@ const MusicianRequests = () => {
         message: 'Solicitud eliminada exitosamente',
         severity: 'success'
       });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al eliminar solicitud',
@@ -115,7 +115,7 @@ const MusicianRequests = () => {
         message: 'Solicitud aceptada exitosamente',
         severity: 'success'
       });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al aceptar solicitud',
@@ -132,7 +132,7 @@ const MusicianRequests = () => {
         message: 'Solicitud cancelada exitosamente',
         severity: 'success'
       });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Error al cancelar solicitud',
@@ -161,7 +161,7 @@ const MusicianRequests = () => {
     clearSelectedRequest();
   };
 
-  const handleFilterChange = (filters: any) => {
+  const handleFilterChange = (filters: RequestFilters) => {
     // Implementar filtrado local o llamar a API
     console.log('Filtros aplicados:', filters);
   };

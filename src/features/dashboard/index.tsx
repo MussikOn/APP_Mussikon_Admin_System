@@ -6,7 +6,7 @@ import { eventsService } from '../../services/eventsService';
 import { musicianRequestsService } from '../../services/musicianRequestsService';
 import { imagesService } from '../../services/imagesService';
 import { useApiRequest } from '../../hooks/useApiRequest';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks/useTheme';
 import DashboardNotifications from '../../components/DashboardNotifications';
 import DashboardCharts from '../../components/DashboardCharts';
 import {

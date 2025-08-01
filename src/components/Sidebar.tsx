@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 import { useResponsive } from '../hooks/useResponsive';
 import {
   Box,
@@ -107,7 +107,7 @@ const navigationItems = [
   },
 ];
 
-const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout: _onLogout }) => {
+const Sidebar: React.FC<{ onLogout: () => void }> = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const { isDark } = useTheme();

@@ -7,7 +7,7 @@ import {
   deleteUserByEmail,
 } from "../../services/usersService";
 import { useApiRequest } from "../../hooks/useApiRequest";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import {
   Box,
   Card,
