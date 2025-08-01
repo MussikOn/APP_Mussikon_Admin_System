@@ -9,10 +9,6 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   IconButton,
   Tooltip,
   FormControl,
@@ -30,7 +26,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useApiRequest } from '../../hooks/useApiRequest';
-import { searchService, type SearchFilters, type SearchResult } from '../../services/searchService';
+import { searchService, type SearchFilters, type SearchResult, type GlobalSearchResponse } from '../../services/searchService';
 
 const Search: React.FC = () => {
   const [filters, setFilters] = useState<SearchFilters>({
@@ -42,8 +38,94 @@ const Search: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
-  // Hook para búsqueda
-  const searchRequest = useApiRequest(searchService.globalSearch);
+  // Función adaptadora para convertir la respuesta del backend al formato esperado
+  const adaptSearchResponse = (backendResponse: GlobalSearchResponse) => {
+    const allResults: SearchResult[] = [];
+    
+    // Extraer los datos de la estructura real
+    const events = backendResponse.data?.events || [];
+    const requests = backendResponse.data?.requests || [];
+    const users = backendResponse.data?.users || [];
+    console.log('./src/features/search/index.tsx line 53')
+    console.log('🔍 Procesando eventos:', events.length);
+    console.log('🔍 Procesando solicitudes:', requests.length);
+    console.log('🔍 Procesando usuarios:', users.length);
+    
+    // Procesar eventos
+    if (events.length > 0) {
+      events.forEach((event: any) => {
+        allResults.push({
+          id: event.id || event.user || 'event-' + Math.random(),
+          type: 'event',
+          title: event.eventName || 'Evento sin nombre',
+          description: `${event.eventType || 'Evento'} - ${event.date || 'Sin fecha'}`,
+          relevance: 1,
+          metadata: {
+            eventType: event.eventType,
+            date: event.date,
+            location: event.location,
+            status: event.status
+          }
+        });
+      });
+    }
+    
+    // Procesar solicitudes de músicos
+    if (requests.length > 0) {
+      requests.forEach((request: any) => {
+        allResults.push({
+          id: request.id || request.user || 'request-' + Math.random(),
+          type: 'request',
+          title: request.eventName || 'Solicitud sin nombre',
+          description: `${request.instrument || 'Instrumento'} - ${request.status || 'Pendiente'}`,
+          relevance: 1,
+          metadata: {
+            instrument: request.instrument,
+            status: request.status,
+            date: request.date,
+            location: request.location
+          }
+        });
+      });
+    }
+    
+    // Procesar usuarios
+    if (users.length > 0) {
+      users.forEach((user: any) => {
+        allResults.push({
+          id: user.userEmail || user.id || 'user-' + Math.random(),
+          type: 'user',
+          title: `${user.name || 'Usuario'} ${user.lastName || ''}`,
+          description: `${user.roll || 'Usuario'} - ${user.userEmail || 'Sin email'}`,
+          relevance: 1,
+          metadata: {
+            role: user.roll,
+            email: user.userEmail,
+            name: user.name,
+            lastName: user.lastName
+          }
+        });
+      });
+    }
+    
+    console.log('🔍 Resultados adaptados:', allResults.length);
+    
+    return {
+      results: allResults,
+      total: allResults.length,
+      page: 1,
+      limit: allResults.length,
+      hasMore: false
+    };
+  };
+
+  // Hook para búsqueda con adaptador
+  const searchRequest = useApiRequest(async (filters: SearchFilters) => {
+    const response = await searchService.globalSearch(filters);
+    console.log('🔍 Respuesta completa del backend:', response);
+    
+    return adaptSearchResponse(response);
+  });
 
   // Debounce para la búsqueda
   useEffect(() => {
@@ -144,13 +226,13 @@ const Search: React.FC = () => {
     };
 
     return (
-      <ListItem key={result.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 1 }}>
-        <ListItemIcon>
-          {getIcon()}
-        </ListItemIcon>
-        <ListItemText
-          primary={
-            <Box display="flex" alignItems="center" gap={1}>
+      <Box key={result.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 1, p: 2 }}>
+        <Box display="flex" alignItems="flex-start" gap={2}>
+          <Box sx={{ mt: 0.5 }}>
+            {getIcon()}
+          </Box>
+          <Box flex={1}>
+            <Box display="flex" alignItems="center" gap={1} mb={1}>
               <Typography variant="subtitle1" fontWeight="bold">
                 {result.title}
               </Typography>
@@ -165,28 +247,24 @@ const Search: React.FC = () => {
                 variant="outlined"
               />
             </Box>
-          }
-          secondary={
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {result.description}
-              </Typography>
-              {result.metadata && Object.keys(result.metadata).length > 0 && (
-                <Box display="flex" gap={1} flexWrap="wrap">
-                  {Object.entries(result.metadata).map(([key, value]) => (
-                    <Chip 
-                      key={key}
-                      label={`${key}: ${value}`} 
-                      size="small" 
-                      variant="outlined"
-                    />
-                  ))}
-                </Box>
-              )}
-            </Box>
-          }
-        />
-      </ListItem>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {result.description}
+            </Typography>
+            {result.metadata && Object.keys(result.metadata).length > 0 && (
+              <Box display="flex" gap={1} flexWrap="wrap">
+                {Object.entries(result.metadata).map(([key, value]) => (
+                  <Chip 
+                    key={key}
+                    label={`${key}: ${value}`} 
+                    size="small" 
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Box>
     );
   };
 
@@ -205,14 +283,18 @@ const Search: React.FC = () => {
         
         <Box display="flex" gap={1}>
           <Tooltip title="Refrescar búsqueda">
-            <IconButton onClick={handleRefresh} color="primary" disabled={searchRequest.loading}>
-              <RefreshIcon />
-            </IconButton>
+            <span>
+              <IconButton onClick={handleRefresh} color="primary" disabled={searchRequest.loading}>
+                <RefreshIcon />
+              </IconButton>
+            </span>
           </Tooltip>
           <Tooltip title="Exportar resultados">
-            <IconButton onClick={handleExport} color="primary" disabled={!searchRequest.data?.results?.length}>
-              <DownloadIcon />
-            </IconButton>
+            <span>
+              <IconButton onClick={handleExport} color="primary" disabled={!searchRequest.data?.results?.length}>
+                <DownloadIcon />
+              </IconButton>
+            </span>
           </Tooltip>
         </Box>
       </Box>
@@ -370,9 +452,9 @@ const Search: React.FC = () => {
                   </Typography>
                 </Box>
               ) : (
-                <List>
+                <Box>
                   {searchRequest.data.results.map(renderSearchResult)}
-                </List>
+                </Box>
               )}
 
               {/* Paginación */}

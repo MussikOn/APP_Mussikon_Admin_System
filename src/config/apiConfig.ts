@@ -11,7 +11,7 @@ const getBaseUrl = (): string => {
   }
   
   // URL por defecto (puede ser cambiada aquí)
-  const defaultUrl = 'http://localhost:3001';
+  const defaultUrl = 'http://192.168.54.86:3001';
   console.log('🌐 Usando URL del backend por defecto:', defaultUrl);
   return defaultUrl;
 };

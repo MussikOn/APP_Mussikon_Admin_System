@@ -1,558 +1,513 @@
-# 🛠️ **GUÍA DE DESARROLLO - MUSSIKON ADMIN SYSTEM**
+# Guía de Desarrollo - APP Mussikon Admin
 
-> **Guías, Mejores Prácticas y Estándares de Desarrollo**
+## 🚀 Introducción
 
----
+Esta guía proporciona información completa para desarrolladores que trabajen en el **APP Mussikon Admin System**. Incluye estándares de código, mejores prácticas, y flujos de trabajo.
 
-## 🎯 **INFORMACIÓN GENERAL**
+## 🛠️ Stack Tecnológico
 
-### **Estado del Proyecto**
-- **✅ COMPLETADO**: Sistema de API Centralizado y Gestión de Usuarios Móviles
-- **🚧 EN DESARROLLO**: Sistema de Notificaciones
-- **📅 Fecha**: Diciembre 2024
-- **🏆 Versión**: 2.0.0
+### **Frontend**
+- **React**: 19.1.0
+- **TypeScript**: 5.8.3
+- **Material-UI**: 5.18.0
+- **React Router**: 7.7.0
+- **Axios**: 1.11.0
+- **Zustand**: 5.0.6
 
-### **Tecnologías Utilizadas**
-- **Frontend**: React 18 + TypeScript + Vite
-- **UI Framework**: Material-UI v7
-- **HTTP Client**: Axios con interceptores
-- **Estado**: React Hooks + Context
-- **Routing**: React Router v6
-- **Build Tool**: Vite
+### **Herramientas de Desarrollo**
+- **Vite**: 7.0.4 (Build tool)
+- **ESLint**: 9.30.1 (Linting)
+- **TypeScript**: 5.8.3 (Type checking)
 
----
+## 📁 Estructura del Proyecto
 
-## 🚀 **CONFIGURACIÓN DEL ENTORNO**
-
-### **Requisitos Previos**
-```bash
-# Versiones mínimas requeridas
-Node.js >= 18.0.0
-npm >= 8.0.0
-Git >= 2.30.0
+```
+src/
+├── 🎨 components/          # Componentes reutilizables
+│   ├── Sidebar.tsx        # Navegación principal
+│   ├── PrivateLayout.tsx  # Layout protegido
+│   ├── LoadingScreen.tsx  # Pantalla de carga
+│   ├── ThemeToggle.tsx    # Toggle de tema
+│   ├── GlobalSearch.tsx   # Búsqueda global
+│   ├── QuickFilters.tsx   # Filtros rápidos
+│   ├── DashboardCharts.tsx # Gráficos del dashboard
+│   ├── DashboardStats.tsx # Estadísticas
+│   ├── DashboardNotifications.tsx # Notificaciones
+│   └── Sidebar.css        # Estilos del sidebar
+├── ⚙️ config/             # Configuraciones
+│   └── apiConfig.ts       # Configuración de API
+├── 🔄 contexts/           # Contextos de React
+│   └── ThemeContext.tsx   # Contexto de tema
+├── 🚀 features/           # Módulos principales
+│   ├── auth/             # Autenticación
+│   ├── dashboard/        # Dashboard principal
+│   ├── users/            # Gestión de usuarios
+│   ├── events/           # Gestión de eventos
+│   ├── musicianRequests/ # Solicitudes de músicos
+│   ├── images/           # Gestión de imágenes
+│   ├── musicians/        # Gestión de músicos
+│   ├── mobileUsers/      # Usuarios móviles
+│   ├── search/           # Búsqueda global
+│   ├── analytics/        # Analytics
+│   └── admin/            # Herramientas de admin
+├── 🎣 hooks/             # Custom hooks
+│   ├── useAuth.ts        # Autenticación
+│   ├── useApiRequest.ts  # Requests de API
+│   ├── useResponsive.ts  # Responsive design
+│   └── useTheme.ts       # Gestión de tema
+├── 🛣️ routes/            # Configuración de rutas
+│   └── index.tsx         # Definición de rutas
+├── 🔌 services/          # Servicios de API
+│   ├── api.ts            # Cliente HTTP principal
+│   ├── authService.ts    # Autenticación
+│   ├── usersService.ts   # Gestión de usuarios
+│   ├── eventsService.ts  # Gestión de eventos
+│   ├── musicianRequestsService.ts # Solicitudes
+│   ├── imagesService.ts  # Gestión de imágenes
+│   ├── musiciansService.ts # Gestión de músicos
+│   ├── mobileUsersService.ts # Usuarios móviles
+│   ├── searchService.ts  # Búsqueda global
+│   ├── analyticsService.ts # Analytics
+│   ├── notificationService.ts # Notificaciones
+│   ├── paymentService.ts # Pagos
+│   ├── contentService.ts # Contenido
+│   ├── deviceService.ts  # Dispositivos
+│   ├── geolocationService.ts # Geolocalización
+│   ├── superadminService.ts # Herramientas admin
+│   └── index.ts          # Exportaciones
+├── 📦 store/             # Estado global (Zustand)
+├── 🎨 theme/             # Configuración de tema
+│   ├── themeConfig.ts    # Configuración principal
+│   └── README.md         # Documentación del tema
+└── 🛠️ utils/             # Utilidades
+    └── searchDiagnostic.ts # Diagnóstico de búsqueda
 ```
 
-### **Instalación del Proyecto**
-```bash
-# Clonar el repositorio
-git clone https://github.com/MussikOn/APP_Mussikon_Admin_System.git
+## 🎯 Estándares de Código
 
-# Navegar al directorio
-cd APP_Mussikon_Admin_System
+### **1. Convenciones de Nomenclatura**
 
-# Instalar dependencias
-npm install
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con la configuración local
-
-# Ejecutar en desarrollo
-npm run dev
-```
-
-### **Scripts Disponibles**
-```bash
-# Desarrollo
-npm run dev          # Servidor de desarrollo (puerto 5173)
-npm run build        # Build de producción
-npm run preview      # Preview del build
-npm run lint         # Linting del código
-
-# Testing (futuro)
-npm run test         # Ejecutar tests
-npm run test:watch   # Tests en modo watch
-npm run test:coverage # Tests con cobertura
-```
-
----
-
-## 📁 **ESTRUCTURA DE DESARROLLO**
-
-### **Convenciones de Nomenclatura**
+#### **Archivos y Carpetas**
 ```typescript
-// Archivos y carpetas
-components/           # Componentes reutilizables
-features/            # Módulos de funcionalidad
-hooks/               # Custom hooks
-services/            # Servicios de API
-types/               # Definiciones de tipos
-utils/               # Utilidades
+// PascalCase para componentes
+UserCard.tsx
+EventDetails.tsx
+DashboardStats.tsx
 
-// Nomenclatura de archivos
-ComponentName.tsx    # Componentes React
-useHookName.ts       # Custom hooks
-serviceName.ts       # Servicios
-typeName.ts          # Tipos TypeScript
+// camelCase para hooks y servicios
+useAuth.ts
+authService.ts
+mobileUsersService.ts
+
+// kebab-case para archivos de configuración
+api-config.ts
+theme-config.ts
 ```
 
-### **Organización de Componentes**
+#### **Variables y Funciones**
 ```typescript
-// Estructura recomendada para features
-src/features/featureName/
-├── components/          # Componentes específicos
-│   ├── ComponentName.tsx
-│   └── ComponentName.test.tsx
-├── hooks/              # Hooks específicos
-│   └── useFeatureName.ts
-├── services/           # Servicios específicos
-│   └── featureNameService.ts
-├── types/              # Tipos específicos
-│   └── featureName.ts
-└── index.tsx           # Punto de entrada
+// camelCase para variables y funciones
+const userData = {};
+const handleUserClick = () => {};
+const fetchUserData = async () => {};
+
+// PascalCase para componentes y tipos
+interface UserData {}
+type EventType = 'concert' | 'rehearsal';
+const UserCard: React.FC = () => {};
 ```
 
----
-
-## 🔧 **PATRONES DE DESARROLLO**
-
-### **1. Patrón de Servicios**
+#### **Constantes**
 ```typescript
-// src/services/exampleService.ts
-export const exampleService = {
-  // GET - Obtener datos
-  async getData(filters?: Filters): Promise<ApiResponse<Data[]>> {
-    return apiService.get('/endpoint', { params: filters });
-  },
+// UPPER_SNAKE_CASE para constantes
+const API_BASE_URL = 'http://192.168.54.86:3001';
+const MAX_RETRY_ATTEMPTS = 3;
+const DEFAULT_PAGE_SIZE = 20;
+```
 
-  // POST - Crear datos
-  async createData(data: CreateData): Promise<ApiResponse<Data>> {
-    return apiService.post('/endpoint', data);
-  },
+### **2. Estructura de Componentes**
 
-  // PUT - Actualizar datos
-  async updateData(id: string, data: UpdateData): Promise<ApiResponse<Data>> {
-    return apiService.put(`/endpoint/${id}`, data);
-  },
+#### **Componente Funcional con TypeScript**
+```typescript
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button } from '@mui/material';
+import { useAuth } from '../../hooks/useAuth';
 
-  // DELETE - Eliminar datos
-  async deleteData(id: string): Promise<ApiResponse<void>> {
-    return apiService.delete(`/endpoint/${id}`);
-  },
+interface UserCardProps {
+  user: User;
+  onEdit: (user: User) => void;
+  onDelete: (id: string) => void;
+}
+
+export const UserCard: React.FC<UserCardProps> = ({
+  user,
+  onEdit,
+  onDelete
+}) => {
+  const [loading, setLoading] = useState(false);
+  const { user: currentUser } = useAuth();
+
+  const handleEdit = () => {
+    onEdit(user);
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await onDelete(user.id);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider' }}>
+      <Typography variant="h6">{user.name}</Typography>
+      <Typography variant="body2" color="text.secondary">
+        {user.email}
+      </Typography>
+      <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+        <Button onClick={handleEdit} variant="outlined" size="small">
+          Editar
+        </Button>
+        <Button 
+          onClick={handleDelete} 
+          variant="outlined" 
+          color="error" 
+          size="small"
+          disabled={loading}
+        >
+          Eliminar
+        </Button>
+      </Box>
+    </Box>
+  );
 };
 ```
 
-### **2. Patrón de Hooks**
+### **3. Hooks Personalizados**
+
+#### **Estructura de Hook**
 ```typescript
-// src/hooks/useExample.ts
-export const useExample = () => {
-  const [data, setData] = useState<Data[]>([]);
+import { useState, useEffect, useCallback } from 'react';
+import { usersService } from '../../services/usersService';
+
+interface UseUsersReturn {
+  users: User[];
+  loading: boolean;
+  error: string | null;
+  fetchUsers: () => Promise<void>;
+  createUser: (userData: CreateUserData) => Promise<void>;
+  updateUser: (id: string, userData: UpdateUserData) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
+}
+
+export const useUsers = (): UseUsersReturn => {
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (filters?: Filters) => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await exampleService.getData(filters);
-      setData(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Error desconocido');
+      const response = await usersService.getAllUsers();
+      setUsers(response.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const createData = useCallback(async (newData: CreateData) => {
+  const createUser = useCallback(async (userData: CreateUserData) => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await exampleService.createData(newData);
-      setData(prev => [...prev, response.data]);
-      return response;
-    } catch (err: any) {
-      setError(err.message || 'Error al crear');
+      await usersService.createUser(userData);
+      await fetchUsers(); // Refetch users
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear usuario');
       throw err;
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [fetchUsers]);
+
+  const updateUser = useCallback(async (id: string, userData: UpdateUserData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await usersService.updateUser(id, userData);
+      await fetchUsers(); // Refetch users
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar usuario');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchUsers]);
+
+  const deleteUser = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await usersService.deleteUser(id);
+      await fetchUsers(); // Refetch users
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar usuario');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchUsers]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   return {
-    data,
+    users,
     loading,
     error,
-    fetchData,
-    createData,
+    fetchUsers,
+    createUser,
+    updateUser,
+    deleteUser
   };
 };
 ```
 
-### **3. Patrón de Componentes**
+### **4. Servicios de API**
+
+#### **Estructura de Servicio**
 ```typescript
-// src/components/ExampleComponent.tsx
-interface ExampleComponentProps {
-  data: Data;
-  onEdit: (data: Data) => void;
-  onDelete: (id: string) => void;
-  loading?: boolean;
+import { api } from './api';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
-export const ExampleComponent: React.FC<ExampleComponentProps> = ({
-  data,
-  onEdit,
-  onDelete,
-  loading = false,
-}) => {
-  const handleEdit = useCallback(() => {
-    onEdit(data);
-  }, [data, onEdit]);
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}
 
-  const handleDelete = useCallback(() => {
-    if (window.confirm('¿Estás seguro de eliminar este elemento?')) {
-      onDelete(data.id);
-    }
-  }, [data.id, onDelete]);
+export interface UpdateUserData {
+  name?: string;
+  email?: string;
+  role?: string;
+  status?: 'active' | 'inactive';
+}
 
-  if (loading) {
-    return <CircularProgress />;
+export interface UsersResponse {
+  data: User[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export const usersService = {
+  async getAllUsers(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    role?: string;
+  }): Promise<UsersResponse> {
+    const response = await api.get('/users', { params });
+    return response.data;
+  },
+
+  async getUserById(id: string): Promise<User> {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  async createUser(userData: CreateUserData): Promise<User> {
+    const response = await api.post('/users', userData);
+    return response.data;
+  },
+
+  async updateUser(id: string, userData: UpdateUserData): Promise<User> {
+    const response = await api.put(`/users/${id}`, userData);
+    return response.data;
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    await api.delete(`/users/${id}`);
+  },
+
+  async blockUser(id: string): Promise<User> {
+    const response = await api.patch(`/users/${id}/block`);
+    return response.data;
+  },
+
+  async unblockUser(id: string): Promise<User> {
+    const response = await api.patch(`/users/${id}/unblock`);
+    return response.data;
   }
-
-  return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6">{data.title}</Typography>
-        <Typography variant="body2">{data.description}</Typography>
-      </CardContent>
-      <CardActions>
-        <Button onClick={handleEdit}>Editar</Button>
-        <Button onClick={handleDelete} color="error">Eliminar</Button>
-      </CardActions>
-    </Card>
-  );
 };
 ```
 
----
+## 🎨 Estándares de UI/UX
 
-## 🎨 **ESTÁNDARES DE UI/UX**
+### **1. Material-UI Components**
 
-### **1. Componentes Material-UI**
+#### **Uso Consistente de Componentes**
 ```typescript
-// Uso correcto de Material-UI v7
-import { Box, Typography, Button, Card, CardContent } from '@mui/material';
+// ✅ Correcto - Uso consistente de MUI
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  Card, 
+  CardContent,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
+} from '@mui/material';
 
-// Layout con Box (reemplaza Grid)
-<Box
-  sx={{
+// ✅ Correcto - Props consistentes
+<Button 
+  variant="contained" 
+  color="primary" 
+  size="medium"
+  onClick={handleClick}
+  disabled={loading}
+>
+  Guardar
+</Button>
+
+// ✅ Correcto - Spacing consistente
+<Box sx={{ p: 2, mb: 2 }}>
+  <Typography variant="h6" gutterBottom>
+    Título
+  </Typography>
+  <Typography variant="body2" color="text.secondary">
+    Descripción
+  </Typography>
+</Box>
+```
+
+### **2. Responsive Design**
+
+#### **Breakpoints y Responsive**
+```typescript
+// ✅ Correcto - Uso de breakpoints
+<Box 
+  sx={{ 
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: 2,
-    p: 2,
+    gridTemplateColumns: {
+      xs: '1fr',           // 1 columna en móvil
+      sm: '1fr 1fr',       // 2 columnas en tablet
+      md: '1fr 1fr 1fr',   // 3 columnas en desktop
+      lg: '1fr 1fr 1fr 1fr' // 4 columnas en large
+    },
+    gap: 2
   }}
 >
   {/* Contenido */}
 </Box>
 
-// Tema personalizado
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#00fff7',
-    },
-    secondary: {
-      main: '#b993d6',
-    },
-  },
-});
-```
+// ✅ Correcto - Responsive con useResponsive hook
+import { useResponsive } from '../../hooks/useResponsive';
 
-### **2. Glassmorphism Design**
-```typescript
-// Componente Glass Panel
-const GlassPanel: React.FC<GlassPanelProps> = ({ children, className }) => (
-  <Box
-    className={className}
-    sx={{
-      background: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(10px)',
-      borderRadius: 2,
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      p: 2,
-    }}
-  >
-    {children}
-  </Box>
-);
-```
-
-### **3. Responsive Design**
-```typescript
-// Hook para responsive
-export const useResponsive = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width <= 768);
-      setIsTablet(width > 768 && width <= 1024);
-      setIsDesktop(width > 1024);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return { isMobile, isTablet, isDesktop };
-};
-```
-
----
-
-## 🔐 **SEGURIDAD Y AUTENTICACIÓN**
-
-### **1. Protección de Rutas**
-```typescript
-// src/components/PrivateRoute.tsx
-interface PrivateRouteProps {
-  children: React.ReactNode;
-  allowedRoles?: string[];
-}
-
-export const PrivateRoute: React.FC<PrivateRouteProps> = ({
-  children,
-  allowedRoles = [],
-}) => {
-  const { user, isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return <CircularProgress />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  return <>{children}</>;
-};
-```
-
-### **2. Validación de Formularios**
-```typescript
-// Validación de datos
-const validateForm = (data: FormData): string[] => {
-  const errors: string[] = [];
-
-  if (!data.name?.trim()) {
-    errors.push('El nombre es requerido');
-  }
-
-  if (!data.email?.trim()) {
-    errors.push('El email es requerido');
-  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
-    errors.push('El email no es válido');
-  }
-
-  if (data.password && data.password.length < 6) {
-    errors.push('La contraseña debe tener al menos 6 caracteres');
-  }
-
-  return errors;
-};
-```
-
----
-
-## 📊 **GESTIÓN DE ESTADO**
-
-### **1. Estado Local**
-```typescript
-// Para estado simple de componentes
-const [isOpen, setIsOpen] = useState(false);
-const [formData, setFormData] = useState(initialForm);
-const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-```
-
-### **2. Estado Compartido**
-```typescript
-// Context para estado compartido
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-
-  const toggleTheme = useCallback(() => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  }, []);
+const MyComponent = () => {
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+    <Box sx={{ 
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? 1 : 2
+    }}>
+      {/* Contenido adaptativo */}
+    </Box>
   );
 };
 ```
 
-### **3. Estado de Servidor**
+### **3. Tema y Colores**
+
+#### **Uso del Sistema de Tema**
 ```typescript
-// Hook para datos del servidor
-export const useServerData = <T>(fetchFn: () => Promise<T>) => {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// ✅ Correcto - Uso de colores del tema
+<Box sx={{ 
+  backgroundColor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid',
+  borderColor: 'divider'
+}}>
+  Contenido
+</Box>
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await fetchFn();
-      setData(result);
-    } catch (err: any) {
-      setError(err.message || 'Error desconocido');
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchFn]);
-
-  return { data, loading, error, fetchData };
-};
+// ✅ Correcto - Uso de spacing del tema
+<Box sx={{ 
+  p: 2,        // padding: theme.spacing(2)
+  m: 1,        // margin: theme.spacing(1)
+  gap: 1       // gap: theme.spacing(1)
+}}>
+  Contenido
+</Box>
 ```
 
----
-
-## 🧪 **TESTING**
-
-### **1. Testing de Componentes**
-```typescript
-// __tests__/components/ExampleComponent.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import { ExampleComponent } from '../ExampleComponent';
-
-describe('ExampleComponent', () => {
-  const mockData = {
-    id: '1',
-    title: 'Test Title',
-    description: 'Test Description',
-  };
-
-  const mockOnEdit = jest.fn();
-  const mockOnDelete = jest.fn();
-
-  it('should render component with data', () => {
-    render(
-      <ExampleComponent
-        data={mockData}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-      />
-    );
-
-    expect(screen.getByText('Test Title')).toBeInTheDocument();
-    expect(screen.getByText('Test Description')).toBeInTheDocument();
-  });
-
-  it('should call onEdit when edit button is clicked', () => {
-    render(
-      <ExampleComponent
-        data={mockData}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-      />
-    );
-
-    fireEvent.click(screen.getByText('Editar'));
-    expect(mockOnEdit).toHaveBeenCalledWith(mockData);
-  });
-});
-```
-
-### **2. Testing de Hooks**
-```typescript
-// __tests__/hooks/useExample.test.ts
-import { renderHook, act } from '@testing-library/react';
-import { useExample } from '../useExample';
-
-describe('useExample', () => {
-  it('should fetch data successfully', async () => {
-    const { result } = renderHook(() => useExample());
-
-    await act(async () => {
-      await result.current.fetchData();
-    });
-
-    expect(result.current.data).toBeDefined();
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBeNull();
-  });
-});
-```
-
----
-
-## 🚀 **OPTIMIZACIÓN Y PERFORMANCE**
-
-### **1. Lazy Loading**
-```typescript
-// src/routes/index.tsx
-import { lazy, Suspense } from 'react';
-
-const Dashboard = lazy(() => import('../features/dashboard'));
-const Users = lazy(() => import('../features/mobileUsers'));
-const Events = lazy(() => import('../features/events'));
-
-// Con Suspense
-<Suspense fallback={<CircularProgress />}>
-  <Dashboard />
-</Suspense>
-```
-
-### **2. Memoización**
-```typescript
-// Memoización de componentes
-const UserCard = React.memo<UserCardProps>(({ user, onEdit, onDelete }) => {
-  return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6">{user.name}</Typography>
-        <Typography variant="body2">{user.email}</Typography>
-      </CardContent>
-      <CardActions>
-        <Button onClick={() => onEdit(user)}>Editar</Button>
-        <Button onClick={() => onDelete(user.id)}>Eliminar</Button>
-      </CardActions>
-    </Card>
-  );
-});
-
-// Memoización de callbacks
-const handleEdit = useCallback((user: User) => {
-  // Lógica de edición
-}, []);
-```
-
-### **3. Code Splitting**
-```typescript
-// División de bundles por rutas
-const AdminTools = lazy(() => import('../features/admin'));
-const MusicianRequests = lazy(() => import('../features/musicianRequests'));
-const Notifications = lazy(() => import('../features/notifications'));
-```
-
----
-
-## 🔧 **CONFIGURACIÓN Y ENTORNO**
+## 🔧 Configuración de Desarrollo
 
 ### **1. Variables de Entorno**
-```bash
-# .env
-VITE_API_BASE_URL=http://172.20.10.2:3001
-VITE_APP_NAME=MussikOn Admin
-VITE_WEBSOCKET_URL=ws://172.20.10.2:3001
-VITE_NOTIFICATION_ENABLED=true
-VITE_TOAST_DURATION=5000
-VITE_MAX_NOTIFICATIONS=50
+
+#### **Archivo .env**
+```env
+# API Configuration
+VITE_API_BASE_URL=http://192.168.54.86:3001
+VITE_API_TIMEOUT=10000
+
+# App Configuration
+VITE_APP_NAME=Mussikon Admin
+VITE_APP_VERSION=1.0.0
+
+# Feature Flags
+VITE_ENABLE_ANALYTICS=true
+VITE_ENABLE_NOTIFICATIONS=true
+VITE_ENABLE_WEBSOCKET=false
+
+# Development
+VITE_DEBUG_MODE=true
+VITE_LOG_LEVEL=debug
 ```
 
-### **2. Configuración de TypeScript**
+### **2. Scripts de Desarrollo**
+
+#### **package.json Scripts**
 ```json
-// tsconfig.json
+{
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "check-backend": "node scripts/check-backend.cjs"
+  }
+}
+```
+
+### **3. Configuración de TypeScript**
+
+#### **tsconfig.json**
+```json
 {
   "compilerOptions": {
     "target": "ES2020",
@@ -569,144 +524,218 @@ VITE_MAX_NOTIFICATIONS=50
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/features/*": ["src/features/*"],
+      "@/services/*": ["src/services/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/utils/*": ["src/utils/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
 ```
 
-### **3. Configuración de ESLint**
-```javascript
-// eslint.config.js
-export default [
-  {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    languageOptions: {
-      parser: '@typescript-eslint/parser',
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-    },
-    plugins: {
-      '@typescript-eslint': typescriptEslint,
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
-    },
-    rules: {
-      // Reglas personalizadas
-    },
-  },
-];
+## 🧪 Testing
+
+### **1. Estructura de Tests**
+
+```
+__tests__/
+├── components/
+│   ├── UserCard.test.tsx
+│   ├── EventCard.test.tsx
+│   └── DashboardStats.test.tsx
+├── hooks/
+│   ├── useAuth.test.ts
+│   ├── useUsers.test.ts
+│   └── useApiRequest.test.ts
+├── services/
+│   ├── authService.test.ts
+│   ├── usersService.test.ts
+│   └── api.test.ts
+└── utils/
+    └── testUtils.ts
 ```
 
----
+### **2. Ejemplo de Test**
 
-## 📚 **DOCUMENTACIÓN DE CÓDIGO**
-
-### **1. Comentarios JSDoc**
+#### **Component Test**
 ```typescript
-/**
- * Hook personalizado para gestionar usuarios móviles
- * @param filters - Filtros opcionales para la búsqueda
- * @returns Objeto con datos, estado de carga y funciones
- */
-export const useMobileUsers = (filters?: UserFilters) => {
-  // Implementación
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ThemeProvider } from '@mui/material/styles';
+import { theme } from '../../theme/themeConfig';
+import { UserCard } from '../UserCard';
+
+const mockUser = {
+  id: '1',
+  name: 'John Doe',
+  email: 'john@example.com',
+  role: 'user',
+  status: 'active',
+  createdAt: '2024-01-01',
+  updatedAt: '2024-01-01'
 };
 
-/**
- * Componente para mostrar información de un usuario móvil
- * @param props - Propiedades del componente
- * @returns Elemento JSX
- */
-export const MobileUserCard: React.FC<MobileUserCardProps> = (props) => {
-  // Implementación
+const mockOnEdit = jest.fn();
+const mockOnDelete = jest.fn();
+
+const renderWithTheme = (component: React.ReactElement) => {
+  return render(
+    <ThemeProvider theme={theme}>
+      {component}
+    </ThemeProvider>
+  );
 };
+
+describe('UserCard', () => {
+  it('renders user information correctly', () => {
+    renderWithTheme(
+      <UserCard 
+        user={mockUser} 
+        onEdit={mockOnEdit} 
+        onDelete={mockOnDelete} 
+      />
+    );
+
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('john@example.com')).toBeInTheDocument();
+  });
+
+  it('calls onEdit when edit button is clicked', () => {
+    renderWithTheme(
+      <UserCard 
+        user={mockUser} 
+        onEdit={mockOnEdit} 
+        onDelete={mockOnDelete} 
+      />
+    );
+
+    fireEvent.click(screen.getByText('Editar'));
+    expect(mockOnEdit).toHaveBeenCalledWith(mockUser);
+  });
+
+  it('calls onDelete when delete button is clicked', () => {
+    renderWithTheme(
+      <UserCard 
+        user={mockUser} 
+        onEdit={mockOnEdit} 
+        onDelete={mockOnDelete} 
+      />
+    );
+
+    fireEvent.click(screen.getByText('Eliminar'));
+    expect(mockOnDelete).toHaveBeenCalledWith(mockUser.id);
+  });
+});
 ```
 
-### **2. README de Componentes**
-```markdown
-# MobileUserCard
+## 🚀 Flujo de Trabajo
 
-Componente para mostrar información de un usuario móvil en formato de tarjeta.
+### **1. Desarrollo de Features**
 
-## Props
+#### **Pasos del Flujo**
+1. **Crear branch**: `git checkout -b feature/nombre-feature`
+2. **Desarrollar**: Implementar funcionalidad
+3. **Testear**: Ejecutar tests y linting
+4. **Commit**: `git commit -m "feat: add user management feature"`
+5. **Push**: `git push origin feature/nombre-feature`
+6. **Pull Request**: Crear PR en GitHub
+7. **Code Review**: Revisión de código
+8. **Merge**: Merge a main después de aprobación
 
-- `user: MobileUser` - Datos del usuario
-- `onEdit: (user: MobileUser) => void` - Función para editar
-- `onDelete: (id: string) => void` - Función para eliminar
-- `onBlock: (id: string) => void` - Función para bloquear
-
-## Uso
-
-```tsx
-<MobileUserCard
-  user={userData}
-  onEdit={handleEdit}
-  onDelete={handleDelete}
-  onBlock={handleBlock}
-/>
+#### **Convenciones de Commits**
+```bash
+# Formato: type(scope): description
+feat(auth): add JWT authentication system
+fix(users): resolve user deletion issue
+docs(readme): update installation guide
+style(components): improve button styling
+refactor(services): simplify API service structure
+test(hooks): add tests for useAuth hook
+chore(deps): update dependencies
 ```
+
+### **2. Code Review Checklist**
+
+#### **Revisión de Código**
+- [ ] **Funcionalidad**: ¿La feature funciona correctamente?
+- [ ] **Código**: ¿El código es limpio y legible?
+- [ ] **Performance**: ¿Hay problemas de performance?
+- [ ] **Testing**: ¿Hay tests adecuados?
+- [ ] **Documentación**: ¿Está documentado correctamente?
+- [ ] **Seguridad**: ¿Hay problemas de seguridad?
+- [ ] **Accesibilidad**: ¿Es accesible?
+- [ ] **Responsive**: ¿Funciona en todos los dispositivos?
+
+## 🐛 Debugging
+
+### **1. Herramientas de Debugging**
+
+#### **React Developer Tools**
+- Instalar extensión del navegador
+- Inspeccionar componentes y props
+- Verificar estado y hooks
+
+#### **Redux DevTools (para Zustand)**
+```typescript
+// Configuración para debugging
+import { devtools } from 'zustand/middleware';
+
+const useStore = create(
+  devtools(
+    (set) => ({
+      // store implementation
+    }),
+    {
+      name: 'mussikon-admin-store'
+    }
+  )
+);
 ```
 
----
+### **2. Logging**
 
-## 🔗 **ENLACES RELACIONADOS**
+#### **Console Logging**
+```typescript
+// ✅ Correcto - Logging estructurado
+console.log('🔍 [Search] Processing search query:', query);
+console.log('✅ [Auth] User authenticated successfully:', user);
+console.log('❌ [API] Request failed:', error);
 
-### **Documentación Principal**
-- **[MAIN_DOCUMENTATION.md](MAIN_DOCUMENTATION.md)** - Documentación principal
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Arquitectura del sistema
-- **[INSTALLATION.md](INSTALLATION.md)** - Guía de instalación
+// ✅ Correcto - Logging condicional
+if (process.env.NODE_ENV === 'development') {
+  console.log('Debug info:', data);
+}
+```
 
-### **Sistemas Específicos**
-- **[NOTIFICATION_SYSTEM.md](NOTIFICATION_SYSTEM.md)** - Sistema de notificaciones
-- **[AUTHENTICATION_SYSTEM.md](AUTHENTICATION_SYSTEM.md)** - Sistema de autenticación
-- **[API_ENDPOINTS.md](API_ENDPOINTS.md)** - Endpoints de la API
+## 📚 Recursos Adicionales
 
----
+### **1. Documentación Oficial**
+- [React Documentation](https://react.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Material-UI Documentation](https://mui.com/)
+- [Vite Documentation](https://vitejs.dev/)
 
-## 📞 **INFORMACIÓN DE CONTACTO**
+### **2. Herramientas Recomendadas**
+- **VS Code Extensions**:
+  - ESLint
+  - Prettier
+  - TypeScript Importer
+  - Material-UI Snippets
+  - React Developer Tools
 
-### **Repositorio**
-- **URL**: `https://github.com/MussikOn/APP_Mussikon_Admin_System`
-- **Branch**: `notification`
-- **Commit**: `ddb38b3`
-
-### **Documentación**
-- **README.md** - Documentación principal
-- **API_SYSTEM_DOCUMENTATION.md** - Sistema de API
-- **MAIN_DOCUMENTATION.md** - Documentación organizativa
-
----
-
-## 🏆 **CONCLUSIÓN**
-
-**¡Las guías de desarrollo están completas y listas para usar!**
-
-### **Beneficios de las Guías**
-1. **Consistencia** en el código
-2. **Mantenibilidad** mejorada
-3. **Escalabilidad** del proyecto
-4. **Calidad** del código
-5. **Colaboración** efectiva
-
-### **Próximos Pasos**
-- **Implementar sistema de notificaciones** siguiendo estas guías
-- **Agregar tests completos** para todas las funcionalidades
-- **Optimizar rendimiento** para producción
-- **Implementar CI/CD** con estas guías
-
-**¡El desarrollo será más eficiente y consistente!** 🚀
+### **3. Bibliotecas Útiles**
+- **Date handling**: `date-fns`
+- **Form validation**: `react-hook-form` + `yup`
+- **Charts**: `recharts`
+- **Icons**: `@mui/icons-material`
+- **Notifications**: `notistack`
 
 ---
 
-**Desarrollado con ❤️ para el equipo de MussikOn**
-
-**Fecha de Actualización**: Diciembre 2024  
-**Versión**: 2.0.0  
-**Estado**: ✅ Completado + 🚧 En desarrollo 
+**Esta guía de desarrollo proporciona las bases para mantener un código limpio, escalable y mantenible en el proyecto APP Mussikon Admin.** 

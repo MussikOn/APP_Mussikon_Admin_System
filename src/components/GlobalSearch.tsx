@@ -14,7 +14,8 @@ import {
   Typography,
   Chip,
   CircularProgress,
-  ClickAwayListener
+  ClickAwayListener,
+  Alert
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -27,8 +28,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
+import { searchService } from '../services/searchService';
+import type { SearchFilters } from '../services/searchService';
 
-interface SearchResult {
+interface SearchResultItem {
   id: string;
   title: string;
   description: string;
@@ -47,35 +50,134 @@ const searchTypes = {
 
 const GlobalSearch: React.FC = () => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<SearchResultItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [error, setError] = useState<string | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { isDark } = useTheme();
   const navigate = useNavigate();
 
-  // Simular búsqueda (en producción esto sería una llamada a la API)
+
+
+
+
+  // Función para realizar búsqueda real usando el servicio
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([]);
+      setError(null);
       return;
     }
 
     setLoading(true);
+    setError(null);
     
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      console.log('🔍 Iniciando búsqueda global:', searchQuery);
+      
+      // Configurar filtros de búsqueda
+      const filters: SearchFilters = {
+        query: searchQuery,
+        category: 'all',
+        limit: 10
+      };
 
-    // Datos de ejemplo
-    const mockResults: SearchResult[] = [
+      // Realizar búsqueda global
+      const response = await searchService.globalSearch(filters);
+      
+      console.log('🔍 Resultados de búsqueda recibidos:', response);
+      
+      // Convertir los resultados del backend al formato esperado por el componente
+      const allResults: SearchResultItem[] = [];
+      
+      // Extraer los datos de la estructura real
+      const events = response.data?.events || [];
+      const requests = response.data?.requests || [];
+      const users = response.data?.users || [];
+      
+      // Procesar eventos
+      if (events.length > 0) {
+        events.forEach((event: any) => {
+          allResults.push({
+            id: event.id || event.user || 'event-' + Math.random(),
+            title: event.eventName || 'Evento sin nombre',
+            description: `${event.eventType || 'Evento'} - ${event.date || 'Sin fecha'}`,
+            type: 'event',
+            path: `/events/${event.id || event.user}`,
+            icon: <EventIcon />,
+            color: '#ff2eec'
+          });
+        });
+      }
+      
+      // Procesar solicitudes de músicos
+      if (requests.length > 0) {
+        requests.forEach((request: any) => {
+          allResults.push({
+            id: request.id || request.user || 'request-' + Math.random(),
+            title: request.eventName || 'Solicitud sin nombre',
+            description: `${request.instrument || 'Instrumento'} - ${request.status || 'Pendiente'}`,
+            type: 'request',
+            path: `/musician-requests/${request.id || request.user}`,
+            icon: <LibraryMusicIcon />,
+            color: '#b993d6'
+          });
+        });
+      }
+      
+      // Procesar usuarios
+      if (users.length > 0) {
+        users.forEach((user: any) => {
+          allResults.push({
+            id: user.userEmail || user.id || 'user-' + Math.random(),
+            title: `${user.name || 'Usuario'} ${user.lastName || ''}`,
+            description: `${user.roll || 'Usuario'} - ${user.userEmail || 'Sin email'}`,
+            type: 'user',
+            path: `/users/${user.userEmail || user.id}`,
+            icon: <PeopleIcon />,
+            color: '#00e0ff'
+          });
+        });
+      }
+      
+      console.log('🔍 Resultados convertidos:', allResults);
+      setResults(allResults);
+      
+    } catch (error: any) {
+      console.error('🔍 Error en búsqueda global:', error);
+      
+      // Manejar diferentes tipos de errores
+      if (error.code === 'ERR_BLOCKED_BY_CLIENT') {
+        setError('La búsqueda fue bloqueada por una extensión del navegador. Intenta desactivar ad-blockers o extensiones de privacidad.');
+      } else if (error.status === 404) {
+        setError('El servicio de búsqueda no está disponible en este momento.');
+      } else if (error.status === 500) {
+        setError('Error interno del servidor. Intenta nuevamente en unos momentos.');
+      } else if (error.message?.includes('Network Error')) {
+        setError('Error de conexión. Verifica tu conexión a internet y que el backend esté funcionando.');
+      } else {
+        setError(`Error en la búsqueda: ${error.message || 'Error desconocido'}`);
+      }
+      
+      // Usar datos de respaldo en caso de error
+      setResults(getFallbackResults(searchQuery));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Datos de respaldo en caso de error
+  const getFallbackResults = (searchQuery: string): SearchResultItem[] => {
+    const mockResults: SearchResultItem[] = [
       {
         id: '1',
         title: 'Juan Pérez',
         description: 'Músico - Guitarra',
-        type: 'user' as const,
-        path: '/users',
+        type: 'user',
+        path: '/users/1',
         icon: <PeopleIcon />,
         color: '#00e0ff'
       },
@@ -83,8 +185,8 @@ const GlobalSearch: React.FC = () => {
         id: '2',
         title: 'Concierto de Rock',
         description: 'Evento - 15 de Diciembre',
-        type: 'event' as const,
-        path: '/events',
+        type: 'event',
+        path: '/events/2',
         icon: <EventIcon />,
         color: '#ff2eec'
       },
@@ -92,18 +194,17 @@ const GlobalSearch: React.FC = () => {
         id: '3',
         title: 'Solicitud de Baterista',
         description: 'Pendiente de revisión',
-        type: 'request' as const,
-        path: '/musician-requests',
+        type: 'request',
+        path: '/musician-requests/3',
         icon: <LibraryMusicIcon />,
         color: '#b993d6'
       }
-    ].filter(item => 
+    ];
+
+    return mockResults.filter(item => 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    setResults(mockResults);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -118,19 +219,22 @@ const GlobalSearch: React.FC = () => {
     setQuery(event.target.value);
     setIsOpen(true);
     setSelectedIndex(-1);
+    setError(null);
   };
 
   const handleClear = () => {
     setQuery('');
     setResults([]);
     setIsOpen(false);
+    setError(null);
     inputRef.current?.focus();
   };
 
-  const handleResultClick = (result: SearchResult) => {
+  const handleResultClick = (result: SearchResultItem) => {
     navigate(result.path);
     setIsOpen(false);
     setQuery('');
+    setError(null);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -226,7 +330,7 @@ const GlobalSearch: React.FC = () => {
       />
 
       <Popper
-        open={isOpen && (query.length > 0 || results.length > 0)}
+        open={isOpen && (query.length > 0 || results.length > 0 || !!error)}
         anchorEl={anchorRef.current}
         placement="bottom-start"
         style={{ zIndex: 1300, width: anchorRef.current?.offsetWidth }}
@@ -246,6 +350,19 @@ const GlobalSearch: React.FC = () => {
               overflow: 'auto',
             }}
           >
+            {error ? (
+              <Box sx={{ p: 2 }}>
+                <Alert severity="warning" sx={{ mb: 1 }}>
+                  {error}
+                </Alert>
+                {results.length > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    Mostrando resultados de respaldo
+                  </Typography>
+                )}
+              </Box>
+            ) : null}
+            
             {loading ? (
               <Box sx={{ p: 3, textAlign: 'center' }}>
                 <CircularProgress size={24} />
@@ -316,7 +433,7 @@ const GlobalSearch: React.FC = () => {
                   </ListItem>
                 ))}
               </List>
-            ) : query.length > 0 ? (
+            ) : query.length > 0 && !loading && !error ? (
               <Box sx={{ p: 3, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
                   No se encontraron resultados para "{query}"

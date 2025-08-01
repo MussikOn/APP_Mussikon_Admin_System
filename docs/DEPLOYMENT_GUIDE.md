@@ -1,167 +1,192 @@
-# 🚀 Guía de Despliegue - MusikOn Admin System
+# Guía de Despliegue - APP Mussikon Admin
 
-> **Versión:** 1.0.0  
-> **Última Actualización:** Diciembre 2024
+## 🚀 Introducción
 
-## 📋 Prerrequisitos de Despliegue
+Esta guía proporciona instrucciones completas para desplegar el **APP Mussikon Admin System** en diferentes entornos de producción.
 
-### Requisitos del Sistema
-- **Servidor:** Ubuntu 20.04+ / CentOS 8+ / Debian 11+
-- **Node.js:** 18.0.0 o superior
-- **Nginx:** 1.18.0 o superior
-- **SSL Certificate:** Certificado válido para HTTPS
-- **Dominio:** Dominio configurado (opcional)
+## 📋 Requisitos de Producción
 
-### Verificar Requisitos
+### **Servidor**
+- **CPU**: 2 cores mínimo, 4 cores recomendado
+- **RAM**: 4GB mínimo, 8GB recomendado
+- **Almacenamiento**: 20GB mínimo
+- **Sistema Operativo**: Ubuntu 20.04+ / CentOS 8+ / Debian 11+
+
+### **Software Requerido**
 ```bash
-# Verificar Node.js
-node --version
-npm --version
+# Node.js (versión LTS)
+Node.js >= 18.0.0
 
-# Verificar Nginx
-nginx -v
+# Nginx (servidor web)
+nginx >= 1.18.0
 
-# Verificar espacio en disco
-df -h
+# PM2 (gestor de procesos)
+npm install -g pm2
 
-# Verificar memoria disponible
-free -h
+# Certbot (certificados SSL)
+sudo apt install certbot python3-certbot-nginx
 ```
 
----
+### **Dominio y DNS**
+- Dominio configurado (ej: `admin.mussikon.com`)
+- Registros DNS apuntando al servidor
+- Certificado SSL válido
 
-## 🔧 Preparación del Entorno
+## 🏗️ Preparación del Proyecto
 
-### 1. Configurar Variables de Entorno de Producción
-```bash
-# Crear archivo de variables de entorno de producción
-cp .env.example .env.production
+### **1. Configuración de Variables de Entorno**
 
-# Editar variables de producción
-nano .env.production
-```
-
-#### Contenido de `.env.production`:
+#### **Archivo .env.production**
 ```env
 # API Configuration
-VITE_API_URL=https://api.musikon.com
-VITE_API_TIMEOUT=30000
+VITE_API_BASE_URL=https://api.mussikon.com
+VITE_API_TIMEOUT=15000
 
 # App Configuration
-VITE_APP_NAME=MusikOn Admin
+VITE_APP_NAME=Mussikon Admin
 VITE_APP_VERSION=1.0.0
-VITE_APP_ENVIRONMENT=production
 
 # Feature Flags
-VITE_ENABLE_NOTIFICATIONS=true
 VITE_ENABLE_ANALYTICS=true
-VITE_ENABLE_ERROR_TRACKING=true
+VITE_ENABLE_NOTIFICATIONS=true
+VITE_ENABLE_WEBSOCKET=true
 
 # Production
 VITE_DEBUG_MODE=false
 VITE_LOG_LEVEL=error
 ```
 
-### 2. Build de Producción
+### **2. Build de Producción**
+
 ```bash
 # Instalar dependencias
-npm install
+npm ci --only=production
 
 # Crear build optimizado
 npm run build
 
-# Verificar que el build se creó correctamente
+# Verificar build
 ls -la dist/
-
-# El build estará en la carpeta dist/
+# Debe contener: index.html, assets/, etc.
 ```
 
-### 3. Verificar Build
-```bash
-# Servir el build localmente para verificar
-npm run preview
+### **3. Optimización del Build**
 
-# Verificar que no hay errores en la consola
-# Probar funcionalidades básicas
+#### **Configuración de Vite para Producción**
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    outDir: 'dist',
+    sourcemap: false, // Deshabilitar en producción
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          mui: ['@mui/material', '@mui/icons-material'],
+          router: ['react-router-dom']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
+})
 ```
 
----
+## 🚀 Métodos de Despliegue
 
-## 🌐 Despliegue en Servidor
+### **1. Despliegue con Nginx + PM2**
 
-### Opción 1: Despliegue Manual
-
-#### 1. Preparar Servidor
-```bash
-# Actualizar sistema
-sudo apt update && sudo apt upgrade -y
-
-# Instalar Node.js
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Instalar Nginx
-sudo apt install nginx -y
-
-# Instalar PM2 (opcional)
-sudo npm install -g pm2
+#### **Estructura del Servidor**
+```
+/var/www/mussikon-admin/
+├── dist/                 # Build de producción
+├── logs/                 # Logs de la aplicación
+├── ecosystem.config.js   # Configuración de PM2
+└── nginx.conf           # Configuración de Nginx
 ```
 
-#### 2. Subir Archivos
-```bash
-# Crear directorio para la aplicación
-sudo mkdir -p /var/www/admin
-
-# Copiar archivos del build
-sudo cp -r dist/* /var/www/admin/
-
-# Configurar permisos
-sudo chown -R www-data:www-data /var/www/admin
-sudo chmod -R 755 /var/www/admin
+#### **Configuración de PM2**
+```javascript
+// ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: 'mussikon-admin',
+    script: 'serve',
+    args: '-s dist -l 3000',
+    instances: 'max',
+    exec_mode: 'cluster',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    },
+    error_file: './logs/err.log',
+    out_file: './logs/out.log',
+    log_file: './logs/combined.log',
+    time: true
+  }]
+};
 ```
 
-#### 3. Configurar Nginx
-```bash
-# Crear configuración de Nginx
-sudo nano /etc/nginx/sites-available/admin
-```
-
-#### Contenido de `/etc/nginx/sites-available/admin`:
+#### **Configuración de Nginx**
 ```nginx
+# /etc/nginx/sites-available/mussikon-admin
 server {
     listen 80;
-    server_name admin.musikon.com;
-    root /var/www/admin;
-    index index.html;
+    server_name admin.mussikon.com;
+    
+    # Redirigir HTTP a HTTPS
+    return 301 https://$server_name$request_uri;
+}
 
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_proxied expired no-cache no-store private must-revalidate auth;
-    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
-
-    # Security headers
+server {
+    listen 443 ssl http2;
+    server_name admin.mussikon.com;
+    
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/admin.mussikon.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/admin.mussikon.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    
+    # Security Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
     add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-
-    # Handle SPA routing
+    
+    # Root directory
+    root /var/www/mussikon-admin/dist;
+    index index.html;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied expired no-cache no-store private must-revalidate auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript;
+    
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # Handle React Router
     location / {
         try_files $uri $uri/ /index.html;
-        
-        # Cache static assets
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
     }
-
-    # API proxy
-    location /api {
-        proxy_pass http://192.168.100.101:1000;
+    
+    # API proxy (si es necesario)
+    location /api/ {
+        proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -171,470 +196,583 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
-
-    # Error pages
-    error_page 404 /index.html;
-    error_page 500 502 503 504 /50x.html;
+    
+    # Health check
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
 }
 ```
 
-#### 4. Habilitar Sitio
+#### **Script de Despliegue**
 ```bash
-# Crear enlace simbólico
-sudo ln -s /etc/nginx/sites-available/admin /etc/nginx/sites-enabled/
+#!/bin/bash
+# deploy.sh
 
-# Verificar configuración
-sudo nginx -t
+set -e
 
-# Reiniciar Nginx
-sudo systemctl restart nginx
+echo "🚀 Iniciando despliegue de Mussikon Admin..."
+
+# Variables
+APP_NAME="mussikon-admin"
+APP_DIR="/var/www/mussikon-admin"
+BACKUP_DIR="/var/backups/mussikon-admin"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# Crear directorios si no existen
+sudo mkdir -p $APP_DIR
+sudo mkdir -p $BACKUP_DIR
+sudo mkdir -p $APP_DIR/logs
+
+# Backup del build anterior
+if [ -d "$APP_DIR/dist" ]; then
+    echo "📦 Creando backup del build anterior..."
+    sudo tar -czf $BACKUP_DIR/backup_$TIMESTAMP.tar.gz -C $APP_DIR dist/
+fi
+
+# Copiar nuevo build
+echo "📁 Copiando nuevo build..."
+sudo cp -r dist/ $APP_DIR/
+
+# Configurar permisos
+echo "🔐 Configurando permisos..."
+sudo chown -R www-data:www-data $APP_DIR
+sudo chmod -R 755 $APP_DIR
+
+# Reiniciar PM2
+echo "🔄 Reiniciando aplicación..."
+pm2 restart ecosystem.config.js
 
 # Verificar estado
-sudo systemctl status nginx
+echo "✅ Verificando estado de la aplicación..."
+pm2 status
+
+# Limpiar backups antiguos (mantener últimos 5)
+echo "🧹 Limpiando backups antiguos..."
+cd $BACKUP_DIR
+ls -t | tail -n +6 | xargs -r rm
+
+echo "🎉 Despliegue completado exitosamente!"
 ```
 
-### Opción 2: Despliegue con PM2
+### **2. Despliegue con Docker**
 
-#### 1. Configurar PM2
+#### **Dockerfile**
+```dockerfile
+# Dockerfile
+FROM node:18-alpine as builder
+
+WORKDIR /app
+
+# Copiar package files
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm ci --only=production
+
+# Copiar código fuente
+COPY . .
+
+# Build de producción
+RUN npm run build
+
+# Stage de producción
+FROM nginx:alpine
+
+# Copiar build
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copiar configuración de nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Exponer puerto
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/health || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+#### **docker-compose.yml**
+```yaml
+version: '3.8'
+
+services:
+  mussikon-admin:
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - mussikon-network
+
+  # Backend API (si es necesario)
+  api:
+    image: mussikon-api:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:pass@db:5432/mussikon
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - mussikon-network
+
+  # Base de datos
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=mussikon
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - mussikon-network
+
+volumes:
+  postgres_data:
+
+networks:
+  mussikon-network:
+    driver: bridge
+```
+
+#### **Script de Despliegue Docker**
 ```bash
-# Crear archivo de configuración de PM2
-nano ecosystem.config.js
+#!/bin/bash
+# deploy-docker.sh
+
+set -e
+
+echo "🐳 Iniciando despliegue con Docker..."
+
+# Build de la imagen
+echo "🔨 Construyendo imagen Docker..."
+docker build -t mussikon-admin:latest .
+
+# Detener contenedores existentes
+echo "🛑 Deteniendo contenedores existentes..."
+docker-compose down
+
+# Iniciar nuevos contenedores
+echo "🚀 Iniciando nuevos contenedores..."
+docker-compose up -d
+
+# Verificar estado
+echo "✅ Verificando estado de los contenedores..."
+docker-compose ps
+
+# Limpiar imágenes no utilizadas
+echo "🧹 Limpiando imágenes no utilizadas..."
+docker image prune -f
+
+echo "🎉 Despliegue con Docker completado!"
 ```
 
-#### Contenido de `ecosystem.config.js`:
+### **3. Despliegue en Cloud Platforms**
+
+#### **Vercel**
+```json
+// vercel.json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://api.mussikon.com/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### **Netlify**
+```toml
+# netlify.toml
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.mussikon.com/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer-when-downgrade"
+```
+
+## 🔒 Configuración de Seguridad
+
+### **1. Certificados SSL**
+
+#### **Let's Encrypt con Certbot**
+```bash
+# Instalar certificado
+sudo certbot --nginx -d admin.mussikon.com
+
+# Renovación automática
+sudo crontab -e
+# Agregar: 0 12 * * * /usr/bin/certbot renew --quiet
+```
+
+### **2. Headers de Seguridad**
+
+#### **Configuración de Nginx**
+```nginx
+# Headers de seguridad adicionales
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.mussikon.com;" always;
+```
+
+### **3. Firewall**
+
+#### **Configuración de UFW**
+```bash
+# Habilitar firewall
+sudo ufw enable
+
+# Permitir SSH
+sudo ufw allow ssh
+
+# Permitir HTTP y HTTPS
+sudo ufw allow 80
+sudo ufw allow 443
+
+# Verificar estado
+sudo ufw status
+```
+
+## 📊 Monitoreo y Logs
+
+### **1. Configuración de Logs**
+
+#### **Nginx Logs**
+```nginx
+# Configuración de logs
+access_log /var/log/nginx/mussikon-admin-access.log;
+error_log /var/log/nginx/mussikon-admin-error.log;
+
+# Log rotation
+# /etc/logrotate.d/nginx
+/var/log/nginx/*.log {
+    daily
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    create 640 nginx adm
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
+    endscript
+}
+```
+
+#### **PM2 Logs**
+```bash
+# Ver logs en tiempo real
+pm2 logs mussikon-admin
+
+# Ver logs específicos
+pm2 logs mussikon-admin --err
+pm2 logs mussikon-admin --out
+
+# Limpiar logs
+pm2 flush
+```
+
+### **2. Monitoreo de Performance**
+
+#### **Configuración de PM2**
 ```javascript
+// ecosystem.config.js con monitoreo
 module.exports = {
   apps: [{
-    name: 'musikon-admin',
-    script: 'npm',
-    args: 'run preview',
-    cwd: '/var/www/admin',
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
+    name: 'mussikon-admin',
+    script: 'serve',
+    args: '-s dist -l 3000',
+    instances: 'max',
+    exec_mode: 'cluster',
     env: {
       NODE_ENV: 'production',
       PORT: 3000
-    }
+    },
+    // Monitoreo
+    monitor: true,
+    max_memory_restart: '1G',
+    // Logs
+    error_file: './logs/err.log',
+    out_file: './logs/out.log',
+    log_file: './logs/combined.log',
+    time: true,
+    // Métricas
+    pmx: true
   }]
 };
 ```
 
-#### 2. Iniciar con PM2
-```bash
-# Iniciar aplicación
-pm2 start ecosystem.config.js
+## 🔄 CI/CD Pipeline
 
-# Guardar configuración
-pm2 save
+### **1. GitHub Actions**
 
-# Configurar inicio automático
-pm2 startup
-```
+#### **Workflow de Despliegue**
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to Production
 
-### Opción 3: Despliegue con Docker
+on:
+  push:
+    branches: [ main ]
 
-#### 1. Crear Dockerfile
-```dockerfile
-# Dockerfile
-FROM node:18-alpine as build
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-#### 2. Crear nginx.conf
-```nginx
-events {
-    worker_connections 1024;
-}
-
-http {
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    server {
-        listen 80;
-        server_name localhost;
-        root /usr/share/nginx/html;
-        index index.html;
-
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
-
-        location /api {
-            proxy_pass http://192.168.100.101:1000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
-    }
-}
-```
-
-#### 3. Construir y Ejecutar
-```bash
-# Construir imagen
-docker build -t musikon-admin .
-
-# Ejecutar contenedor
-docker run -d -p 80:80 --name musikon-admin musikon-admin
-
-# Verificar contenedor
-docker ps
-```
-
----
-
-## 🔒 Configuración de SSL/HTTPS
-
-### Opción 1: Let's Encrypt (Gratuito)
-
-#### 1. Instalar Certbot
-```bash
-# Instalar Certbot
-sudo apt install certbot python3-certbot-nginx -y
-```
-
-#### 2. Obtener Certificado
-```bash
-# Obtener certificado SSL
-sudo certbot --nginx -d admin.musikon.com
-
-# Verificar renovación automática
-sudo certbot renew --dry-run
-```
-
-### Opción 2: Certificado Comercial
-
-#### 1. Instalar Certificado
-```bash
-# Copiar certificado
-sudo cp certificate.crt /etc/ssl/certs/
-sudo cp private.key /etc/ssl/private/
-
-# Configurar Nginx para SSL
-sudo nano /etc/nginx/sites-available/admin
-```
-
-#### 2. Configuración SSL en Nginx
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name admin.musikon.com;
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
     
-    ssl_certificate /etc/ssl/certs/certificate.crt;
-    ssl_certificate_key /etc/ssl/private/private.key;
+    steps:
+    - uses: actions/checkout@v3
     
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
-    ssl_prefer_server_ciphers off;
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
     
-    # Resto de configuración...
-}
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Build application
+      run: npm run build
+      env:
+        VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+    
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /var/www/mussikon-admin
+          git pull origin main
+          npm ci --only=production
+          npm run build
+          pm2 restart ecosystem.config.js
 ```
 
----
+### **2. Variables de Entorno en CI/CD**
 
-## 📊 Monitoreo y Logs
-
-### 1. Configurar Logs de Nginx
+#### **GitHub Secrets**
 ```bash
-# Ver logs de acceso
-sudo tail -f /var/log/nginx/access.log
-
-# Ver logs de error
-sudo tail -f /var/log/nginx/error.log
+# Configurar en GitHub Repository > Settings > Secrets
+HOST=your-server-ip
+USERNAME=deploy-user
+SSH_KEY=your-ssh-private-key
+VITE_API_BASE_URL=https://api.mussikon.com
 ```
 
-### 2. Monitoreo con PM2
-```bash
-# Ver estado de la aplicación
-pm2 status
+## 🚨 Rollback y Recuperación
 
-# Ver logs
-pm2 logs musikon-admin
+### **1. Script de Rollback**
 
-# Monitorear recursos
-pm2 monit
-```
-
-### 3. Monitoreo del Sistema
-```bash
-# Ver uso de CPU y memoria
-htop
-
-# Ver espacio en disco
-df -h
-
-# Ver procesos de Nginx
-ps aux | grep nginx
-```
-
----
-
-## 🔄 Actualizaciones y Mantenimiento
-
-### 1. Proceso de Actualización
-```bash
-# 1. Crear backup
-sudo cp -r /var/www/admin /var/www/admin.backup.$(date +%Y%m%d)
-
-# 2. Subir nuevo build
-sudo cp -r dist/* /var/www/admin/
-
-# 3. Verificar permisos
-sudo chown -R www-data:www-data /var/www/admin
-sudo chmod -R 755 /var/www/admin
-
-# 4. Verificar que funciona
-curl -I http://admin.musikon.com
-```
-
-### 2. Rollback
-```bash
-# Si algo sale mal, hacer rollback
-sudo rm -rf /var/www/admin
-sudo cp -r /var/www/admin.backup.$(date +%Y%m%d) /var/www/admin
-sudo systemctl restart nginx
-```
-
-### 3. Limpieza Automática
-```bash
-# Crear script de limpieza
-nano /usr/local/bin/cleanup-admin.sh
-```
-
-#### Contenido del script:
 ```bash
 #!/bin/bash
-# Limpiar backups antiguos (más de 7 días)
-find /var/www/admin.backup.* -type d -mtime +7 -exec rm -rf {} \;
+# rollback.sh
 
-# Limpiar logs de Nginx (más de 30 días)
-find /var/log/nginx -name "*.log" -mtime +30 -delete
+set -e
 
-# Limpiar cache de PM2
-pm2 flush
+echo "🔄 Iniciando rollback..."
+
+# Variables
+APP_NAME="mussikon-admin"
+APP_DIR="/var/www/mussikon-admin"
+BACKUP_DIR="/var/backups/mussikon-admin"
+
+# Listar backups disponibles
+echo "📦 Backups disponibles:"
+ls -la $BACKUP_DIR
+
+# Seleccionar backup
+read -p "Ingrese el timestamp del backup a restaurar: " BACKUP_TIMESTAMP
+
+# Verificar que existe
+if [ ! -f "$BACKUP_DIR/backup_$BACKUP_TIMESTAMP.tar.gz" ]; then
+    echo "❌ Backup no encontrado"
+    exit 1
+fi
+
+# Crear backup del estado actual
+echo "📦 Creando backup del estado actual..."
+sudo tar -czf $BACKUP_DIR/rollback_$(date +%Y%m%d_%H%M%S).tar.gz -C $APP_DIR dist/
+
+# Restaurar backup
+echo "🔄 Restaurando backup..."
+sudo rm -rf $APP_DIR/dist
+sudo tar -xzf $BACKUP_DIR/backup_$BACKUP_TIMESTAMP.tar.gz -C $APP_DIR
+
+# Reiniciar aplicación
+echo "🔄 Reiniciando aplicación..."
+pm2 restart ecosystem.config.js
+
+echo "✅ Rollback completado exitosamente!"
 ```
 
----
+### **2. Verificación Post-Despliegue**
 
-## 🚨 Troubleshooting
-
-### Problemas Comunes
-
-#### 1. Error 502 Bad Gateway
 ```bash
-# Verificar que el backend esté corriendo
-curl http://192.168.100.101:1000/health
+#!/bin/bash
+# health-check.sh
 
-# Verificar configuración de proxy en Nginx
-sudo nginx -t
+echo "🏥 Verificando salud de la aplicación..."
 
-# Ver logs de error
-sudo tail -f /var/log/nginx/error.log
+# Verificar que el servidor responde
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://admin.mussikon.com/health)
+
+if [ $HTTP_STATUS -eq 200 ]; then
+    echo "✅ Servidor respondiendo correctamente"
+else
+    echo "❌ Error: HTTP $HTTP_STATUS"
+    exit 1
+fi
+
+# Verificar PM2
+PM2_STATUS=$(pm2 jlist | jq -r '.[0].pm2_env.status')
+
+if [ "$PM2_STATUS" = "online" ]; then
+    echo "✅ PM2 proceso online"
+else
+    echo "❌ Error: PM2 proceso $PM2_STATUS"
+    exit 1
+fi
+
+# Verificar logs recientes
+echo "📋 Últimos logs de error:"
+pm2 logs mussikon-admin --err --lines 10
+
+echo "🎉 Verificación completada exitosamente!"
 ```
 
-#### 2. Error de Permisos
-```bash
-# Corregir permisos
-sudo chown -R www-data:www-data /var/www/admin
-sudo chmod -R 755 /var/www/admin
+## 📈 Optimización de Performance
 
-# Verificar permisos
-ls -la /var/www/admin/
-```
+### **1. Configuración de Caché**
 
-#### 3. Error de SSL
-```bash
-# Verificar certificado
-sudo certbot certificates
-
-# Renovar certificado
-sudo certbot renew
-
-# Verificar configuración SSL
-sudo nginx -t
-```
-
-#### 4. Error de Memoria
-```bash
-# Ver uso de memoria
-free -h
-
-# Reiniciar servicios
-sudo systemctl restart nginx
-pm2 restart musikon-admin
-```
-
-### Logs de Debugging
-
-#### 1. Habilitar Logs Detallados
-```bash
-# Configurar logs detallados en Nginx
-sudo nano /etc/nginx/sites-available/admin
-```
-
-#### Agregar en la configuración:
+#### **Nginx Cache**
 ```nginx
-# Logs detallados
-access_log /var/log/nginx/admin_access.log;
-error_log /var/log/nginx/admin_error.log debug;
+# Cache para archivos estáticos
+location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    add_header Vary Accept-Encoding;
+}
+
+# Cache para HTML
+location ~* \.html$ {
+    expires 1h;
+    add_header Cache-Control "public, must-revalidate";
+}
 ```
 
-#### 2. Monitoreo en Tiempo Real
-```bash
-# Ver logs en tiempo real
-sudo tail -f /var/log/nginx/admin_access.log
-sudo tail -f /var/log/nginx/admin_error.log
+### **2. Compresión Gzip**
 
-# Monitorear requests
-watch -n 1 'curl -s -o /dev/null -w "%{http_code}" http://admin.musikon.com'
-```
-
----
-
-## 📈 Performance y Optimización
-
-### 1. Optimización de Nginx
 ```nginx
-# Configuración optimizada
-worker_processes auto;
-worker_connections 1024;
-
-# Gzip compression
+# Configuración de compresión
 gzip on;
 gzip_vary on;
 gzip_min_length 1024;
-gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
-# Cache headers
-location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-    expires 1y;
-    add_header Cache-Control "public, immutable";
-}
+gzip_proxied expired no-cache no-store private must-revalidate auth;
+gzip_types
+    text/plain
+    text/css
+    text/xml
+    text/javascript
+    application/x-javascript
+    application/xml+rss
+    application/javascript
+    application/json;
 ```
-
-### 2. Optimización de Build
-```bash
-# Build optimizado
-npm run build
-
-# Analizar bundle
-npm install -g bundle-analyzer
-bundle-analyzer dist/assets/*.js
-```
-
-### 3. CDN Configuration
-```bash
-# Configurar CDN para assets estáticos
-# Subir assets a CDN y actualizar URLs en el build
-```
-
----
-
-## 🔐 Seguridad
-
-### 1. Headers de Seguridad
-```nginx
-# Security headers
-add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-XSS-Protection "1; mode=block" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header Referrer-Policy "no-referrer-when-downgrade" always;
-add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-```
-
-### 2. Rate Limiting
-```nginx
-# Rate limiting
-limit_req_zone $binary_remote_addr zone=admin:10m rate=10r/s;
-
-location / {
-    limit_req zone=admin burst=20 nodelay;
-    # resto de configuración...
-}
-```
-
-### 3. Firewall
-```bash
-# Configurar firewall
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw allow 22
-sudo ufw enable
-```
-
----
-
-## 📚 Recursos Adicionales
-
-### Documentación Relacionada
-- **[INSTALLATION.md](./INSTALLATION.md)** - Guía de instalación
-- **[CONFIGURATION.md](./CONFIGURATION.md)** - Configuración avanzada
-- **[MAINTENANCE.md](./MAINTENANCE.md)** - Mantenimiento del sistema
-
-### Herramientas de Monitoreo
-- **Prometheus + Grafana:** Monitoreo avanzado
-- **Sentry:** Error tracking
-- **Google Analytics:** Analytics de usuarios
-
-### Comandos Útiles
-```bash
-# Verificar estado de servicios
-sudo systemctl status nginx
-pm2 status
-
-# Ver logs
-sudo journalctl -u nginx -f
-pm2 logs
-
-# Reiniciar servicios
-sudo systemctl restart nginx
-pm2 restart all
-```
-
----
 
 ## ✅ Checklist de Despliegue
 
-### Preparación
-- [ ] Variables de entorno configuradas
-- [ ] Build de producción creado
-- [ ] Servidor preparado
-- [ ] Dominio configurado
+### **Pre-Despliegue**
+- [ ] **Build exitoso** sin errores
+- [ ] **Tests pasando** en CI/CD
+- [ ] **Variables de entorno** configuradas
+- [ ] **Backend API** funcionando
+- [ ] **Dominio y DNS** configurados
+- [ ] **Certificados SSL** instalados
 
-### Despliegue
-- [ ] Archivos subidos al servidor
-- [ ] Nginx configurado
-- [ ] SSL configurado
-- [ ] Servicios iniciados
+### **Despliegue**
+- [ ] **Backup** del estado anterior
+- [ ] **Copia de archivos** completada
+- [ ] **Permisos** configurados
+- [ ] **Servicios reiniciados** correctamente
+- [ ] **Health checks** pasando
 
-### Verificación
-- [ ] Sitio accesible
-- [ ] SSL funcionando
-- [ ] API conectada
-- [ ] Funcionalidades básicas operativas
-
-### Monitoreo
-- [ ] Logs configurados
-- [ ] Monitoreo activo
-- [ ] Backup configurado
-- [ ] Alertas configuradas
+### **Post-Despliegue**
+- [ ] **Aplicación accesible** via HTTPS
+- [ ] **Funcionalidades críticas** funcionando
+- [ ] **Logs sin errores** críticos
+- [ ] **Performance** dentro de parámetros
+- [ ] **Monitoreo** configurado
 
 ---
 
-**🎵 MusikOn Admin System** - Guía completa de despliegue para el panel administrativo. 
+**¡Tu aplicación está lista para producción!** 🚀 

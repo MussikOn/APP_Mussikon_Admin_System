@@ -1,165 +1,197 @@
-# 🚀 Guía de Instalación - MusikOn Admin System
+# Guía de Instalación - APP Mussikon Admin
 
-> **Versión:** 1.0.0  
-> **Última Actualización:** Diciembre 2024
+## 🚀 Introducción
 
-## 📋 Prerrequisitos
+Esta guía proporciona instrucciones paso a paso para instalar y configurar el **APP Mussikon Admin System** en tu entorno de desarrollo local.
 
-### Requisitos del Sistema
-- **Node.js:** 18.0.0 o superior
-- **npm:** 8.0.0 o superior (o yarn 1.22.0+)
-- **Git:** 2.30.0 o superior
-- **Navegador:** Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+## 📋 Requisitos Previos
 
-### Verificar Versiones
+### **Sistema Operativo**
+- **Windows**: 10 o superior
+- **macOS**: 10.15 (Catalina) o superior
+- **Linux**: Ubuntu 18.04+ o distribución similar
+
+### **Software Requerido**
+```bash
+# Versiones mínimas recomendadas
+Node.js >= 18.0.0
+npm >= 8.0.0
+Git >= 2.30.0
+```
+
+### **Verificar Instalaciones**
 ```bash
 # Verificar Node.js
 node --version
-# Debe mostrar: v18.0.0 o superior
+# Debe mostrar: v18.x.x o superior
 
 # Verificar npm
 npm --version
-# Debe mostrar: 8.0.0 o superior
+# Debe mostrar: 8.x.x o superior
 
 # Verificar Git
 git --version
-# Debe mostrar: 2.30.0 o superior
+# Debe mostrar: 2.30.x o superior
 ```
 
-### Backend API
-- **URL Base:** `http://192.168.100.101:1000`
-- **Estado:** Debe estar corriendo y accesible
-- **Documentación:** `http://192.168.100.101:1000/docs`
+## 📦 Instalación del Proyecto
 
----
+### **1. Clonar el Repositorio**
 
-## 🔧 Instalación Paso a Paso
-
-### 1. Clonar el Repositorio
 ```bash
 # Clonar el repositorio
-git clone <repository-url>
-cd App_mussikon_admin_system
+git clone https://github.com/MussikOn/APP_Mussikon_Admin_System.git
 
-# Verificar que estás en la rama correcta
-git branch
+# Navegar al directorio del proyecto
+cd APP_Mussikon_Admin_System
+
+# Verificar que estás en el directorio correcto
+ls
+# Debe mostrar: package.json, src/, docs/, etc.
 ```
 
-### 2. Instalar Dependencias
+### **2. Instalar Dependencias**
+
 ```bash
 # Instalar todas las dependencias
 npm install
 
-# Verificar que no hay errores
-npm audit
+# Verificar que la instalación fue exitosa
+npm list --depth=0
 ```
 
-### 3. Configurar Variables de Entorno
+### **3. Configurar Variables de Entorno**
+
 ```bash
 # Crear archivo de variables de entorno
 cp .env.example .env
 
-# Editar el archivo .env con tus configuraciones
+# Editar el archivo .env con tu configuración
 nano .env
+# o
+code .env
 ```
 
-#### Contenido del archivo `.env`:
+#### **Contenido del archivo .env**
 ```env
 # API Configuration
-VITE_API_URL=http://192.168.100.101:1000
-VITE_API_TIMEOUT=30000
+VITE_API_BASE_URL=http://192.168.54.86:3001
+VITE_API_TIMEOUT=10000
 
 # App Configuration
-VITE_APP_NAME=MusikOn Admin
+VITE_APP_NAME=Mussikon Admin
 VITE_APP_VERSION=1.0.0
-VITE_APP_ENVIRONMENT=development
 
 # Feature Flags
+VITE_ENABLE_ANALYTICS=true
 VITE_ENABLE_NOTIFICATIONS=true
-VITE_ENABLE_ANALYTICS=false
-VITE_ENABLE_ERROR_TRACKING=false
+VITE_ENABLE_WEBSOCKET=false
 
 # Development
 VITE_DEBUG_MODE=true
 VITE_LOG_LEVEL=debug
 ```
 
-### 4. Verificar Configuración
+### **4. Verificar Configuración**
+
 ```bash
 # Verificar que TypeScript compila correctamente
-npx tsc --noEmit
+npm run type-check
 
-# Verificar que ESLint no encuentra errores
+# Verificar linting
 npm run lint
 
-# Verificar que el build funciona
-npm run build
+# Verificar conexión al backend (opcional)
+npm run check-backend
 ```
 
-### 5. Iniciar Servidor de Desarrollo
+## 🚀 Ejecutar el Proyecto
+
+### **Modo Desarrollo**
+
 ```bash
 # Iniciar servidor de desarrollo
 npm run dev
 
-# El servidor estará disponible en:
+# El servidor se iniciará en:
 # http://localhost:5173
-# http://192.168.100.101:5173 (acceso desde red local)
+# http://192.168.x.x:5173 (acceso desde red local)
 ```
 
----
+### **Scripts Disponibles**
 
-## 🔍 Verificación de la Instalación
-
-### 1. Verificar que el Servidor Funciona
-- Abrir `http://localhost:5173` en el navegador
-- Deberías ver la página de login
-- Verificar que no hay errores en la consola del navegador
-
-### 2. Verificar Conexión con Backend
-- Intentar hacer login con credenciales válidas
-- Verificar que las peticiones a la API funcionan
-- Revisar la consola del navegador para errores de red
-
-### 3. Verificar Funcionalidades Básicas
-- [ ] Login/logout funciona
-- [ ] Dashboard se carga correctamente
-- [ ] Navegación entre páginas funciona
-- [ ] Sidebar responsive funciona
-- [ ] Tema claro/oscuro funciona
-
----
-
-## 🛠️ Configuración Avanzada
-
-### Configuración de Desarrollo
-
-#### 1. Configurar Vite
-```typescript
-// vite.config.ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: true, // Acceso desde red local
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://192.168.100.101:1000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    }
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true
-  }
-})
+```bash
+# Desarrollo
+npm run dev              # Servidor de desarrollo con hot reload
+npm run build            # Build de producción
+npm run preview          # Preview del build de producción
+npm run lint             # Linting del código
+npm run lint:fix         # Linting con auto-fix
+npm run type-check       # Verificación de tipos TypeScript
+npm run check-backend    # Verificar conexión al backend
 ```
 
-#### 2. Configurar TypeScript
+## 🔧 Configuración del Backend
+
+### **Requisitos del Backend**
+
+El sistema requiere un backend Node.js/Express corriendo con los siguientes endpoints:
+
+#### **Endpoints Requeridos**
+```
+POST   /api/auth/login          # Autenticación
+POST   /api/auth/logout         # Cerrar sesión
+GET    /api/auth/me             # Obtener usuario actual
+POST   /api/auth/refresh        # Refresh token
+
+GET    /api/users               # Listar usuarios
+POST   /api/users               # Crear usuario
+GET    /api/users/:id           # Obtener usuario
+PUT    /api/users/:id           # Actualizar usuario
+DELETE /api/users/:id           # Eliminar usuario
+PATCH  /api/users/:id/block     # Bloquear usuario
+PATCH  /api/users/:id/unblock   # Desbloquear usuario
+
+GET    /api/events              # Listar eventos
+POST   /api/events              # Crear evento
+GET    /api/events/:id          # Obtener evento
+PUT    /api/events/:id          # Actualizar evento
+DELETE /api/events/:id          # Eliminar evento
+
+GET    /api/requests            # Listar solicitudes
+POST   /api/requests            # Crear solicitud
+GET    /api/requests/:id        # Obtener solicitud
+PUT    /api/requests/:id        # Actualizar solicitud
+DELETE /api/requests/:id        # Eliminar solicitud
+
+GET    /api/search              # Búsqueda global
+GET    /api/analytics           # Datos de analytics
+```
+
+### **Configuración de CORS**
+
+El backend debe tener CORS configurado para permitir requests desde el frontend:
+
+```javascript
+// En el backend (Express)
+const cors = require('cors');
+
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://192.168.x.x:5173',
+    'http://localhost:4173' // Preview
+  ],
+  credentials: true
+}));
+```
+
+## 🛠️ Configuración de Desarrollo
+
+### **1. Configuración de TypeScript**
+
+El proyecto incluye configuración TypeScript optimizada:
+
 ```json
 // tsconfig.json
 {
@@ -178,221 +210,283 @@ export default defineConfig({
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/features/*": ["src/features/*"],
+      "@/services/*": ["src/services/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/utils/*": ["src/utils/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
 ```
 
-#### 3. Configurar ESLint
+### **2. Configuración de ESLint**
+
 ```javascript
 // eslint.config.js
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-
 export default [
-  js.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.es2021
-      },
+      parser: '@typescript-eslint/parser',
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
         ecmaFeatures: {
-          jsx: true
-        }
-      }
+          jsx: true,
+        },
+      },
     },
     plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh
+      '@typescript-eslint': typescriptEslint,
+      react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true }
-      ]
-    }
+      // Reglas personalizadas
+    },
+  },
+];
+```
+
+### **3. Configuración de Vite**
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: true, // Permite acceso desde red local
+    port: 5173,
+    open: true  // Abre navegador automáticamente
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true
   }
-]
+})
 ```
 
-### Configuración de Producción
+## 🔍 Verificación de la Instalación
 
-#### 1. Variables de Entorno de Producción
-```env
-# Production .env
-VITE_API_URL=https://api.musikon.com
-VITE_APP_ENVIRONMENT=production
-VITE_ENABLE_ANALYTICS=true
-VITE_ENABLE_ERROR_TRACKING=true
-VITE_DEBUG_MODE=false
-VITE_LOG_LEVEL=error
-```
+### **1. Verificar Funcionalidad Básica**
 
-#### 2. Build de Producción
 ```bash
-# Crear build optimizado
+# 1. Iniciar el servidor de desarrollo
+npm run dev
+
+# 2. Abrir navegador en http://localhost:5173
+
+# 3. Verificar que se muestra la página de login
+
+# 4. Verificar que no hay errores en la consola del navegador
+```
+
+### **2. Verificar Build de Producción**
+
+```bash
+# 1. Crear build de producción
 npm run build
 
-# Verificar el build
+# 2. Verificar que se creó la carpeta dist/
+ls dist/
+
+# 3. Preview del build
 npm run preview
 
-# El build estará en la carpeta dist/
+# 4. Verificar que funciona en http://localhost:4173
 ```
 
----
+### **3. Verificar Linting y TypeScript**
 
-## 🔧 Solución de Problemas
-
-### Problemas Comunes
-
-#### 1. Error de Conexión a la API
 ```bash
-# Verificar que el backend esté corriendo
-curl http://192.168.100.101:1000/health
+# 1. Verificar linting
+npm run lint
 
-# Verificar variables de entorno
-echo $VITE_API_URL
+# 2. Verificar tipos TypeScript
+npm run type-check
 
-# Verificar configuración de CORS en el backend
+# 3. Si hay errores, corregirlos antes de continuar
 ```
 
-#### 2. Error de Dependencias
-```bash
-# Limpiar cache de npm
-npm cache clean --force
+## 🐛 Solución de Problemas
 
-# Eliminar node_modules y reinstalar
+### **Problemas Comunes**
+
+#### **1. Error: "Cannot find module"**
+```bash
+# Solución: Reinstalar dependencias
 rm -rf node_modules package-lock.json
 npm install
 ```
 
-#### 3. Error de TypeScript
+#### **2. Error: "Port already in use"**
 ```bash
-# Verificar configuración de TypeScript
-npx tsc --noEmit
-
-# Verificar tipos de Material UI
-npm install @types/react @types/react-dom
+# Solución: Cambiar puerto
+# En vite.config.ts
+export default defineConfig({
+  server: {
+    port: 3000  // Cambiar a otro puerto
+  }
+})
 ```
 
-#### 4. Error de Build
+#### **3. Error: "Backend connection failed"**
 ```bash
-# Limpiar build anterior
-rm -rf dist/
+# Verificar que el backend esté corriendo
+npm run check-backend
 
-# Reinstalar dependencias
-npm install
-
-# Intentar build nuevamente
-npm run build
+# Verificar URL en .env
+VITE_API_BASE_URL=http://192.168.54.86:3001
 ```
 
-### Logs y Debugging
+#### **4. Error: "TypeScript compilation failed"**
+```bash
+# Verificar tipos
+npm run type-check
 
-#### 1. Habilitar Logs Detallados
-```typescript
-// src/services/api.ts
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  timeout: import.meta.env.VITE_API_TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json'
+# Si hay errores, revisar:
+# - Imports faltantes
+# - Tipos incorrectos
+# - Configuración de tsconfig.json
+```
+
+#### **5. Error: "ESLint errors"**
+```bash
+# Verificar linting
+npm run lint
+
+# Auto-fix errores
+npm run lint:fix
+
+# Si persisten errores, corregirlos manualmente
+```
+
+### **Logs de Debug**
+
+```bash
+# Habilitar logs detallados
+export DEBUG=*
+npm run dev
+
+# O en Windows
+set DEBUG=*
+npm run dev
+```
+
+## 📱 Configuración para Diferentes Entornos
+
+### **Desarrollo Local**
+```env
+VITE_API_BASE_URL=http://localhost:3001
+VITE_DEBUG_MODE=true
+VITE_LOG_LEVEL=debug
+```
+
+### **Desarrollo en Red Local**
+```env
+VITE_API_BASE_URL=http://192.168.1.100:3001
+VITE_DEBUG_MODE=true
+VITE_LOG_LEVEL=debug
+```
+
+### **Staging**
+```env
+VITE_API_BASE_URL=https://staging-api.mussikon.com
+VITE_DEBUG_MODE=false
+VITE_LOG_LEVEL=info
+```
+
+### **Producción**
+```env
+VITE_API_BASE_URL=https://api.mussikon.com
+VITE_DEBUG_MODE=false
+VITE_LOG_LEVEL=error
+```
+
+## 🔒 Configuración de Seguridad
+
+### **Variables de Entorno Sensibles**
+
+```env
+# Nunca committear estas variables
+VITE_JWT_SECRET=your-secret-key
+VITE_ADMIN_EMAIL=admin@mussikon.com
+VITE_ADMIN_PASSWORD=secure-password
+```
+
+### **Configuración de HTTPS (Desarrollo)**
+
+```bash
+# Generar certificados SSL locales
+npx mkcert localhost 127.0.0.1 ::1
+
+# Configurar Vite para HTTPS
+# En vite.config.ts
+export default defineConfig({
+  server: {
+    https: {
+      key: fs.readFileSync('localhost-key.pem'),
+      cert: fs.readFileSync('localhost.pem')
+    }
   }
-});
-
-// Agregar logs para debugging
-api.interceptors.request.use(config => {
-  console.log('API Request:', config.method?.toUpperCase(), config.url);
-  return config;
-});
-
-api.interceptors.response.use(
-  response => {
-    console.log('API Response:', response.status, response.config.url);
-    return response;
-  },
-  error => {
-    console.error('API Error:', error.response?.status, error.config?.url);
-    return Promise.reject(error);
-  }
-);
+})
 ```
-
-#### 2. Verificar Estado de la Aplicación
-```typescript
-// En cualquier componente
-console.log('Environment:', import.meta.env.VITE_APP_ENVIRONMENT);
-console.log('API URL:', import.meta.env.VITE_API_URL);
-console.log('Debug Mode:', import.meta.env.VITE_DEBUG_MODE);
-```
-
----
 
 ## 📚 Recursos Adicionales
 
-### Documentación Relacionada
-- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Guía de desarrollo
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitectura del sistema
-- **[CONFIGURATION.md](./CONFIGURATION.md)** - Configuración avanzada
+### **Documentación Relacionada**
+- [Guía de Desarrollo](DEVELOPMENT.md)
+- [Arquitectura del Sistema](ARCHITECTURE.md)
+- [API de Autenticación](AUTH_API.md)
+- [Sistema de Notificaciones](NOTIFICATION_SYSTEM.md)
 
-### Herramientas de Desarrollo
-- **Vite Dev Tools:** Extensión de navegador para debugging
-- **React Developer Tools:** Extensión para debugging de React
-- **Redux DevTools:** Para debugging de estado (si se implementa Redux)
+### **Herramientas Útiles**
+- **VS Code Extensions**:
+  - ESLint
+  - Prettier
+  - TypeScript Importer
+  - Material-UI Snippets
+  - React Developer Tools
 
-### Comandos Útiles
+### **Comandos Útiles**
 ```bash
-# Desarrollo
-npm run dev          # Servidor de desarrollo
-npm run build        # Build de producción
-npm run preview      # Preview del build
-npm run lint         # Linting del código
+# Limpiar cache
+npm cache clean --force
 
-# Testing
-npm test             # Ejecutar tests (cuando se implementen)
-npm run test:watch   # Tests en modo watch
+# Verificar dependencias obsoletas
+npm outdated
 
-# Utilidades
-npm run clean        # Limpiar build (si se configura)
-npm run type-check   # Verificar tipos TypeScript
+# Actualizar dependencias
+npm update
+
+# Verificar vulnerabilidades
+npm audit
+npm audit fix
 ```
-
----
 
 ## ✅ Checklist de Instalación
 
-### Instalación Básica
-- [ ] Node.js 18+ instalado
-- [ ] Repositorio clonado
-- [ ] Dependencias instaladas
-- [ ] Variables de entorno configuradas
-- [ ] Servidor de desarrollo corriendo
-
-### Verificación
-- [ ] Página de login se carga
-- [ ] Conexión con backend funciona
-- [ ] Login/logout funciona
-- [ ] Dashboard se carga
-- [ ] Navegación funciona
-- [ ] Tema claro/oscuro funciona
-
-### Configuración Avanzada
-- [ ] TypeScript compila sin errores
-- [ ] ESLint no encuentra errores
-- [ ] Build de producción funciona
-- [ ] Variables de entorno correctas
-- [ ] Logs de debugging configurados
+- [ ] **Requisitos previos instalados** (Node.js, npm, Git)
+- [ ] **Repositorio clonado** correctamente
+- [ ] **Dependencias instaladas** sin errores
+- [ ] **Variables de entorno** configuradas
+- [ ] **Backend configurado** y corriendo
+- [ ] **Servidor de desarrollo** iniciado
+- [ ] **Página de login** visible
+- [ ] **Sin errores** en consola del navegador
+- [ ] **Build de producción** exitoso
+- [ ] **Linting y TypeScript** sin errores
 
 ---
 
-**🎵 MusikOn Admin System** - Guía completa de instalación y configuración del panel administrativo. 
+**¡Tu entorno de desarrollo está listo para trabajar en el APP Mussikon Admin System!** 🚀 

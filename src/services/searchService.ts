@@ -37,6 +37,27 @@ export interface SearchResponse {
   hasMore: boolean;
 }
 
+// Tipo para la respuesta real del backend
+export interface GlobalSearchResponse {
+  success: boolean;
+  data: {
+    events: any[];
+    requests: any[];
+    users: any[];
+  };
+  summary: {
+    totalEvents: number;
+    totalRequests: number;
+    totalUsers: number;
+  };
+  // Campos opcionales para compatibilidad
+  results?: SearchResult[];
+  total?: number;
+  page?: number;
+  limit?: number;
+  hasMore?: boolean;
+}
+
 // Tipos para analytics
 export interface AnalyticsFilters {
   period?: 'day' | 'week' | 'month' | 'year';
@@ -69,7 +90,7 @@ export interface AnalyticsResponse {
 // Servicio de búsqueda
 export const searchService = {
   // Búsqueda global en toda la plataforma
-  async globalSearch(filters: SearchFilters): Promise<SearchResponse> {
+  async globalSearch(filters: SearchFilters): Promise<GlobalSearchResponse> {
     try {
       console.log('🔍 Ejecutando búsqueda global con filtros:', filters);
       const response = await apiService.get('/search/global', { params: filters });
