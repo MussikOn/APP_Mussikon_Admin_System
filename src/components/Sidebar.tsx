@@ -26,6 +26,7 @@ import {
   Smartphone as SmartphoneIcon,
   Search as SearchIcon,
   Analytics as AnalyticsIcon,
+  Chat as ChatIcon,
   Menu as MenuIcon,
   KeyboardArrowLeft as CollapseIcon,
   KeyboardArrowRight as ExpandIcon
@@ -97,6 +98,13 @@ const navigationItems = [
     icon: <AnalyticsIcon />,
     color: '#ff6b35',
     description: 'Dashboard de analytics y métricas'
+  },
+  { 
+    to: '/chat', 
+    label: 'Chat', 
+    icon: <ChatIcon />,
+    color: '#4CAF50',
+    description: 'Sistema de mensajería y comunicación'
   },
   { 
     to: '/admin', 

@@ -14,6 +14,7 @@ export { geolocationService } from './geolocationService';
 export { superadminService } from './superadminService';
 export { deviceService } from './deviceService';
 export { contentService } from './contentService';
+export { chatService } from './chatService';
 
 // Exportar tipos de los servicios
 export type {
@@ -86,4 +87,15 @@ export type {
   ContentTemplate,
   CreateTemplateData,
   ContentStats
-} from './contentService'; 
+} from './contentService';
+
+export type {
+  Message,
+  Conversation,
+  CreateConversationData,
+  SendMessageData,
+  ChatFilters,
+  ChatResponse,
+  ConversationListResponse,
+  MessageListResponse
+} from './chatService'; 

@@ -11,6 +11,7 @@ import AdminTools from '../features/admin';
 import MobileUsers from '../features/mobileUsers';
 import Search from '../features/search';
 import Analytics from '../features/analytics';
+import Chat from '../features/chat';
 import { useAuth } from '../hooks/useAuth';
 import PrivateLayout from '../components/PrivateLayout';
 import LoadingScreen from '../components/LoadingScreen';
@@ -59,6 +60,7 @@ const AppRoutes = () => (
       <Route path="/mobile-users" element={<PrivateRoute><MobileUsers /></PrivateRoute>} />
       <Route path="/search" element={<PrivateRoute><Search /></PrivateRoute>} />
       <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
+      <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute allowedRoles={['superadmin']}><AdminTools /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

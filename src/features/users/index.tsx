@@ -8,6 +8,7 @@ import {
 } from "../../services/usersService";
 import { useApiRequest } from "../../hooks/useApiRequest";
 import { useTheme } from "../../hooks/useTheme";
+import { buttonStyles, chipStyles, cardStyles } from "../../theme/buttonStyles";
 import {
   Box,
   Card,
@@ -336,21 +337,7 @@ const Users: React.FC = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={handleCreateUser}
-              sx={{
-                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
-                borderRadius: 3,
-                px: 3,
-                py: 1.5,
-                fontWeight: 600,
-                textTransform: 'none',
-                boxShadow: '0 8px 32px rgba(127, 95, 255, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 40px rgba(127, 95, 255, 0.4)',
-                },
-                transition: 'all 0.3s ease',
-              }}
+              sx={buttonStyles.primary}
             >
               Nuevo Usuario
             </Button>
@@ -361,12 +348,7 @@ const Users: React.FC = () => {
       {/* Filtros y Estadísticas */}
       <Card
         sx={{
-          background: isDark 
-            ? 'rgba(31, 38, 135, 0.15)'
-            : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(12px)',
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
-          borderRadius: 4,
+          ...(isDark ? cardStyles.dark : cardStyles.default),
           mb: 3,
         }}
       >
@@ -408,31 +390,19 @@ const Users: React.FC = () => {
                     label={`Admin: ${users.filter(u => u.roll === 'admin').length}`}
                     size="small"
                     icon={<AdminIcon />}
-                    sx={{ 
-                      background: 'rgba(0, 255, 247, 0.1)', 
-                      color: '#00fff7',
-                      fontWeight: 600 
-                    }} 
+                    sx={chipStyles.secondary}
                   />
                   <Chip 
                     label={`Organizadores: ${users.filter(u => u.roll === 'organizador').length}`}
                     size="small"
                     icon={<EventIcon />}
-                    sx={{ 
-                      background: 'rgba(185, 147, 214, 0.1)', 
-                      color: '#b993d6',
-                      fontWeight: 600 
-                    }} 
+                    sx={chipStyles.primary}
                   />
                   <Chip 
                     label={`Músicos: ${users.filter(u => u.roll === 'musico').length}`}
                     size="small"
                     icon={<MusicIcon />}
-                    sx={{ 
-                      background: 'rgba(255, 46, 236, 0.1)', 
-                      color: '#ff2eec',
-                      fontWeight: 600 
-                    }} 
+                    sx={chipStyles.error}
                   />
                 </Box>
               </Box>
@@ -461,14 +431,7 @@ const Users: React.FC = () => {
       {/* Tabla de Usuarios */}
       {!loadingUsers && !errorUsers && (
         <Card
-          sx={{
-            background: isDark 
-              ? 'rgba(31, 38, 135, 0.15)'
-              : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(12px)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
-            borderRadius: 4,
-          }}
+          sx={isDark ? cardStyles.dark : cardStyles.default}
         >
           <TableContainer>
             <Table>
@@ -577,6 +540,7 @@ const Users: React.FC = () => {
                                 size="small"
                                 onClick={() => handleEditUser(user)}
                                 sx={{
+                                  ...buttonStyles.icon,
                                   color: '#7f5fff',
                                   '&:hover': {
                                     background: 'rgba(127, 95, 255, 0.1)',
@@ -592,6 +556,7 @@ const Users: React.FC = () => {
                                 onClick={() => handleConfirmDelete(user)}
                                 disabled={deleteTarget === user._id && loadingDelete}
                                 sx={{
+                                  ...buttonStyles.icon,
                                   color: '#ff2eec',
                                   '&:hover': {
                                     background: 'rgba(255, 46, 236, 0.1)',
@@ -731,12 +696,7 @@ const Users: React.FC = () => {
           <Button
             onClick={() => setModalOpen(false)}
             disabled={loadingCreate || loadingUpdate}
-            sx={{
-              color: 'text.secondary',
-              '&:hover': {
-                background: 'rgba(0,0,0,0.04)',
-              },
-            }}
+            sx={buttonStyles.text}
           >
             Cancelar
           </Button>
@@ -744,12 +704,7 @@ const Users: React.FC = () => {
             onClick={handleSave}
             disabled={loadingCreate || loadingUpdate}
             variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
-              },
-            }}
+            sx={buttonStyles.primary}
           >
             {loadingCreate || loadingUpdate ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
