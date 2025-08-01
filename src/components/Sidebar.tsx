@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useResponsive } from '../hooks/useResponsive';
+import { buttonStyles, shadowStyles } from '../theme/buttonStyles';
 import {
   Box,
   Drawer,
@@ -204,14 +205,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
             <IconButton
               onClick={() => setCollapsed(!collapsed)}
               aria-label={collapsed ? "Expandir menú de navegación" : "Contraer menú de navegación"}
-              sx={{
-                color: 'text.secondary',
-                '&:hover': { 
-                  background: 'rgba(255,255,255,0.1)',
-                  transform: 'scale(1.1)'
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
+              sx={buttonStyles.sidebarIcon}
             >
               {collapsed ? <ExpandIcon /> : <CollapseIcon />}
             </IconButton>
@@ -342,10 +336,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
           edge="start"
           onClick={handleDrawerToggle}
           sx={{
-            position: 'fixed',
-            top: 16,
-            left: 16,
-            zIndex: 1200,
+            ...buttonStyles.sidebarMobile,
             background: isDark 
               ? 'rgba(31, 38, 135, 0.9)'
               : 'rgba(255, 255, 255, 0.9)',
@@ -355,9 +346,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
               background: isDark 
                 ? 'rgba(31, 38, 135, 0.95)'
                 : 'rgba(255, 255, 255, 0.95)',
-              transform: 'scale(1.1)',
             },
-            transition: 'all 0.2s ease-in-out',
           }}
         >
           <MenuIcon />
@@ -379,7 +368,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
                 : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(12px)',
               border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              boxShadow: shadowStyles.strong,
             },
           }}
         >

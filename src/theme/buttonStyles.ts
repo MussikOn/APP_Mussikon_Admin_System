@@ -1,5 +1,15 @@
 // Estilos optimizados para botones - Elimina sombras excesivas y parpadeos
 
+// Sistema centralizado de sombras sutiles
+export const shadowStyles = {
+  subtle: '0 2px 8px rgba(0, 0, 0, 0.1)',
+  medium: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  strong: '0 8px 24px rgba(0, 0, 0, 0.2)',
+  colored: (color: string, opacity: number = 0.2) => `0 4px 12px ${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
+  hover: (color: string, opacity: number = 0.3) => `0 6px 16px ${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
+  none: 'none'
+};
+
 export const buttonStyles = {
   // Botón primario con gradiente
   primary: {
@@ -9,21 +19,21 @@ export const buttonStyles = {
     py: 1.5,
     fontWeight: 600,
     textTransform: 'none' as const,
-    boxShadow: '0 2px 8px rgba(127, 95, 255, 0.2)',
+    boxShadow: shadowStyles.subtle,
     transition: 'all 0.2s ease',
     '&:hover': {
       background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
       transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(127, 95, 255, 0.3)',
+      boxShadow: shadowStyles.medium,
     },
     '&:active': {
       transform: 'translateY(0)',
-      boxShadow: '0 2px 6px rgba(127, 95, 255, 0.2)',
+      boxShadow: shadowStyles.subtle,
     },
     '&:disabled': {
       background: 'rgba(127, 95, 255, 0.3)',
       transform: 'none',
-      boxShadow: 'none',
+      boxShadow: shadowStyles.none,
     }
   },
 
@@ -61,21 +71,21 @@ export const buttonStyles = {
     py: 1.5,
     fontWeight: 600,
     textTransform: 'none' as const,
-    boxShadow: '0 2px 8px rgba(255, 46, 236, 0.2)',
+    boxShadow: shadowStyles.subtle,
     transition: 'all 0.2s ease',
     '&:hover': {
       background: 'linear-gradient(135deg, #ff6b6b 0%, #ff2eec 100%)',
       transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(255, 46, 236, 0.3)',
+      boxShadow: shadowStyles.medium,
     },
     '&:active': {
       transform: 'translateY(0)',
-      boxShadow: '0 2px 6px rgba(255, 46, 236, 0.2)',
+      boxShadow: shadowStyles.subtle,
     },
     '&:disabled': {
       background: 'rgba(255, 46, 236, 0.3)',
       transform: 'none',
-      boxShadow: 'none',
+      boxShadow: shadowStyles.none,
     }
   },
 
@@ -99,15 +109,15 @@ export const buttonStyles = {
     py: 1,
     fontSize: '0.875rem',
     borderRadius: 1.5,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+    boxShadow: shadowStyles.subtle,
     transition: 'all 0.2s ease',
     '&:hover': {
       transform: 'translateY(-1px)',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+      boxShadow: shadowStyles.medium,
     },
     '&:active': {
       transform: 'translateY(0)',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+      boxShadow: shadowStyles.subtle,
     }
   },
 
@@ -118,6 +128,34 @@ export const buttonStyles = {
     height: 40,
     borderRadius: '50%',
     p: 0,
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      transform: 'scale(1.05)',
+    },
+    '&:active': {
+      transform: 'scale(1)',
+    }
+  },
+
+  // Botón de icono del sidebar (sin sombras excesivas)
+  sidebarIcon: {
+    color: 'text.secondary',
+    transition: 'all 0.2s ease',
+    '&:hover': { 
+      background: 'rgba(255,255,255,0.1)',
+      transform: 'scale(1.05)'
+    },
+    '&:active': {
+      transform: 'scale(1)',
+    }
+  },
+
+  // Botón móvil del sidebar (hamburger menu)
+  sidebarMobile: {
+    position: 'fixed',
+    top: 16,
+    left: 16,
+    zIndex: 1200,
     transition: 'all 0.2s ease',
     '&:hover': {
       transform: 'scale(1.05)',
@@ -169,10 +207,10 @@ export const cardStyles = {
     backdropFilter: 'blur(12px)',
     border: '1px solid rgba(0,0,0,0.08)',
     borderRadius: 3,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    boxShadow: shadowStyles.subtle,
     transition: 'all 0.2s ease',
     '&:hover': {
-      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      boxShadow: shadowStyles.medium,
       transform: 'translateY(-1px)',
     }
   },
@@ -181,10 +219,10 @@ export const cardStyles = {
     backdropFilter: 'blur(12px)',
     border: '1px solid rgba(255,255,255,0.18)',
     borderRadius: 3,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+    boxShadow: shadowStyles.subtle,
     transition: 'all 0.2s ease',
     '&:hover': {
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      boxShadow: shadowStyles.medium,
       transform: 'translateY(-1px)',
     }
   }

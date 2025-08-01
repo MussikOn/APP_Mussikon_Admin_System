@@ -191,7 +191,8 @@ const MobileUsers = () => {
 
 
   return (
-    <ResponsiveLayout
+    <>
+      <ResponsiveLayout
       spacing="lg"
       sx={{
         background: 'linear-gradient(135deg, rgba(0, 255, 247, 0.05) 0%, rgba(0, 0, 0, 0.9) 100%)',
@@ -604,25 +605,7 @@ const MobileUsers = () => {
           <Add sx={{ fontSize: 28 }} />
         </Fab>
       </ResponsiveLayout>
-
-      {/* Estilos CSS para animaciones */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
-    </ResponsiveLayout>
+    </>
   );
 };
 

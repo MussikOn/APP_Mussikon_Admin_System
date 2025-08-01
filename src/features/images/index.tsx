@@ -372,7 +372,6 @@ const Images: React.FC = () => {
                 startIcon={<DeleteIcon />}
                 onClick={handleBulkDelete}
                 sx={{ 
-                  ...buttonStyles.error,
                   backgroundColor: '#ff4757', 
                   '&:hover': { backgroundColor: '#ff3742' } 
                 }}
@@ -555,7 +554,7 @@ const Images: React.FC = () => {
             columns={{ xs: 1, sm: 2, md: 3, lg: 4 }}
             gap={2}
           >
-            {filteredImages.map((image, index) => (
+            {filteredImages.map((image) => (
               <Card 
                 key={image.id}
                 sx={{ 

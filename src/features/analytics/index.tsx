@@ -9,8 +9,6 @@ import {
   CircularProgress,
   Alert,
   Chip,
-  IconButton,
-  Tooltip,
   Button,
   AlertTitle
 } from '@mui/material';
@@ -21,7 +19,6 @@ import {
   LibraryMusic as LibraryMusicIcon,
   Download as DownloadIcon,
   Refresh as RefreshIcon,
-  FilterList as FilterIcon,
   BarChart as BarChartIcon,
   Timeline as TimelineIcon,
   BugReport as BugReportIcon
@@ -186,15 +183,7 @@ const Analytics: React.FC = () => {
     return suggestions;
   };
 
-  // Función para manejar errores de bloqueo por cliente
-  const handleBlockedByClientError = () => {
-    console.warn('🚨 ERR_BLOCKED_BY_CLIENT detectado!');
-    console.warn('🔧 Soluciones recomendadas:');
-    console.warn('   1. Desactiva temporalmente las extensiones del navegador');
-    console.warn('   2. Verifica que el backend esté corriendo en http://localhost:3001');
-    console.warn('   3. Intenta con modo incógnito');
-    console.warn('   4. Verifica la configuración de firewall/antivirus');
-  };
+
 
   // Función para verificar disponibilidad del backend
   const checkBackendAvailability = async () => {
@@ -548,7 +537,6 @@ const Analytics: React.FC = () => {
                   color={selectedMetrics.includes(metric) ? 'primary' : 'default'}
                   variant={selectedMetrics.includes(metric) ? 'filled' : 'outlined'}
                   sx={{ 
-                    ...buttonStyles.chip,
                     '&:hover': {
                       backgroundColor: selectedMetrics.includes(metric) 
                         ? 'rgba(25, 118, 210, 0.12)' 
