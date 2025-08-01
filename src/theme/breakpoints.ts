@@ -1,3 +1,5 @@
+import React from 'react';
+
 // Sistema de Breakpoints Unificado - MussikOn Admin System
 
 export const breakpoints = {
@@ -296,7 +298,7 @@ export const breakpointUtils = {
     
     return values.xs;
   }
-};
+  };
 
 // Hook personalizado para valores responsivos
 export const useResponsiveValue = <T>(

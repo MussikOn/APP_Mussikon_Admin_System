@@ -10,8 +10,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Chip,
-  Avatar,
   IconButton,
   Tooltip,
   useMediaQuery,
@@ -39,7 +37,6 @@ interface ResponsiveTableProps {
     color?: string;
   }[];
   emptyMessage?: string;
-  loading?: boolean;
   sx?: any;
 }
 
@@ -52,7 +49,6 @@ const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
   onRowClick,
   actions = [],
   emptyMessage = 'No hay datos para mostrar',
-  loading = false,
   sx
 }) => {
   const theme = useTheme();

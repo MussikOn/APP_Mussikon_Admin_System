@@ -26,6 +26,10 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
+import ResponsiveLayout from '../../components/ResponsiveLayout';
+import ResponsiveGrid from '../../components/ResponsiveGrid';
+import { responsiveTypography } from '../../theme/breakpoints';
+import { buttonStyles, chipStyles } from '../../theme/buttonStyles';
 import {
   People as PeopleIcon,
   Event as EventIcon,
@@ -277,10 +281,17 @@ const Dashboard: React.FC = () => {
   const isLoading = loadingUsersCount || loadingEventsCount || loadingRequestsCount || loadingImagesCount;
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: '100%' }}>
+    <ResponsiveLayout spacing="md">
       {/* Header Mejorado */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          gap: 2,
+          mb: 3 
+        }}>
         <Box>
             <Typography 
               variant="h3" 
@@ -291,7 +302,7 @@ const Dashboard: React.FC = () => {
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                fontSize: { xs: '2rem', md: '2.5rem' }
+                fontSize: responsiveTypography.h3
               }}
             >
             Dashboard
@@ -343,21 +354,7 @@ const Dashboard: React.FC = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => navigate('/users')}
-              sx={{
-                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
-                borderRadius: 3,
-                px: 3,
-                py: 1.5,
-                fontWeight: 600,
-                textTransform: 'none',
-                boxShadow: '0 8px 32px rgba(127, 95, 255, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 40px rgba(127, 95, 255, 0.4)',
-                },
-                transition: 'all 0.3s ease',
-              }}
+              sx={buttonStyles.primary}
             >
               Nuevo Usuario
         </Button>
@@ -366,12 +363,7 @@ const Dashboard: React.FC = () => {
       </Box>
 
       {/* Métricas Principales */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
-        gap: 3, 
-        mb: 4 
-      }}>
+      <ResponsiveGrid type="metrics" gap={3} sx={{ mb: 4 }}>
         {metricCards.map((card, index) => {
           const counts = [usersData, eventsData, requestsData, imagesData];
           const loadings = [loadingUsersCount, loadingEventsCount, loadingRequestsCount, loadingImagesCount];
@@ -465,12 +457,19 @@ const Dashboard: React.FC = () => {
             </Card>
           );
         })}
-      </Box>
+      </ResponsiveGrid>
 
       {/* Contenido Principal */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
+      <ResponsiveGrid 
+        type="dashboard" 
+        gap={3}
+        sx={{ 
+          display: { xs: 'block', lg: 'grid' },
+          '& > *:first-of-type': { gridColumn: { lg: '1 / 3' } }
+        }}
+      >
         {/* Actividad Reciente */}
-        <Box sx={{ flex: { lg: 2 } }}>
+        <Box>
         <Card
           sx={{
             background: isDark 
@@ -506,29 +505,17 @@ const Dashboard: React.FC = () => {
                 <Chip 
                   label="Usuarios" 
                   size="small" 
-                  sx={{ 
-                    background: 'rgba(127, 95, 255, 0.1)', 
-                    color: '#7f5fff',
-                    fontWeight: 600 
-                  }} 
+                  sx={chipStyles.primary} 
                 />
                 <Chip 
                   label="Eventos" 
                   size="small" 
-                  sx={{ 
-                    background: 'rgba(0, 224, 255, 0.1)', 
-                    color: '#00e0ff',
-                    fontWeight: 600 
-                  }} 
+                  sx={chipStyles.secondary} 
                 />
                 <Chip 
                   label="Solicitudes" 
                   size="small" 
-                  sx={{ 
-                    background: 'rgba(255, 46, 236, 0.1)', 
-                    color: '#ff2eec',
-                    fontWeight: 600 
-                  }} 
+                  sx={chipStyles.error} 
                 />
               </Box>
               
@@ -670,15 +657,14 @@ const Dashboard: React.FC = () => {
             onDismiss={handleDismissNotification}
           />
         </Box>
-      </Box>
+      </ResponsiveGrid>
 
       {/* Gráficos y Estadísticas */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' },
-        gap: 3, 
-        mt: 3 
-      }}>
+      <ResponsiveGrid 
+        columns={{ xs: 1, lg: 2 }}
+        gap={3} 
+        sx={{ mt: 3 }}
+      >
         <DashboardCharts
           data={chartData}
           title="Distribución de Roles"
@@ -694,7 +680,7 @@ const Dashboard: React.FC = () => {
           type="line"
           isLoading={false}
         />
-      </Box>
+      </ResponsiveGrid>
 
       {/* Solicitudes Recientes */}
       <Box sx={{ mt: 3 }}>
@@ -727,11 +713,7 @@ const Dashboard: React.FC = () => {
                 <CircularProgress />
               </Box>
             ) : (
-              <Box sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-                gap: 2 
-              }}>
+              <ResponsiveGrid type="list" gap={2}>
                 {recentRequests.map((request: any, index: number) => (
                   <Card
                     key={request._id || index}
@@ -774,12 +756,12 @@ const Dashboard: React.FC = () => {
                     </CardContent>
                   </Card>
                 ))}
-              </Box>
+              </ResponsiveGrid>
             )}
           </CardContent>
         </Card>
       </Box>
-    </Box>
+    </ResponsiveLayout>
   );
 };
 

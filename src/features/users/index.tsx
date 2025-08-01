@@ -9,6 +9,9 @@ import {
 import { useApiRequest } from "../../hooks/useApiRequest";
 import { useTheme } from "../../hooks/useTheme";
 import { buttonStyles, chipStyles, cardStyles } from "../../theme/buttonStyles";
+import ResponsiveLayout from "../../components/ResponsiveLayout";
+import ResponsiveTable from "../../components/ResponsiveTable";
+import { responsiveTypography } from "../../theme/breakpoints";
 import {
   Box,
   Card,
@@ -18,12 +21,7 @@ import {
   TextField,
   Chip,
   Avatar,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+
   IconButton,
   Tooltip,
   Dialog,
@@ -55,7 +53,7 @@ import {
   AdminPanelSettings as AdminIcon,
   Event as EventIcon,
   MusicNote as MusicIcon,
-  People as PeopleIcon
+
 } from "@mui/icons-material";
 
 const PAGE_SIZE = 10;
@@ -283,10 +281,17 @@ const Users: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: '100%' }}>
+    <ResponsiveLayout spacing="md">
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          gap: 2,
+          mb: 3 
+        }}>
           <Box>
             <Typography 
               variant="h3" 
@@ -297,7 +302,7 @@ const Users: React.FC = () => {
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                fontSize: { xs: '2rem', md: '2.5rem' }
+                fontSize: responsiveTypography.h3
               }}
             >
               Gestión de Usuarios
@@ -433,148 +438,124 @@ const Users: React.FC = () => {
         <Card
           sx={isDark ? cardStyles.dark : cardStyles.default}
         >
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Usuario</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Email</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Rol</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>Estado</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main', textAlign: 'center' }}>Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                        <PeopleIcon sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.5 }} />
-                        <Typography variant="h6" color="text.secondary">
-                          {search ? 'No se encontraron usuarios con esa búsqueda' : 'No hay usuarios para mostrar'}
-                        </Typography>
-                        {search && (
-                          <Button
-                            variant="outlined"
-                            onClick={() => setSearch('')}
-                            sx={{ mt: 1 }}
-                          >
-                            Limpiar búsqueda
-                          </Button>
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((user, index) => {
-                    const roleInfo = getRoleInfo(user.roll);
-                    return (
-                      <TableRow 
-                        key={user._id || index}
+          <ResponsiveTable
+            data={filtered}
+            columns={[
+              {
+                id: 'user',
+                label: 'Usuario',
+                render: (_, user) => (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar
+                      sx={{
+                        background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        width: 40,
+                        height: 40,
+                      }}
+                    >
+                      {user.name?.charAt(0) || user.userEmail?.charAt(0) || 'U'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {user.name} {user.lastName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        ID: {user._id || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )
+              },
+              {
+                id: 'email',
+                label: 'Email',
+                render: (_, user) => (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="body2">
+                      {user.userEmail}
+                    </Typography>
+                  </Box>
+                )
+              },
+              {
+                id: 'role',
+                label: 'Rol',
+                render: (_, user) => {
+                  const roleInfo = getRoleInfo(user.roll);
+                  return (
+                    <Chip
+                      label={roleInfo.label}
+                      icon={roleInfo.icon}
+                      size="small"
+                      sx={{
+                        background: `${roleInfo.color}20`,
+                        color: roleInfo.color,
+                        fontWeight: 600,
+                      }}
+                    />
+                  );
+                }
+              },
+              {
+                id: 'status',
+                label: 'Estado',
+                render: (_, user) => (
+                  <Chip
+                    label={user.status ? "Activo" : "Inactivo"}
+                    icon={user.status ? <CheckCircleIcon /> : <CancelIcon />}
+                    size="small"
+                    sx={{
+                      background: user.status ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 152, 0, 0.1)',
+                      color: user.status ? '#00e676' : '#ff9800',
+                      fontWeight: 600,
+                    }}
+                  />
+                )
+              },
+              {
+                id: 'actions',
+                label: 'Acciones',
+                render: (_, user) => (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    <Tooltip title="Editar usuario">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditUser(user)}
                         sx={{
+                          ...buttonStyles.icon,
+                          color: '#7f5fff',
                           '&:hover': {
-                            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                            background: 'rgba(127, 95, 255, 0.1)',
                           },
-                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar
-                              sx={{
-                                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
-                                width: 40,
-                                height: 40,
-                              }}
-                            >
-                              {user.name?.charAt(0) || user.userEmail?.charAt(0) || 'U'}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                {user.name} {user.lastName}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                ID: {user._id || 'N/A'}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                            <Typography variant="body2">
-                              {user.userEmail}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={roleInfo.label}
-                            icon={roleInfo.icon}
-                            size="small"
-                            sx={{
-                              background: `${roleInfo.color}20`,
-                              color: roleInfo.color,
-                              fontWeight: 600,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.status ? "Activo" : "Inactivo"}
-                            icon={user.status ? <CheckCircleIcon /> : <CancelIcon />}
-                            size="small"
-                            sx={{
-                              background: user.status ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 152, 0, 0.1)',
-                              color: user.status ? '#00e676' : '#ff9800',
-                              fontWeight: 600,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                            <Tooltip title="Editar usuario">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEditUser(user)}
-                                sx={{
-                                  ...buttonStyles.icon,
-                                  color: '#7f5fff',
-                                  '&:hover': {
-                                    background: 'rgba(127, 95, 255, 0.1)',
-                                  },
-                                }}
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Eliminar usuario">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleConfirmDelete(user)}
-                                disabled={deleteTarget === user._id && loadingDelete}
-                                sx={{
-                                  ...buttonStyles.icon,
-                                  color: '#ff2eec',
-                                  '&:hover': {
-                                    background: 'rgba(255, 46, 236, 0.1)',
-                                  },
-                                }}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Eliminar usuario">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleConfirmDelete(user)}
+                        disabled={deleteTarget === user._id && loadingDelete}
+                        sx={{
+                          ...buttonStyles.icon,
+                          color: '#ff2eec',
+                          '&:hover': {
+                            background: 'rgba(255, 46, 236, 0.1)',
+                          },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                )
+              }
+            ]}
+          />
         </Card>
       )}
 
@@ -819,7 +800,7 @@ const Users: React.FC = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </ResponsiveLayout>
   );
 };
 

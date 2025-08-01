@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, BoxProps } from '@mui/material';
+import { Box } from '@mui/material';
+import type { BoxProps } from '@mui/material';
 import { responsiveSpacing } from '../theme/breakpoints';
 
-interface ResponsiveLayoutProps extends Omit<BoxProps, 'spacing'> {
+interface ResponsiveLayoutProps extends Omit<BoxProps, 'spacing' | 'maxWidth'> {
   children: React.ReactNode;
   spacing?: 'xs' | 'sm' | 'md' | 'lg';
   maxWidth?: boolean | string;

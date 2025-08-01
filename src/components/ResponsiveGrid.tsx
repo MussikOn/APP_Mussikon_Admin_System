@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, BoxProps } from '@mui/material';
+import { Box } from '@mui/material';
+import type { BoxProps } from '@mui/material';
 import { responsiveGrids } from '../theme/breakpoints';
 
 interface ResponsiveGridProps extends Omit<BoxProps, 'columns'> {
