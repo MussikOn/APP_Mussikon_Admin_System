@@ -186,21 +186,62 @@ export const buttonStyles = {
   // Botón del navbar (para evitar interferencias entre botones cercanos)
   navbar: {
     borderRadius: '50%',
+    minWidth: 40,
+    minHeight: 40,
+    padding: '8px',
+    margin: '2px',
     transition: 'all 0.2s ease',
+    position: 'relative',
+    zIndex: 1,
     '&:hover': { 
       background: 'rgba(255,255,255,0.1)',
-      transform: 'scale(1.05)'
+      transform: 'scale(1.05)',
+      zIndex: 2,
     },
     '&:active': {
       transform: 'scale(1)',
+      zIndex: 3,
     },
     '&:focus': {
       outline: '2px solid rgba(255, 255, 255, 0.3)',
       outlineOffset: '2px',
+      zIndex: 2,
     },
     '&:focus-visible': {
       outline: '2px solid rgba(255, 255, 255, 0.3)',
       outlineOffset: '2px',
+      zIndex: 2,
+    }
+  },
+
+  // Botón del ThemeToggle (compatible con otros botones del navbar)
+  themeToggle: {
+    borderRadius: '50%',
+    minWidth: 40,
+    minHeight: 40,
+    padding: '8px',
+    margin: '2px',
+    transition: 'all 0.2s ease',
+    position: 'relative',
+    zIndex: 1,
+    '&:hover': {
+      transform: 'scale(1.05)',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+      zIndex: 2,
+    },
+    '&:active': {
+      transform: 'scale(1)',
+      zIndex: 3,
+    },
+    '&:focus': {
+      outline: '2px solid rgba(255, 255, 255, 0.5)',
+      outlineOffset: '2px',
+      zIndex: 2,
+    },
+    '&:focus-visible': {
+      outline: '2px solid rgba(255, 255, 255, 0.5)',
+      outlineOffset: '2px',
+      zIndex: 2,
     }
   }
 };

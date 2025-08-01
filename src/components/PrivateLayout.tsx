@@ -148,7 +148,7 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1,
+              gap: 2,
               flexShrink: 0
             }}>
               {/* Mobile Search Toggle */}
@@ -158,14 +158,7 @@ const PrivateLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     onClick={handleSearchToggle}
                     color="inherit"
                     aria-label="Alternar búsqueda global"
-                    sx={{ 
-                      borderRadius: '50%',
-                      '&:hover': { 
-                        background: 'rgba(255,255,255,0.1)',
-                        transform: 'scale(1.1)'
-                      },
-                      transition: 'all 0.2s ease-in-out',
-                    }}
+                    sx={buttonStyles.navbar}
                   >
                     <SearchIcon />
                   </IconButton>
