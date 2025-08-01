@@ -140,13 +140,22 @@ export const buttonStyles = {
   // Botón de icono del sidebar (sin sombras excesivas)
   sidebarIcon: {
     color: 'text.secondary',
+    boxShadow: 'none',
     transition: 'all 0.2s ease',
     '&:hover': { 
       background: 'rgba(255,255,255,0.1)',
-      transform: 'scale(1.05)'
+      transform: 'scale(1.05)',
+      boxShadow: 'none'
     },
     '&:active': {
       transform: 'scale(1)',
+      boxShadow: 'none'
+    },
+    '&:focus': {
+      boxShadow: 'none'
+    },
+    '&:focus-visible': {
+      boxShadow: 'none'
     }
   },
 
@@ -156,12 +165,21 @@ export const buttonStyles = {
     top: 16,
     left: 16,
     zIndex: 1200,
+    boxShadow: 'none',
     transition: 'all 0.2s ease',
     '&:hover': {
       transform: 'scale(1.05)',
+      boxShadow: 'none'
     },
     '&:active': {
       transform: 'scale(1)',
+      boxShadow: 'none'
+    },
+    '&:focus': {
+      boxShadow: 'none'
+    },
+    '&:focus-visible': {
+      boxShadow: 'none'
     }
   }
 };

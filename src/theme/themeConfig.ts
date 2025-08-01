@@ -154,10 +154,22 @@ const baseTheme: ThemeOptions = {
       styleOverrides: {
         root: {
           borderRadius: 8,
+          boxShadow: 'none',
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            transform: 'scale(1.1)',
+            transform: 'scale(1.05)',
+            boxShadow: 'none'
           },
+          '&:active': {
+            transform: 'scale(1)',
+            boxShadow: 'none'
+          },
+          '&:focus': {
+            boxShadow: 'none'
+          },
+          '&:focus-visible': {
+            boxShadow: 'none'
+          }
         },
       },
     },
@@ -333,20 +345,22 @@ export const darkTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
+          boxShadow: 'none',
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            transform: 'scale(1.1)',
+            transform: 'scale(1.05)',
+            boxShadow: 'none'
+          },
+          '&:active': {
+            transform: 'scale(1)',
+            boxShadow: 'none'
           },
           '&:focus': {
-            outline: '2px solid',
-            outlineColor: mussikOnColors.primary.main,
-            outlineOffset: '2px',
+            boxShadow: 'none'
           },
           '&:focus-visible': {
-            outline: '2px solid',
-            outlineColor: mussikOnColors.primary.main,
-            outlineOffset: '2px',
-          },
+            boxShadow: 'none'
+          }
         },
       },
     },
