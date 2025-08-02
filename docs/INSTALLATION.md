@@ -1,53 +1,40 @@
-# Guía de Instalación - APP Mussikon Admin
+# Guía de Instalación - MussikOn Admin System
 
-## 🚀 Introducción
+## 📋 Prerrequisitos
 
-Esta guía proporciona instrucciones paso a paso para instalar y configurar el **APP Mussikon Admin System** en tu entorno de desarrollo local.
+### **Requisitos del Sistema**
+- **Node.js:** Versión 18.0.0 o superior
+- **npm:** Versión 9.0.0 o superior (incluido con Node.js)
+- **Git:** Versión 2.30.0 o superior
+- **Navegador:** Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 
-## 📋 Requisitos Previos
+### **Requisitos de Desarrollo**
+- **Editor de código:** VS Code (recomendado)
+- **Extensiones recomendadas:**
+  - TypeScript Importer
+  - ESLint
+  - Prettier
+  - Material Icon Theme
+  - Auto Rename Tag
 
-### **Sistema Operativo**
-- **Windows**: 10 o superior
-- **macOS**: 10.15 (Catalina) o superior
-- **Linux**: Ubuntu 18.04+ o distribución similar
+### **Requisitos del Backend**
+- **Backend MussikOn Express:** Debe estar ejecutándose
+- **URL del backend:** Configurable en variables de entorno
+- **Base de datos:** Firebase Firestore (configurado en backend)
 
-### **Software Requerido**
-```bash
-# Versiones mínimas recomendadas
-Node.js >= 18.0.0
-npm >= 8.0.0
-Git >= 2.30.0
-```
-
-### **Verificar Instalaciones**
-```bash
-# Verificar Node.js
-node --version
-# Debe mostrar: v18.x.x o superior
-
-# Verificar npm
-npm --version
-# Debe mostrar: 8.x.x o superior
-
-# Verificar Git
-git --version
-# Debe mostrar: 2.30.x o superior
-```
-
-## 📦 Instalación del Proyecto
+## 🚀 Instalación Paso a Paso
 
 ### **1. Clonar el Repositorio**
 
 ```bash
-# Clonar el repositorio
+# Clonar el repositorio principal
 git clone https://github.com/MussikOn/APP_Mussikon_Admin_System.git
 
 # Navegar al directorio del proyecto
 cd APP_Mussikon_Admin_System
 
-# Verificar que estás en el directorio correcto
-ls
-# Debe mostrar: package.json, src/, docs/, etc.
+# Verificar que estás en la rama correcta
+git branch
 ```
 
 ### **2. Instalar Dependencias**
@@ -63,276 +50,176 @@ npm list --depth=0
 ### **3. Configurar Variables de Entorno**
 
 ```bash
-# Crear archivo de variables de entorno
+# Copiar el archivo de ejemplo
 cp .env.example .env
 
-# Editar el archivo .env con tu configuración
-nano .env
-# o
-code .env
+# Editar el archivo .env con tus configuraciones
+nano .env  # o usar tu editor preferido
 ```
 
-#### **Contenido del archivo .env**
-```env
-# API Configuration
-VITE_API_BASE_URL=http://192.168.54.86:3001
-VITE_API_TIMEOUT=10000
+#### **Configuración del Archivo .env**
 
-# App Configuration
-VITE_APP_NAME=Mussikon Admin
+```env
+# ========================================
+# CONFIGURACIÓN DEL BACKEND
+# ========================================
+
+# URL del backend (cambiar según tu configuración)
+VITE_API_URL=http://localhost:3001
+# VITE_API_URL=http://192.168.100.101:3001
+# VITE_API_URL=https://api.mussikon.com
+
+# ========================================
+# CONFIGURACIÓN DE FIREBASE
+# ========================================
+
+# Firebase API Key
+VITE_FIREBASE_API_KEY=your_firebase_api_key_here
+
+# Firebase Auth Domain
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+
+# Firebase Project ID
+VITE_FIREBASE_PROJECT_ID=your_project_id
+
+# Firebase Storage Bucket
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+
+# Firebase Messaging Sender ID
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+
+# Firebase App ID
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+
+# ========================================
+# CONFIGURACIÓN DE PAGOS
+# ========================================
+
+# Stripe Publishable Key
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key_here
+
+# PayPal Client ID
+VITE_PAYPAL_CLIENT_ID=your_paypal_client_id_here
+
+# ========================================
+# CONFIGURACIÓN DE LA APLICACIÓN
+# ========================================
+
+# Nombre de la aplicación
+VITE_APP_NAME=MussikOn Admin System
+
+# Versión de la aplicación
 VITE_APP_VERSION=1.0.0
 
-# Feature Flags
-VITE_ENABLE_ANALYTICS=true
-VITE_ENABLE_NOTIFICATIONS=true
-VITE_ENABLE_WEBSOCKET=false
+# Modo de desarrollo
+VITE_DEV_MODE=true
 
-# Development
-VITE_DEBUG_MODE=true
-VITE_LOG_LEVEL=debug
+# ========================================
+# CONFIGURACIÓN DE GOOGLE MAPS
+# ========================================
+
+# Google Maps API Key
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 ```
 
-### **4. Verificar Configuración**
+### **4. Verificar la Instalación**
 
 ```bash
-# Verificar que TypeScript compila correctamente
+# Verificar que TypeScript está configurado correctamente
 npm run type-check
 
-# Verificar linting
+# Verificar que el linting funciona
 npm run lint
 
-# Verificar conexión al backend (opcional)
+# Verificar la conexión al backend (si está disponible)
 npm run check-backend
 ```
 
-## 🚀 Ejecutar el Proyecto
-
-### **Modo Desarrollo**
+### **5. Iniciar el Servidor de Desarrollo**
 
 ```bash
-# Iniciar servidor de desarrollo
+# Iniciar el servidor de desarrollo
 npm run dev
 
-# El servidor se iniciará en:
-# http://localhost:5173
-# http://192.168.x.x:5173 (acceso desde red local)
+# El servidor se iniciará en: http://localhost:5173
 ```
 
-### **Scripts Disponibles**
+## 🔧 Configuración Adicional
+
+### **Configuración del Backend**
+
+Asegúrate de que el backend esté ejecutándose:
 
 ```bash
-# Desarrollo
-npm run dev              # Servidor de desarrollo con hot reload
-npm run build            # Build de producción
-npm run preview          # Preview del build de producción
-npm run lint             # Linting del código
-npm run lint:fix         # Linting con auto-fix
-npm run type-check       # Verificación de tipos TypeScript
-npm run check-backend    # Verificar conexión al backend
-```
+# En el directorio del backend
+cd ../app_mussikon_express
 
-## 🔧 Configuración del Backend
+# Instalar dependencias del backend
+npm install
 
-### **Requisitos del Backend**
-
-El sistema requiere un backend Node.js/Express corriendo con los siguientes endpoints:
-
-#### **Endpoints Requeridos**
-```
-POST   /api/auth/login          # Autenticación
-POST   /api/auth/logout         # Cerrar sesión
-GET    /api/auth/me             # Obtener usuario actual
-POST   /api/auth/refresh        # Refresh token
-
-GET    /api/users               # Listar usuarios
-POST   /api/users               # Crear usuario
-GET    /api/users/:id           # Obtener usuario
-PUT    /api/users/:id           # Actualizar usuario
-DELETE /api/users/:id           # Eliminar usuario
-PATCH  /api/users/:id/block     # Bloquear usuario
-PATCH  /api/users/:id/unblock   # Desbloquear usuario
-
-GET    /api/events              # Listar eventos
-POST   /api/events              # Crear evento
-GET    /api/events/:id          # Obtener evento
-PUT    /api/events/:id          # Actualizar evento
-DELETE /api/events/:id          # Eliminar evento
-
-GET    /api/requests            # Listar solicitudes
-POST   /api/requests            # Crear solicitud
-GET    /api/requests/:id        # Obtener solicitud
-PUT    /api/requests/:id        # Actualizar solicitud
-DELETE /api/requests/:id        # Eliminar solicitud
-
-GET    /api/search              # Búsqueda global
-GET    /api/analytics           # Datos de analytics
-```
-
-### **Configuración de CORS**
-
-El backend debe tener CORS configurado para permitir requests desde el frontend:
-
-```javascript
-// En el backend (Express)
-const cors = require('cors');
-
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://192.168.x.x:5173',
-    'http://localhost:4173' // Preview
-  ],
-  credentials: true
-}));
-```
-
-## 🛠️ Configuración de Desarrollo
-
-### **1. Configuración de TypeScript**
-
-El proyecto incluye configuración TypeScript optimizada:
-
-```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@/components/*": ["src/components/*"],
-      "@/features/*": ["src/features/*"],
-      "@/services/*": ["src/services/*"],
-      "@/hooks/*": ["src/hooks/*"],
-      "@/utils/*": ["src/utils/*"]
-    }
-  },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
-}
-```
-
-### **2. Configuración de ESLint**
-
-```javascript
-// eslint.config.js
-export default [
-  {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    languageOptions: {
-      parser: '@typescript-eslint/parser',
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-    },
-    plugins: {
-      '@typescript-eslint': typescriptEslint,
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
-    },
-    rules: {
-      // Reglas personalizadas
-    },
-  },
-];
-```
-
-### **3. Configuración de Vite**
-
-```typescript
-// vite.config.ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: true, // Permite acceso desde red local
-    port: 5173,
-    open: true  // Abre navegador automáticamente
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true
-  }
-})
-```
-
-## 🔍 Verificación de la Instalación
-
-### **1. Verificar Funcionalidad Básica**
-
-```bash
-# 1. Iniciar el servidor de desarrollo
+# Iniciar el servidor del backend
 npm run dev
 
-# 2. Abrir navegador en http://localhost:5173
-
-# 3. Verificar que se muestra la página de login
-
-# 4. Verificar que no hay errores en la consola del navegador
+# El backend debe estar en: http://localhost:3001
 ```
 
-### **2. Verificar Build de Producción**
+### **Configuración de Firebase**
 
-```bash
-# 1. Crear build de producción
-npm run build
+1. **Crear proyecto en Firebase Console:**
+   - Ir a [Firebase Console](https://console.firebase.google.com/)
+   - Crear nuevo proyecto
+   - Habilitar Authentication, Firestore, Storage
 
-# 2. Verificar que se creó la carpeta dist/
-ls dist/
+2. **Obtener configuración:**
+   - En la configuración del proyecto
+   - Copiar las credenciales al archivo `.env`
 
-# 3. Preview del build
-npm run preview
+### **Configuración de Stripe (para pagos)**
 
-# 4. Verificar que funciona en http://localhost:4173
-```
+1. **Crear cuenta en Stripe:**
+   - Ir a [Stripe Dashboard](https://dashboard.stripe.com/)
+   - Obtener las claves de API
 
-### **3. Verificar Linting y TypeScript**
-
-```bash
-# 1. Verificar linting
-npm run lint
-
-# 2. Verificar tipos TypeScript
-npm run type-check
-
-# 3. Si hay errores, corregirlos antes de continuar
-```
+2. **Configurar webhooks:**
+   - Configurar webhooks para eventos de pago
+   - URL del webhook: `https://tu-backend.com/webhooks/stripe`
 
 ## 🐛 Solución de Problemas
 
-### **Problemas Comunes**
+### **Error: "Cannot find module"**
 
-#### **1. Error: "Cannot find module"**
 ```bash
-# Solución: Reinstalar dependencias
+# Limpiar cache de npm
+npm cache clean --force
+
+# Eliminar node_modules y reinstalar
 rm -rf node_modules package-lock.json
 npm install
 ```
 
-#### **2. Error: "Port already in use"**
+### **Error: "Backend connection failed"**
+
 ```bash
-# Solución: Cambiar puerto
-# En vite.config.ts
+# Verificar que el backend esté ejecutándose
+curl http://localhost:3001/health
+
+# Verificar la URL en .env
+cat .env | grep VITE_API_URL
+```
+
+### **Error: "Firebase not configured"**
+
+```bash
+# Verificar configuración de Firebase
+cat .env | grep FIREBASE
+
+# Asegurarse de que todas las variables estén configuradas
+```
+
+### **Error: "Port already in use"**
+
+```bash
+# Cambiar puerto en vite.config.ts
 export default defineConfig({
   server: {
     port: 3000  // Cambiar a otro puerto
@@ -340,153 +227,81 @@ export default defineConfig({
 })
 ```
 
-#### **3. Error: "Backend connection failed"**
-```bash
-# Verificar que el backend esté corriendo
-npm run check-backend
+## 📱 Verificación de la Instalación
 
-# Verificar URL en .env
-VITE_API_BASE_URL=http://192.168.54.86:3001
-```
+### **1. Verificar que la aplicación se carga correctamente**
 
-#### **4. Error: "TypeScript compilation failed"**
-```bash
-# Verificar tipos
-npm run type-check
+- Abrir http://localhost:5173
+- Deberías ver la pantalla de login
+- Verificar que no hay errores en la consola del navegador
 
-# Si hay errores, revisar:
-# - Imports faltantes
-# - Tipos incorrectos
-# - Configuración de tsconfig.json
-```
+### **2. Verificar la autenticación**
 
-#### **5. Error: "ESLint errors"**
-```bash
-# Verificar linting
-npm run lint
+- Intentar hacer login con credenciales válidas
+- Verificar que redirige al dashboard
+- Verificar que el token se guarda correctamente
 
-# Auto-fix errores
-npm run lint:fix
+### **3. Verificar los módulos principales**
 
-# Si persisten errores, corregirlos manualmente
-```
+- Navegar por los diferentes módulos
+- Verificar que las tablas se cargan
+- Verificar que los filtros funcionan
+- Verificar que el diseño es responsive
 
-### **Logs de Debug**
+### **4. Verificar Analytics**
+
+- Ir al módulo de Analytics
+- Verificar que se muestran las alertas de datos mock
+- Verificar que los gráficos se renderizan
+- Verificar que las pestañas funcionan
+
+## 🚀 Scripts Disponibles
 
 ```bash
-# Habilitar logs detallados
-export DEBUG=*
-npm run dev
+# Desarrollo
+npm run dev              # Iniciar servidor de desarrollo
+npm run build            # Construir para producción
+npm run preview          # Previsualizar build de producción
 
-# O en Windows
-set DEBUG=*
-npm run dev
+# Linting y Testing
+npm run lint             # Ejecutar ESLint
+npm run lint:fix         # Corregir errores de linting automáticamente
+npm run type-check       # Verificar tipos TypeScript
+
+# Utilidades
+npm run clean            # Limpiar build
+npm run check-backend    # Verificar conexión al backend
+npm run analyze          # Analizar bundle size
 ```
 
-## 📱 Configuración para Diferentes Entornos
+## 📊 Estado de la Instalación
 
-### **Desarrollo Local**
-```env
-VITE_API_BASE_URL=http://localhost:3001
-VITE_DEBUG_MODE=true
-VITE_LOG_LEVEL=debug
-```
+### **✅ Verificaciones Exitosas**
+- [ ] Node.js 18+ instalado
+- [ ] Dependencias instaladas
+- [ ] Variables de entorno configuradas
+- [ ] Backend ejecutándose
+- [ ] Aplicación cargando correctamente
+- [ ] Autenticación funcionando
+- [ ] Módulos principales accesibles
+- [ ] Analytics con datos mock funcionando
 
-### **Desarrollo en Red Local**
-```env
-VITE_API_BASE_URL=http://192.168.1.100:3001
-VITE_DEBUG_MODE=true
-VITE_LOG_LEVEL=debug
-```
+### **🚨 Problemas Comunes**
+- [ ] Backend no disponible
+- [ ] Variables de entorno mal configuradas
+- [ ] Firebase no configurado
+- [ ] Puerto ocupado
+- [ ] Errores de CORS
 
-### **Staging**
-```env
-VITE_API_BASE_URL=https://staging-api.mussikon.com
-VITE_DEBUG_MODE=false
-VITE_LOG_LEVEL=info
-```
+## 📞 Soporte
 
-### **Producción**
-```env
-VITE_API_BASE_URL=https://api.mussikon.com
-VITE_DEBUG_MODE=false
-VITE_LOG_LEVEL=error
-```
+Si encuentras problemas durante la instalación:
 
-## 🔒 Configuración de Seguridad
-
-### **Variables de Entorno Sensibles**
-
-```env
-# Nunca committear estas variables
-VITE_JWT_SECRET=your-secret-key
-VITE_ADMIN_EMAIL=admin@mussikon.com
-VITE_ADMIN_PASSWORD=secure-password
-```
-
-### **Configuración de HTTPS (Desarrollo)**
-
-```bash
-# Generar certificados SSL locales
-npx mkcert localhost 127.0.0.1 ::1
-
-# Configurar Vite para HTTPS
-# En vite.config.ts
-export default defineConfig({
-  server: {
-    https: {
-      key: fs.readFileSync('localhost-key.pem'),
-      cert: fs.readFileSync('localhost.pem')
-    }
-  }
-})
-```
-
-## 📚 Recursos Adicionales
-
-### **Documentación Relacionada**
-- [Guía de Desarrollo](DEVELOPMENT.md)
-- [Arquitectura del Sistema](ARCHITECTURE.md)
-- [API de Autenticación](AUTH_API.md)
-- [Sistema de Notificaciones](NOTIFICATION_SYSTEM.md)
-
-### **Herramientas Útiles**
-- **VS Code Extensions**:
-  - ESLint
-  - Prettier
-  - TypeScript Importer
-  - Material-UI Snippets
-  - React Developer Tools
-
-### **Comandos Útiles**
-```bash
-# Limpiar cache
-npm cache clean --force
-
-# Verificar dependencias obsoletas
-npm outdated
-
-# Actualizar dependencias
-npm update
-
-# Verificar vulnerabilidades
-npm audit
-npm audit fix
-```
-
-## ✅ Checklist de Instalación
-
-- [ ] **Requisitos previos instalados** (Node.js, npm, Git)
-- [ ] **Repositorio clonado** correctamente
-- [ ] **Dependencias instaladas** sin errores
-- [ ] **Variables de entorno** configuradas
-- [ ] **Backend configurado** y corriendo
-- [ ] **Servidor de desarrollo** iniciado
-- [ ] **Página de login** visible
-- [ ] **Sin errores** en consola del navegador
-- [ ] **Build de producción** exitoso
-- [ ] **Linting y TypeScript** sin errores
+1. **Revisar logs:** Verificar consola del navegador y terminal
+2. **Verificar configuración:** Asegurarse de que todas las variables estén correctas
+3. **Crear issue:** Reportar problemas en GitHub Issues
+4. **Documentación:** Revisar otros documentos en `/docs`
 
 ---
 
-**¡Tu entorno de desarrollo está listo para trabajar en el APP Mussikon Admin System!** 🚀 
+**🎵 MussikOn Admin System** - Sistema de administración completo para la plataforma de música 
