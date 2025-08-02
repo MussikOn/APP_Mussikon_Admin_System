@@ -124,7 +124,7 @@ export interface DashboardAnalytics {
 }
 
 // Servicio de Analytics
-export const analyticsService = {
+const analyticsService = {
   // Dashboard completo de analytics
   async getDashboard(filters: AnalyticsFilters = {}): Promise<DashboardAnalytics> {
     try {
@@ -286,4 +286,5 @@ export const analyticsService = {
   }
 };
 
+export { analyticsService };
 export default analyticsService; 

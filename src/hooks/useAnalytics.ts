@@ -2,7 +2,8 @@
 // Este hook maneja el estado y la lógica de analytics
 
 import { useState, useEffect, useCallback } from 'react';
-import analyticsService, {
+import { analyticsService } from '../services/analyticsService';
+import type {
   AnalyticsFilters,
   DashboardAnalytics,
   EventAnalytics,
