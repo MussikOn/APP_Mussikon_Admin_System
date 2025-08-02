@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useResponsive } from '../hooks/useResponsive';
-import { buttonStyles, shadowStyles } from '../theme/buttonStyles';
+import { buttonStyles } from '../theme/buttonStyles';
 import {
   Box,
   Drawer,
@@ -368,7 +368,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
                 : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(12px)',
               border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
-              boxShadow: shadowStyles.strong,
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
             },
           }}
         >
