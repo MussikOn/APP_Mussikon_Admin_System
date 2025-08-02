@@ -240,11 +240,254 @@ const Analytics: React.FC = () => {
           label: 'Usuarios por Rol',
           data: Object.values(userAnalytics.usersByRole),
           backgroundColor: [
-            '#2196F3', // Admin
-            '#4CAF50', // User
-            '#FF9800', // Musician
-            '#9C27B0'  // Other
+            '#2196F3', // Blue
+            '#4CAF50', // Green
+            '#FF9800', // Orange
+            '#9C27B0', // Purple
+            '#F44336'  // Red
           ]
+        }
+      ]
+    };
+  };
+
+  // Nuevas funciones de preparación de datos
+  const prepareEventTypeChartData = () => {
+    if (!eventAnalytics) return null;
+
+    return {
+      labels: Object.keys(eventAnalytics.eventsByType),
+      datasets: [
+        {
+          label: 'Eventos por Tipo',
+          data: Object.values(eventAnalytics.eventsByType),
+          backgroundColor: [
+            '#2196F3', // Blue
+            '#4CAF50', // Green
+            '#FF9800', // Orange
+            '#9C27B0', // Purple
+            '#F44336'  // Red
+          ]
+        }
+      ]
+    };
+  };
+
+  const prepareEventMonthlyChartData = () => {
+    if (!eventAnalytics) return null;
+
+    return {
+      labels: Object.keys(eventAnalytics.eventsByMonth),
+      datasets: [
+        {
+          label: 'Eventos por Mes',
+          data: Object.values(eventAnalytics.eventsByMonth),
+          borderColor: '#2196F3',
+          backgroundColor: 'rgba(33, 150, 243, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
+  };
+
+  const prepareRequestTypeChartData = () => {
+    if (!requestAnalytics) return null;
+
+    return {
+      labels: Object.keys(requestAnalytics.requestsByType),
+      datasets: [
+        {
+          label: 'Solicitudes por Tipo',
+          data: Object.values(requestAnalytics.requestsByType),
+          backgroundColor: [
+            '#4CAF50', // Green
+            '#2196F3', // Blue
+            '#FF9800', // Orange
+            '#9C27B0', // Purple
+            '#F44336'  // Red
+          ]
+        }
+      ]
+    };
+  };
+
+  const prepareRequestMonthlyChartData = () => {
+    if (!requestAnalytics) return null;
+
+    return {
+      labels: Object.keys(requestAnalytics.requestsByMonth),
+      datasets: [
+        {
+          label: 'Solicitudes por Mes',
+          data: Object.values(requestAnalytics.requestsByMonth),
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
+  };
+
+  const prepareUserMonthlyChartData = () => {
+    if (!userAnalytics) return null;
+
+    return {
+      labels: Object.keys(userAnalytics.usersByMonth),
+      datasets: [
+        {
+          label: 'Usuarios por Mes',
+          data: Object.values(userAnalytics.usersByMonth),
+          backgroundColor: [
+            '#9C27B0', // Purple
+            '#2196F3', // Blue
+            '#4CAF50', // Green
+            '#FF9800', // Orange
+            '#F44336'  // Red
+          ]
+        }
+      ]
+    };
+  };
+
+  const prepareTopEventTypesChartData = () => {
+    if (!platformAnalytics) return null;
+
+    return {
+      labels: platformAnalytics.topEventTypes.map(item => item.type),
+      datasets: [
+        {
+          label: 'Cantidad de Eventos',
+          data: platformAnalytics.topEventTypes.map(item => item.count),
+          backgroundColor: '#2196F3'
+        }
+      ]
+    };
+  };
+
+  const prepareTopLocationsChartData = () => {
+    if (!platformAnalytics) return null;
+
+    return {
+      labels: platformAnalytics.topLocations.map(item => item.location),
+      datasets: [
+        {
+          label: 'Eventos por Ubicación',
+          data: platformAnalytics.topLocations.map(item => item.count),
+          backgroundColor: '#4CAF50'
+        }
+      ]
+    };
+  };
+
+  const prepareEventTrendsChartData = () => {
+    if (!trends) return null;
+
+    return {
+      labels: trends.eventTrends.map(t => t.month),
+      datasets: [
+        {
+          label: 'Eventos',
+          data: trends.eventTrends.map(t => t.count),
+          borderColor: '#2196F3',
+          backgroundColor: 'rgba(33, 150, 243, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Ingresos',
+          data: trends.eventTrends.map(t => t.revenue),
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y1'
+        }
+      ]
+    };
+  };
+
+  const prepareRequestTrendsChartData = () => {
+    if (!trends) return null;
+
+    return {
+      labels: trends.requestTrends.map(t => t.month),
+      datasets: [
+        {
+          label: 'Solicitudes',
+          data: trends.requestTrends.map(t => t.count),
+          borderColor: '#FF9800',
+          backgroundColor: 'rgba(255, 152, 0, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Tasa de Aceptación',
+          data: trends.requestTrends.map(t => t.acceptanceRate * 100),
+          borderColor: '#9C27B0',
+          backgroundColor: 'rgba(156, 39, 176, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y1'
+        }
+      ]
+    };
+  };
+
+  const prepareUserTrendsChartData = () => {
+    if (!trends) return null;
+
+    return {
+      labels: trends.userTrends.map(t => t.month),
+      datasets: [
+        {
+          label: 'Nuevos Usuarios',
+          data: trends.userTrends.map(t => t.newUsers),
+          borderColor: '#F44336',
+          backgroundColor: 'rgba(244, 67, 54, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Usuarios Activos',
+          data: trends.userTrends.map(t => t.activeUsers),
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
+  };
+
+  const prepareLocationChartData = () => {
+    if (!locationPerformance) return null;
+
+    return {
+      labels: locationPerformance.map(item => item.location),
+      datasets: [
+        {
+          label: 'Eventos',
+          data: locationPerformance.map(item => item.totalEvents),
+          backgroundColor: '#2196F3'
+        },
+        {
+          label: 'Solicitudes',
+          data: locationPerformance.map(item => item.totalRequests),
+          backgroundColor: '#4CAF50'
+        }
+      ]
+    };
+  };
+
+  const prepareTopUsersChartData = () => {
+    if (!topUsers) return null;
+
+    return {
+      labels: topUsers.map(item => item.user.name),
+      datasets: [
+        {
+          label: 'Eventos Creados',
+          data: topUsers.map(item => item.eventsCreated),
+          backgroundColor: '#2196F3'
+        },
+        {
+          label: 'Solicitudes Creadas',
+          data: topUsers.map(item => item.requestsCreated),
+          backgroundColor: '#4CAF50'
         }
       ]
     };
@@ -256,14 +499,14 @@ const Analytics: React.FC = () => {
       case 0: // Dashboard
         return (
           <Box>
-            {dashboard && (
+            {dashboard && dashboard.events && dashboard.requests && dashboard.users && dashboard.platform && (
               <>
                 {/* Métricas principales */}
                 <Grid container spacing={3} sx={{ mb: 4 }}>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Total Eventos"
-                      value={dashboard.events.totalEvents}
+                      value={dashboard.events?.totalEvents || 0}
                       subtitle="Eventos en el período"
                       color="primary"
                       icon={<EventIcon />}
@@ -272,7 +515,7 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Total Solicitudes"
-                      value={dashboard.requests.totalRequests}
+                      value={dashboard.requests?.totalRequests || 0}
                       subtitle="Solicitudes en el período"
                       color="secondary"
                       icon={<AssignmentIcon />}
@@ -281,7 +524,7 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Total Usuarios"
-                      value={dashboard.users.totalUsers}
+                      value={dashboard.users?.totalUsers || 0}
                       subtitle="Usuarios registrados"
                       color="success"
                       icon={<PeopleIcon />}
@@ -290,7 +533,7 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Ingresos Totales"
-                      value={`$${dashboard.platform.totalRevenue.toLocaleString()}`}
+                      value={`$${(dashboard.platform?.totalRevenue || 0).toLocaleString()}`}
                       subtitle="Ingresos de la plataforma"
                       color="info"
                       icon={<TrendingUpIcon />}
@@ -303,24 +546,32 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} lg={6}>
                     <DoughnutChart
                       title="Eventos por Estado"
-                      data={prepareEventChartData()!}
+                      data={prepareEventChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                   <Grid item xs={12} lg={6}>
                     <DoughnutChart
                       title="Solicitudes por Estado"
-                      data={prepareRequestChartData()!}
+                      data={prepareRequestChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <LineChart
                       title="Tendencias de Eventos y Solicitudes"
-                      data={prepareTrendsChartData()!}
+                      data={prepareTrendsChartData() || { labels: [], datasets: [] }}
                       height={400}
                     />
                   </Grid>
                 </Grid>
               </>
+            )}
+            {(!dashboard || !dashboard.events || !dashboard.requests || !dashboard.users || !dashboard.platform) && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos del dashboard...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
@@ -334,55 +585,64 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Total Eventos"
-                      value={eventAnalytics.totalEvents}
+                      value={eventAnalytics.totalEvents || 0}
                       color="primary"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Presupuesto Promedio"
-                      value={`$${eventAnalytics.averageBudget.toLocaleString()}`}
+                      value={`$${(eventAnalytics.averageBudget || 0).toLocaleString()}`}
                       color="secondary"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Tasa de Completitud"
-                      value={`${(eventAnalytics.completionRate * 100).toFixed(1)}%`}
+                      value={`${((eventAnalytics.completionRate || 0) * 100).toFixed(1)}%`}
                       color="success"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Tasa de Cancelación"
-                      value={`${(eventAnalytics.cancellationRate * 100).toFixed(1)}%`}
+                      value={`${((eventAnalytics.cancellationRate || 0) * 100).toFixed(1)}%`}
                       color="error"
                     />
                   </Grid>
                 </Grid>
 
+                {/* Gráficos de eventos */}
                 <Grid container spacing={3}>
                   <Grid item xs={12} lg={6}>
                     <DoughnutChart
                       title="Eventos por Estado"
-                      data={prepareEventChartData()!}
+                      data={prepareEventChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                   <Grid item xs={12} lg={6}>
-                    <BarChart
+                    <DoughnutChart
                       title="Eventos por Tipo"
-                      data={{
-                        labels: Object.keys(eventAnalytics.eventsByType),
-                        datasets: [{
-                          label: 'Eventos por Tipo',
-                          data: Object.values(eventAnalytics.eventsByType),
-                          backgroundColor: '#2196F3'
-                        }]
-                      }}
+                      data={prepareEventTypeChartData() || { labels: [], datasets: [] }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <LineChart
+                      title="Eventos por Mes"
+                      data={prepareEventMonthlyChartData() || { labels: [], datasets: [] }}
+                      height={400}
                     />
                   </Grid>
                 </Grid>
               </>
+            )}
+            {!eventAnalytics && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos de eventos...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
@@ -396,55 +656,64 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Total Solicitudes"
-                      value={requestAnalytics.totalRequests}
+                      value={requestAnalytics.totalRequests || 0}
                       color="primary"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Presupuesto Promedio"
-                      value={`$${requestAnalytics.averageBudget.toLocaleString()}`}
+                      value={`$${(requestAnalytics.averageBudget || 0).toLocaleString()}`}
                       color="secondary"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Tasa de Aceptación"
-                      value={`${(requestAnalytics.acceptanceRate * 100).toFixed(1)}%`}
+                      value={`${((requestAnalytics.acceptanceRate || 0) * 100).toFixed(1)}%`}
                       color="success"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
-                      title="Tiempo de Respuesta"
-                      value={`${requestAnalytics.averageResponseTime.toFixed(1)} días`}
+                      title="Tiempo Promedio de Respuesta"
+                      value={`${(requestAnalytics.averageResponseTime || 0).toFixed(1)}h`}
                       color="info"
                     />
                   </Grid>
                 </Grid>
 
+                {/* Gráficos de solicitudes */}
                 <Grid container spacing={3}>
                   <Grid item xs={12} lg={6}>
                     <DoughnutChart
                       title="Solicitudes por Estado"
-                      data={prepareRequestChartData()!}
+                      data={prepareRequestChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                   <Grid item xs={12} lg={6}>
-                    <BarChart
+                    <DoughnutChart
                       title="Solicitudes por Tipo"
-                      data={{
-                        labels: Object.keys(requestAnalytics.requestsByType),
-                        datasets: [{
-                          label: 'Solicitudes por Tipo',
-                          data: Object.values(requestAnalytics.requestsByType),
-                          backgroundColor: '#4CAF50'
-                        }]
-                      }}
+                      data={prepareRequestTypeChartData() || { labels: [], datasets: [] }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <LineChart
+                      title="Solicitudes por Mes"
+                      data={prepareRequestMonthlyChartData() || { labels: [], datasets: [] }}
+                      height={400}
                     />
                   </Grid>
                 </Grid>
               </>
+            )}
+            {!requestAnalytics && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos de solicitudes...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
@@ -458,55 +727,57 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Total Usuarios"
-                      value={userAnalytics.totalUsers}
+                      value={userAnalytics.totalUsers || 0}
                       color="primary"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Usuarios Activos"
-                      value={userAnalytics.activeUsers}
+                      value={userAnalytics.activeUsers || 0}
                       color="success"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Nuevos este Mes"
-                      value={userAnalytics.newUsersThisMonth}
+                      value={userAnalytics.newUsersThisMonth || 0}
                       color="info"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Tasa de Crecimiento"
-                      value={`${(userAnalytics.userGrowthRate * 100).toFixed(1)}%`}
-                      color="warning"
+                      value={`${((userAnalytics.userGrowthRate || 0) * 100).toFixed(1)}%`}
+                      color="secondary"
                     />
                   </Grid>
                 </Grid>
 
+                {/* Gráficos de usuarios */}
                 <Grid container spacing={3}>
                   <Grid item xs={12} lg={6}>
                     <DoughnutChart
                       title="Usuarios por Rol"
-                      data={prepareUserChartData()!}
+                      data={prepareUserChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                   <Grid item xs={12} lg={6}>
-                    <BarChart
+                    <DoughnutChart
                       title="Usuarios por Mes"
-                      data={{
-                        labels: Object.keys(userAnalytics.usersByMonth),
-                        datasets: [{
-                          label: 'Nuevos Usuarios',
-                          data: Object.values(userAnalytics.usersByMonth),
-                          backgroundColor: '#9C27B0'
-                        }]
-                      }}
+                      data={prepareUserMonthlyChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                 </Grid>
               </>
+            )}
+            {!userAnalytics && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos de usuarios...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
@@ -520,66 +791,57 @@ const Analytics: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
                       title="Ingresos Totales"
-                      value={`$${platformAnalytics.totalRevenue.toLocaleString()}`}
+                      value={`$${(platformAnalytics.totalRevenue || 0).toLocaleString()}`}
                       color="primary"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
-                      title="Valor Promedio"
-                      value={`$${platformAnalytics.averageEventValue.toLocaleString()}`}
+                      title="Valor Promedio por Evento"
+                      value={`$${(platformAnalytics.averageEventValue || 0).toLocaleString()}`}
                       color="secondary"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
-                      title="Eventos por Usuario"
-                      value={platformAnalytics.userEngagement.eventsPerUser.toFixed(1)}
+                      title="Tasa de Éxito"
+                      value={`${((platformAnalytics.performance?.successRate || 0) * 100).toFixed(1)}%`}
                       color="success"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <MetricCard
-                      title="Tasa de Éxito"
-                      value={`${(platformAnalytics.performance.successRate * 100).toFixed(1)}%`}
+                      title="Tiempo de Respuesta Promedio"
+                      value={`${(platformAnalytics.performance?.averageResponseTime || 0).toFixed(1)}ms`}
                       color="info"
                     />
                   </Grid>
                 </Grid>
 
+                {/* Gráficos de plataforma */}
                 <Grid container spacing={3}>
                   <Grid item xs={12} lg={6}>
-                    <DataTable
-                      title="Tipos de Eventos Populares"
-                      data={platformAnalytics.topEventTypes}
-                      columns={[
-                        { key: 'type', label: 'Tipo' },
-                        { key: 'count', label: 'Cantidad' },
-                        { 
-                          key: 'revenue', 
-                          label: 'Ingresos',
-                          render: (value) => `$${value.toLocaleString()}`
-                        }
-                      ]}
+                    <BarChart
+                      title="Top Tipos de Eventos"
+                      data={prepareTopEventTypesChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                   <Grid item xs={12} lg={6}>
-                    <DataTable
-                      title="Ubicaciones Top"
-                      data={platformAnalytics.topLocations}
-                      columns={[
-                        { key: 'location', label: 'Ubicación' },
-                        { key: 'count', label: 'Eventos' },
-                        { 
-                          key: 'revenue', 
-                          label: 'Ingresos',
-                          render: (value) => `$${value.toLocaleString()}`
-                        }
-                      ]}
+                    <BarChart
+                      title="Top Ubicaciones"
+                      data={prepareTopLocationsChartData() || { labels: [], datasets: [] }}
                     />
                   </Grid>
                 </Grid>
               </>
+            )}
+            {!platformAnalytics && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos de plataforma...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
@@ -588,11 +850,39 @@ const Analytics: React.FC = () => {
         return (
           <Box>
             {trends && (
-              <LineChart
-                title="Tendencias de Eventos y Solicitudes"
-                data={prepareTrendsChartData()!}
-                height={500}
-              />
+              <>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <LineChart
+                      title="Tendencias de Eventos"
+                      data={prepareEventTrendsChartData() || { labels: [], datasets: [] }}
+                      height={400}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <LineChart
+                      title="Tendencias de Solicitudes"
+                      data={prepareRequestTrendsChartData() || { labels: [], datasets: [] }}
+                      height={400}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <LineChart
+                      title="Tendencias de Usuarios"
+                      data={prepareUserTrendsChartData() || { labels: [], datasets: [] }}
+                      height={400}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
+            {!trends && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos de tendencias...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
@@ -600,31 +890,26 @@ const Analytics: React.FC = () => {
       case 6: // Ubicaciones
         return (
           <Box>
-            {locationPerformance && (
-              <DataTable
-                title="Rendimiento por Ubicación"
-                data={locationPerformance}
-                columns={[
-                  { key: 'location', label: 'Ubicación' },
-                  { key: 'totalEvents', label: 'Eventos' },
-                  { key: 'totalRequests', label: 'Solicitudes' },
-                  { 
-                    key: 'totalRevenue', 
-                    label: 'Ingresos',
-                    render: (value) => `$${value.toLocaleString()}`
-                  },
-                  { 
-                    key: 'completionRate', 
-                    label: 'Tasa Completitud',
-                    render: (value) => `${(value * 100).toFixed(1)}%`
-                  },
-                  { 
-                    key: 'acceptanceRate', 
-                    label: 'Tasa Aceptación',
-                    render: (value) => `${(value * 100).toFixed(1)}%`
-                  }
-                ]}
-              />
+            {locationPerformance && locationPerformance.length > 0 && (
+              <>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <BarChart
+                      title="Rendimiento por Ubicación"
+                      data={prepareLocationChartData() || { labels: [], datasets: [] }}
+                      height={400}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
+            {(!locationPerformance || locationPerformance.length === 0) && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos de ubicaciones...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
@@ -632,33 +917,38 @@ const Analytics: React.FC = () => {
       case 7: // Top Usuarios
         return (
           <Box>
-            {topUsers && (
-              <DataTable
-                title="Usuarios Más Activos"
-                data={topUsers}
-                columns={[
-                  { 
-                    key: 'user', 
-                    label: 'Usuario',
-                    render: (value) => `${value.name} (${value.email})`
-                  },
-                  { key: 'eventsCreated', label: 'Eventos Creados' },
-                  { key: 'requestsCreated', label: 'Solicitudes Creadas' },
-                  { key: 'eventsCompleted', label: 'Eventos Completados' },
-                  { key: 'requestsAccepted', label: 'Solicitudes Aceptadas' },
-                  { 
-                    key: 'totalRevenue', 
-                    label: 'Ingresos Totales',
-                    render: (value) => `$${value.toLocaleString()}`
-                  }
-                ]}
-              />
+            {topUsers && topUsers.length > 0 && (
+              <>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <BarChart
+                      title="Top Usuarios por Rendimiento"
+                      data={prepareTopUsersChartData() || { labels: [], datasets: [] }}
+                      height={400}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
+            {(!topUsers || topUsers.length === 0) && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Cargando datos de top usuarios...
+                </Typography>
+              </Box>
             )}
           </Box>
         );
 
       default:
-        return null;
+        return (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              Selecciona una pestaña para ver los datos
+            </Typography>
+          </Box>
+        );
     }
   };
 
