@@ -88,6 +88,7 @@ const Analytics: React.FC = () => {
   const {
     loading,
     error,
+    usingMockData,
     dashboard,
     eventAnalytics,
     requestAnalytics,
@@ -998,6 +999,55 @@ const Analytics: React.FC = () => {
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
+        </Alert>
+      )}
+
+      {/* Alertas de datos mock */}
+      {usingMockData.dashboard && tabValue === 0 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados del dashboard. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
+        </Alert>
+      )}
+
+      {usingMockData.events && tabValue === 1 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados de eventos. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
+        </Alert>
+      )}
+
+      {usingMockData.requests && tabValue === 2 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados de solicitudes. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
+        </Alert>
+      )}
+
+      {usingMockData.users && tabValue === 3 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados de usuarios. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
+        </Alert>
+      )}
+
+      {usingMockData.platform && tabValue === 4 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados de la plataforma. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
+        </Alert>
+      )}
+
+      {usingMockData.trends && tabValue === 5 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados de tendencias. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
+        </Alert>
+      )}
+
+      {usingMockData.location && tabValue === 6 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados de ubicaciones. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
+        </Alert>
+      )}
+
+      {usingMockData.topUsers && tabValue === 7 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>📊 Datos de Demostración:</strong> Estás viendo datos simulados de usuarios destacados. Los datos reales estarán disponibles cuando el backend esté completamente implementado.
         </Alert>
       )}
 

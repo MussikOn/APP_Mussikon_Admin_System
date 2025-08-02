@@ -20,6 +20,18 @@ interface UseAnalyticsReturn {
   loading: boolean;
   error: string | null;
   
+  // Estado de datos mock
+  usingMockData: {
+    dashboard: boolean;
+    events: boolean;
+    requests: boolean;
+    users: boolean;
+    platform: boolean;
+    trends: boolean;
+    location: boolean;
+    topUsers: boolean;
+  };
+  
   // Datos de analytics
   dashboard: DashboardAnalytics | null;
   eventAnalytics: EventAnalytics | null;
@@ -63,6 +75,18 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Estado de datos mock
+  const [usingMockData, setUsingMockData] = useState({
+    dashboard: false,
+    events: false,
+    requests: false,
+    users: false,
+    platform: false,
+    trends: false,
+    location: false,
+    topUsers: false
+  });
+  
   // Estado de datos
   const [dashboard, setDashboard] = useState<DashboardAnalytics | null>(null);
   const [eventAnalytics, setEventAnalytics] = useState<EventAnalytics | null>(null);
@@ -94,112 +118,161 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     try {
       setLoading(true);
       clearError();
+      
+      // Intentar obtener datos reales
       const data = await analyticsService.getDashboard(filters);
       setDashboard(data);
+      
+      // Verificar si son datos mock (basado en el log del servicio)
+      const isMockData = data && data.events && data.events.totalEvents === 156; // Valor específico de mock
+      setUsingMockData(prev => ({ ...prev, dashboard: isMockData }));
+      
     } catch (error) {
       handleError(error, 'cargar dashboard');
     } finally {
       setLoading(false);
     }
-  }, [filters, handleError, clearError]);
-  
+  }, [filters, clearError, handleError]);
+
   // Analytics de eventos
   const refreshEventAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
+      
       const data = await analyticsService.getEventAnalytics(filters);
       setEventAnalytics(data);
+      
+      // Verificar si son datos mock
+      const isMockData = data && data.totalEvents === 156;
+      setUsingMockData(prev => ({ ...prev, events: isMockData }));
+      
     } catch (error) {
       handleError(error, 'cargar analytics de eventos');
     } finally {
       setLoading(false);
     }
-  }, [filters, handleError, clearError]);
-  
+  }, [filters, clearError, handleError]);
+
   // Analytics de solicitudes
   const refreshRequestAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
+      
       const data = await analyticsService.getRequestAnalytics(filters);
       setRequestAnalytics(data);
+      
+      // Verificar si son datos mock
+      const isMockData = data && data.totalRequests === 234;
+      setUsingMockData(prev => ({ ...prev, requests: isMockData }));
+      
     } catch (error) {
       handleError(error, 'cargar analytics de solicitudes');
     } finally {
       setLoading(false);
     }
-  }, [filters, handleError, clearError]);
-  
+  }, [filters, clearError, handleError]);
+
   // Analytics de usuarios
   const refreshUserAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
+      
       const data = await analyticsService.getUserAnalytics(filters);
       setUserAnalytics(data);
+      
+      // Verificar si son datos mock
+      const isMockData = data && data.totalUsers === 892;
+      setUsingMockData(prev => ({ ...prev, users: isMockData }));
+      
     } catch (error) {
       handleError(error, 'cargar analytics de usuarios');
     } finally {
       setLoading(false);
     }
-  }, [filters, handleError, clearError]);
-  
+  }, [filters, clearError, handleError]);
+
   // Analytics de plataforma
   const refreshPlatformAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
+      
       const data = await analyticsService.getPlatformAnalytics(filters);
       setPlatformAnalytics(data);
+      
+      // Verificar si son datos mock
+      const isMockData = data && data.totalRevenue === 1250000;
+      setUsingMockData(prev => ({ ...prev, platform: isMockData }));
+      
     } catch (error) {
       handleError(error, 'cargar analytics de plataforma');
     } finally {
       setLoading(false);
     }
-  }, [filters, handleError, clearError]);
-  
+  }, [filters, clearError, handleError]);
+
   // Reportes de tendencias
   const refreshTrends = useCallback(async (months: number = 6) => {
     try {
       setLoading(true);
       clearError();
+      
       const data = await analyticsService.getTrendsReport(months);
       setTrends(data);
+      
+      // Verificar si son datos mock
+      const isMockData = data && data.eventTrends && data.eventTrends.length === 6;
+      setUsingMockData(prev => ({ ...prev, trends: isMockData }));
+      
     } catch (error) {
-      handleError(error, 'cargar reporte de tendencias');
+      handleError(error, 'cargar reportes de tendencias');
     } finally {
       setLoading(false);
     }
-  }, [handleError, clearError]);
-  
-  // Rendimiento por ubicación
+  }, [clearError, handleError]);
+
+  // Reportes de rendimiento por ubicación
   const refreshLocationPerformance = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
+      
       const data = await analyticsService.getLocationPerformance();
       setLocationPerformance(data);
+      
+      // Verificar si son datos mock
+      const isMockData = data && data.length === 5;
+      setUsingMockData(prev => ({ ...prev, location: isMockData }));
+      
     } catch (error) {
       handleError(error, 'cargar rendimiento por ubicación');
     } finally {
       setLoading(false);
     }
-  }, [handleError, clearError]);
-  
-  // Usuarios más activos
+  }, [clearError, handleError]);
+
+  // Reportes de usuarios más activos
   const refreshTopUsers = useCallback(async (limit: number = 10) => {
     try {
       setLoading(true);
       clearError();
+      
       const data = await analyticsService.getTopUsers(limit);
       setTopUsers(data);
+      
+      // Verificar si son datos mock
+      const isMockData = data && data.length === 5;
+      setUsingMockData(prev => ({ ...prev, topUsers: isMockData }));
+      
     } catch (error) {
       handleError(error, 'cargar usuarios más activos');
     } finally {
       setLoading(false);
     }
-  }, [handleError, clearError]);
+  }, [clearError, handleError]);
   
   // Exportación de reportes
   const exportReport = useCallback(async (
@@ -298,6 +371,9 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     // Estado
     loading,
     error,
+    
+    // Estado de datos mock
+    usingMockData,
     
     // Datos
     dashboard,
