@@ -49,12 +49,15 @@ export const useMusicians = () => {
       
       if (response && response.success) {
         setMusicians(response.data.musicians);
-        setFilters(updatedFilters);
+        // Solo actualizar filtros si se pasaron nuevos filtros
+        if (newFilters) {
+          setFilters(updatedFilters);
+        }
       }
     } catch (error) {
       console.error('Error cargando músicos:', error);
     }
-  }, [filters, musiciansRequest]);
+  }, [musiciansRequest]); // Removido filters de las dependencias
 
   // Cargar estadísticas
   const fetchStats = useCallback(async () => {

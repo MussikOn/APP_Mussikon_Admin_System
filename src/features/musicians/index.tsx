@@ -64,7 +64,7 @@ const Musicians = () => {
 
   useEffect(() => {
     fetchMusicians();
-  }, [fetchMusicians]);
+  }, []); // Removido fetchMusicians de las dependencias
 
   const handleCreateMusician = async (musicianData: CreateMusicianData) => {
     try {
