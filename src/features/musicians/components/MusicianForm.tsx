@@ -314,7 +314,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+        <Typography component="div" sx={{ fontWeight: 700, fontSize: '1.25rem' }}>
           {musician ? 'Editar Músico' : 'Nuevo Músico'}
         </Typography>
         <IconButton onClick={onClose} sx={{ color: '#00fff7' }}>
