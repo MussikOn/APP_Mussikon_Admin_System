@@ -60,4 +60,6 @@ const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   );
 };
 
+// Re-export ResponsiveGrid para mantener compatibilidad
+export { default as ResponsiveGrid } from './ResponsiveGrid';
 export default ResponsiveLayout; 
