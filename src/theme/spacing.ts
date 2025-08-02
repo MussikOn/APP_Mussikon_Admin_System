@@ -102,7 +102,7 @@ export const spacing = {
         xs: '4px 8px',
         sm: '8px 16px',
         md: '12px 24px',
-        lg: '16px 32px',
+        lg: '16px 30px',
         xl: '20px 40px',
       },
       borderRadius: {

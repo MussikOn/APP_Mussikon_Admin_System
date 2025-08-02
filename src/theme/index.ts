@@ -78,9 +78,9 @@ export const getThemeSystem = (isDark: boolean) => {
     shadows: getThemeShadows(isDark),
     spacing,
     transitions,
-    buttonStyles: getButtonStyles(isDark),
-    chipStyles: getChipStyles(isDark),
-    cardStyles: getCardStyles(isDark),
+    buttonStyles: getButtonStyles('primary'),
+    chipStyles: getChipStyles('primary'),
+    cardStyles: getCardStyles('default'),
     breakpoints,
   };
 };
