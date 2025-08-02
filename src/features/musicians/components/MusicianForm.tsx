@@ -15,11 +15,10 @@ import {
   Select,
   MenuItem,
   Slider,
-  Switch,
-  FormControlLabel,
   Grid,
   Divider,
-  CircularProgress
+  CircularProgress,
+  FormHelperText
 } from '@mui/material';
 
 import {
@@ -79,6 +78,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
   });
 
   const [newGenre, setNewGenre] = useState('');
+  const [newSpecialization, setNewSpecialization] = useState('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -103,8 +103,6 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
     { value: 'advanced', label: 'Avanzado' },
     { value: 'expert', label: 'Experto' }
   ];
-
-
 
   // Cargar datos del músico si está en modo edición
   useEffect(() => {
@@ -283,7 +281,22 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
     }));
   };
 
+  const addSpecialization = () => {
+    if (newSpecialization.trim() && !formData.specializations.includes(newSpecialization)) {
+      setFormData(prev => ({
+        ...prev,
+        specializations: [...prev.specializations, newSpecialization]
+      }));
+      setNewSpecialization('');
+    }
+  };
 
+  const removeSpecialization = (specialization: string) => {
+    setFormData(prev => ({
+      ...prev,
+      specializations: prev.specializations.filter(s => s !== specialization)
+    }));
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -335,7 +348,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Nombre completo"
+                label="Nombre completo *"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 error={!!errors.name}
@@ -365,7 +378,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Email"
+                label="Email *"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
@@ -498,7 +511,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Ciudad"
+                label="Ciudad *"
                 value={formData.location.city}
                 onChange={(e) => handleLocationChange('city', e.target.value)}
                 error={!!errors.city}
@@ -528,7 +541,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Estado/Provincia"
+                label="Estado/Provincia *"
                 value={formData.location.state}
                 onChange={(e) => handleLocationChange('state', e.target.value)}
                 error={!!errors.state}
@@ -558,7 +571,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="País"
+                label="País *"
                 value={formData.location.country}
                 onChange={(e) => handleLocationChange('country', e.target.value)}
                 error={!!errors.country}
@@ -593,7 +606,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             <Grid item xs={12}>
               <Typography variant="h6" sx={{ color: '#00fff7', mb: 2, fontWeight: 600 }}>
                 <MusicNote sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Instrumentos
+                Instrumentos *
               </Typography>
             </Grid>
 
@@ -686,24 +699,20 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             </Grid>
 
             <Grid item xs={12} sm={1}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={newInstrument.isPrimary}
-                    onChange={(e) => setNewInstrument(prev => ({ ...prev, isPrimary: e.target.checked }))}
-                    sx={{
-                      '& .MuiSwitch-switchBase.Mui-checked': {
-                        color: '#00fff7',
-                      },
-                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                        backgroundColor: '#00fff7',
-                      },
-                    }}
-              />
-                }
-                label="Principal"
-                sx={{ color: '#b0b8c1' }}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <Typography variant="body2" sx={{ color: '#b0b8c1', fontSize: '0.75rem' }}>
+                  Principal
+                </Typography>
+                <input
+                  type="checkbox"
+                  checked={newInstrument.isPrimary}
+                  onChange={(e) => setNewInstrument(prev => ({ ...prev, isPrimary: e.target.checked }))}
+                  style={{
+                    marginLeft: '8px',
+                    accentColor: '#00fff7'
+                  }}
+                />
+              </Box>
             </Grid>
 
             <Grid item xs={12}>
@@ -747,6 +756,14 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
               </Grid>
             )}
 
+            {errors.instruments && (
+              <Grid item xs={12}>
+                <FormHelperText error sx={{ color: '#ff4444' }}>
+                  {errors.instruments}
+                </FormHelperText>
+              </Grid>
+            )}
+
             <Grid item xs={12}>
               <Divider sx={{ borderColor: 'rgba(0, 255, 247, 0.2)', my: 2 }} />
             </Grid>
@@ -754,7 +771,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             {/* Géneros */}
             <Grid item xs={12}>
               <Typography variant="h6" sx={{ color: '#00fff7', mb: 2, fontWeight: 600 }}>
-                Géneros Musicales
+                Géneros Musicales *
               </Typography>
             </Grid>
 
@@ -828,6 +845,95 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
               </Grid>
             )}
 
+            {errors.genres && (
+              <Grid item xs={12}>
+                <FormHelperText error sx={{ color: '#ff4444' }}>
+                  {errors.genres}
+                </FormHelperText>
+              </Grid>
+            )}
+
+            <Grid item xs={12}>
+              <Divider sx={{ borderColor: 'rgba(0, 255, 247, 0.2)', my: 2 }} />
+            </Grid>
+
+            {/* Especializaciones */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ color: '#00fff7', mb: 2, fontWeight: 600 }}>
+                Especializaciones
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={8}>
+              <TextField
+                fullWidth
+                label="Especialización"
+                value={newSpecialization}
+                onChange={(e) => setNewSpecialization(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'rgba(0, 255, 247, 0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(0, 255, 247, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#00fff7',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#b0b8c1',
+                  },
+                  '& .MuiInputBase-input': {
+                    color: '#ffffff',
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Button
+                variant="outlined"
+                startIcon={<Add />}
+                onClick={addSpecialization}
+                disabled={!newSpecialization}
+                fullWidth
+                sx={{
+                  borderColor: '#00fff7',
+                  color: '#00fff7',
+                  '&:hover': {
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0, 255, 247, 0.1)',
+                  },
+                }}
+              >
+                Agregar Especialización
+              </Button>
+            </Grid>
+
+            {/* Especializaciones agregadas */}
+            {formData.specializations.length > 0 && (
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formData.specializations.map((specialization) => (
+                    <Chip
+                      key={specialization}
+                      label={specialization}
+                      onDelete={() => removeSpecialization(specialization)}
+                      sx={{
+                        backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                        color: '#ffc107',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#ff4444',
+                        },
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Grid>
+            )}
+
             <Grid item xs={12}>
               <Divider sx={{ borderColor: 'rgba(0, 255, 247, 0.2)', my: 2 }} />
             </Grid>
@@ -836,7 +942,7 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
             <Grid item xs={12}>
               <Typography variant="h6" sx={{ color: '#00fff7', mb: 2, fontWeight: 600 }}>
                 <AccessTime sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Tarifa por Hora
+                Tarifa por Hora *
               </Typography>
             </Grid>
 
@@ -866,6 +972,14 @@ const MusicianForm: React.FC<MusicianFormProps> = ({
                 }}
               />
             </Grid>
+
+            {errors.hourlyRate && (
+              <Grid item xs={12}>
+                <FormHelperText error sx={{ color: '#ff4444' }}>
+                  {errors.hourlyRate}
+                </FormHelperText>
+              </Grid>
+            )}
 
             <Grid item xs={12}>
               <Divider sx={{ borderColor: 'rgba(0, 255, 247, 0.2)', my: 2 }} />
