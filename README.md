@@ -139,6 +139,20 @@ El sistema soporta tres roles principales:
 - Exportación de reportes
 - Filtros por fecha y categoría
 
+## ⚠️ Estado de Implementación
+
+**El frontend actual cubre aproximadamente el 30% de las funcionalidades disponibles en el backend.**
+
+### 🔴 **Funcionalidades Críticas Pendientes:**
+- **Analytics Avanzados**: Dashboard completo de métricas y reportes
+- **Sistema de Pagos**: Gestión de transacciones, facturas y reembolsos
+- **Sistema de Notificaciones**: Gestión de notificaciones y notificaciones push
+- **Geolocalización**: Búsqueda por proximidad y optimización de rutas
+- **Sistema de Contratación**: Gestión de solicitudes de contratación y comunicación
+- **Búsqueda Avanzada**: Filtros avanzados por ubicación, precio, fecha, etc.
+
+**📋 [Ver Análisis Completo de Gaps](docs/BACKEND_ANALYSIS_AND_FRONTEND_GAPS.md)**
+
 ## 🐛 Troubleshooting
 
 ### Problemas Comunes
