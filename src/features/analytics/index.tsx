@@ -1,611 +1,780 @@
+// Módulo de Analytics - MussikOn Admin System
+// Dashboard completo de analytics con gráficos interactivos y filtros avanzados
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  TextField,
-  MenuItem,
-  CircularProgress,
-  Alert,
-  Chip,
+  Grid,
   Button,
-  AlertTitle
+  Alert,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Chip,
+  IconButton,
+  Tooltip,
+  Menu,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import {
+  Refresh as RefreshIcon,
+  Download as DownloadIcon,
+  FilterList as FilterIcon,
   TrendingUp as TrendingUpIcon,
   People as PeopleIcon,
   Event as EventIcon,
-  LibraryMusic as LibraryMusicIcon,
-  Download as DownloadIcon,
-  Refresh as RefreshIcon,
-  BarChart as BarChartIcon,
-  Timeline as TimelineIcon,
-  BugReport as BugReportIcon
+  Assignment as AssignmentIcon,
+  LocationOn as LocationIcon,
+  Star as StarIcon,
+  Analytics as AnalyticsIcon
 } from '@mui/icons-material';
-import ResponsiveLayout from '../../components/ResponsiveLayout';
-import ResponsiveGrid from '../../components/ResponsiveGrid';
+
+// Importar componentes de analytics
+import {
+  LineChart,
+  BarChart,
+  DoughnutChart,
+  MetricCard,
+  DataTable,
+  AnalyticsFilters
+} from '../../components/analytics/AnalyticsCharts';
+
+// Importar hook de analytics
+import useAnalytics from '../../hooks/useAnalytics';
+
+// Importar estilos
+import { buttonStyles, chipStyles } from '../../theme/buttonStyles';
+import { ResponsiveLayout, ResponsiveGrid } from '../../components/ResponsiveLayout';
 import { responsiveTypography } from '../../theme/breakpoints';
-import { buttonStyles } from '../../theme/buttonStyles';
-import { useApiRequest } from '../../hooks/useApiRequest';
-import { analyticsService, type AnalyticsFilters } from '../../services/searchService';
-import { useAuth } from '../../hooks/useAuth';
-import { authService } from '../../services/authService';
 
-const Analytics: React.FC = () => {
-  const [filters, setFilters] = useState<AnalyticsFilters>({
-    period: 'month',
-    groupBy: 'day'
-  });
+// Tipos para las pestañas
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['dashboard', 'events', 'users']);
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
-  // Hooks para diferentes tipos de analytics - Bind del contexto this
-  const dashboardRequest = useApiRequest(analyticsService.getDashboardAnalytics.bind(analyticsService));
-  const eventsRequest = useApiRequest(analyticsService.getEventsAnalytics.bind(analyticsService));
-  const requestsRequest = useApiRequest(analyticsService.getRequestsAnalytics.bind(analyticsService));
-  const usersRequest = useApiRequest(analyticsService.getUsersAnalytics.bind(analyticsService));
-  const platformRequest = useApiRequest(analyticsService.getPlatformAnalytics.bind(analyticsService));
-  const trendsRequest = useApiRequest(analyticsService.getTrendsAnalytics.bind(analyticsService));
-
-  const { user } = useAuth();
-
-  // Verificar permisos del usuario
-  const userPermissionLevel = authService.getPermissionLevel();
-  const canAccessUserAnalytics = userPermissionLevel >= 2; // Solo adminJunior y superior
-
-  // Inicializar métricas seleccionadas basadas en permisos
-  useEffect(() => {
-    const initialMetrics = ['dashboard', 'events'];
-    
-    // Solo agregar 'users' si el usuario tiene permisos suficientes
-    if (canAccessUserAnalytics) {
-      initialMetrics.push('users');
-    }
-    
-    setSelectedMetrics(initialMetrics);
-    console.log('📊 Métricas iniciales configuradas:', initialMetrics);
-  }, [canAccessUserAnalytics]);
-
-  // Función para cargar datos de analytics
-  const loadAnalyticsData = async () => {
-    console.log('📊 Iniciando carga de datos de analytics con filtros:', filters);
-    console.log('📊 Nivel de permisos del usuario:', userPermissionLevel);
-    console.log('📊 ¿Puede acceder a analytics de usuarios?', canAccessUserAnalytics);
-    
-    try {
-      // Cargar datos en paralelo para mejor rendimiento
-      const promises = [];
-      
-      if (selectedMetrics.includes('dashboard')) {
-        promises.push(dashboardRequest.execute(filters).catch(error => {
-          console.warn('📊 Error en dashboard analytics, usando datos de respaldo:', error);
-          return null;
-        }));
-      }
-      if (selectedMetrics.includes('events')) {
-        promises.push(eventsRequest.execute(filters).catch(error => {
-          console.warn('📊 Error en events analytics, usando datos de respaldo:', error);
-          return null;
-        }));
-      }
-      if (selectedMetrics.includes('requests')) {
-        promises.push(requestsRequest.execute(filters).catch(error => {
-          console.warn('📊 Error en requests analytics, usando datos de respaldo:', error);
-          return null;
-        }));
-      }
-      if (selectedMetrics.includes('users') && canAccessUserAnalytics) {
-        promises.push(usersRequest.execute(filters).catch(error => {
-          console.warn('📊 Error en users analytics, usando datos de respaldo:', error);
-          return null;
-        }));
-      } else if (selectedMetrics.includes('users') && !canAccessUserAnalytics) {
-        console.log('📊 Omitiendo analytics de usuarios - permisos insuficientes');
-        // No agregar la promesa para users analytics
-      }
-      if (selectedMetrics.includes('platform')) {
-        promises.push(platformRequest.execute(filters).catch(error => {
-          console.warn('📊 Error en platform analytics, usando datos de respaldo:', error);
-          return null;
-        }));
-      }
-      if (selectedMetrics.includes('trends')) {
-        promises.push(trendsRequest.execute(filters).catch(error => {
-          console.warn('📊 Error en trends analytics, usando datos de respaldo:', error);
-          return null;
-        }));
-      }
-
-      await Promise.allSettled(promises);
-      console.log('📊 Carga de datos de analytics completada (con manejo de errores)');
-    } catch (error) {
-      console.error('📊 Error general cargando datos de analytics:', error);
-    }
-  };
-
-  // Función para detectar errores específicos
-  const hasBlockedByClientError = (error: any): boolean => {
-    return error?.code === 'ERR_BLOCKED_BY_CLIENT' || 
-           error?.message?.includes('ERR_BLOCKED_BY_CLIENT') ||
-           error?.message?.includes('blocked by client');
-  };
-
-  const hasServerError = (error: any): boolean => {
-    return error?.response?.status >= 500 || 
-           error?.code === 'ERR_NETWORK' ||
-           error?.message?.includes('Network Error');
-  };
-
-  const hasPermissionError = (error: any): boolean => {
-    return error?.response?.status === 403 || 
-           error?.response?.status === 401;
-  };
-
-  // Función para obtener mensaje de error específico
-  const getErrorMessage = (error: any): string => {
-    if (hasBlockedByClientError(error)) {
-      return '🚨 Error: La petición fue bloqueada por el navegador o extensiones';
-    }
-    if (hasPermissionError(error)) {
-      return '🚫 Error: No tienes permisos para acceder a estos datos';
-    }
-    if (hasServerError(error)) {
-      return '🔧 Error: Problema de conectividad con el servidor';
-    }
-    return error?.message || 'Error desconocido';
-  };
-
-  // Función para obtener sugerencias de solución
-  const getErrorSuggestions = (error: any): string[] => {
-    const suggestions: string[] = [];
-    
-    if (hasBlockedByClientError(error)) {
-      suggestions.push('🔒 Desactiva temporalmente las extensiones del navegador (ad blockers, privacy extensions)');
-      suggestions.push('🌐 Verifica que el backend esté corriendo en http://localhost:3001');
-      suggestions.push('🔄 Intenta recargar la página con Ctrl+F5 (hard refresh)');
-      suggestions.push('🔧 Verifica la configuración de firewall/antivirus');
-      suggestions.push('🌐 Intenta con otro navegador o modo incógnito');
-    }
-    
-    if (hasPermissionError(error)) {
-      suggestions.push('🔑 Verifica que tu sesión esté activa');
-      suggestions.push('👤 Contacta al administrador para solicitar permisos');
-      suggestions.push('🔄 Cierra sesión y vuelve a iniciar sesión');
-    }
-    
-    if (hasServerError(error)) {
-      suggestions.push('🌐 Verifica tu conexión a internet');
-      suggestions.push('🔌 Asegúrate de que el backend esté corriendo');
-      suggestions.push('🔧 Contacta al equipo técnico si el problema persiste');
-    }
-    
-    return suggestions;
-  };
-
-
-
-  // Función para verificar disponibilidad del backend
-  const checkBackendAvailability = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/health', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
-      
-      if (response.ok) {
-        console.log('✅ Backend está disponible');
-        return true;
-      } else {
-        console.warn('⚠️ Backend responde pero con error:', response.status);
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ Backend no está disponible:', error);
-      return false;
-    }
-  };
-
-  // Función para ejecutar diagnósticos
-  const runDiagnostics = async () => {
-    console.log('🔍 Iniciando diagnósticos...');
-    
-    // Verificar backend
-    const backendAvailable = await checkBackendAvailability();
-    
-    // Verificar configuración
-    console.log('🔧 Configuración actual:');
-    console.log('   - URL del backend:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001');
-    console.log('   - Rol del usuario:', user?.role);
-    console.log('   - Token presente:', !!localStorage.getItem('token'));
-    
-    // Verificar extensiones del navegador
-    console.log('🔍 Verificando extensiones del navegador...');
-    console.log('   - Si tienes ad blockers, desactívalos temporalmente');
-    console.log('   - Si tienes extensiones de privacidad, desactívalas temporalmente');
-    
-    // Mostrar resultados
-    if (backendAvailable) {
-      console.log('✅ Diagnóstico: Backend está disponible');
-    } else {
-      console.log('❌ Diagnóstico: Backend no está disponible');
-      console.log('💡 Solución: Inicia el backend con "npm run dev" en la carpeta ../app_mussikon_express');
-    }
-  };
-
-  // Cargar datos al montar el componente y cuando cambien los filtros
-  useEffect(() => {
-    loadAnalyticsData();
-  }, [filters, selectedMetrics]);
-
-  // Función para exportar reportes
-  const handleExport = async (type: string) => {
-    try {
-      console.log('📊 Exportando reporte:', type);
-      const blob = await analyticsService.exportAnalytics(filters, 'csv');
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `analytics-${type}-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      console.log('📊 Reporte exportado exitosamente');
-    } catch (error) {
-      console.error('📊 Error exportando reporte:', error);
-    }
-  };
-
-  // Función para refrescar datos
-  const handleRefresh = () => {
-    console.log('📊 Refrescando datos de analytics');
-    loadAnalyticsData();
-  };
-
-  // Función para cambiar filtros
-  const handleFilterChange = (key: keyof AnalyticsFilters, value: any) => {
-    console.log('📊 Cambiando filtro:', key, 'a:', value);
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  // Función para alternar métricas
-  const toggleMetric = (metric: string) => {
-    // Verificar permisos para analytics de usuarios
-    if (metric === 'users' && !canAccessUserAnalytics) {
-      console.warn('📊 Intento de agregar analytics de usuarios sin permisos suficientes');
-      return;
-    }
-    
-    setSelectedMetrics(prev => 
-      prev.includes(metric) 
-        ? prev.filter(m => m !== metric)
-        : [...prev, metric]
-    );
-  };
-
-  // Renderizar métrica individual
-  const renderMetric = (title: string, data: any, loading: boolean, error: string | null, icon: React.ReactNode) => (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-          <Box display="flex" alignItems="center" gap={1}>
-            {icon}
-            <Typography variant="h6" component="h3">
-              {title}
-            </Typography>
-          </Box>
-          <Chip 
-            label={loading ? 'Cargando...' : error ? 'Error' : 'Activo'} 
-            color={loading ? 'warning' : error ? 'error' : 'success'}
-            size="small"
-          />
-        </Box>
-
-        {loading && (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={100}>
-            <CircularProgress />
-          </Box>
-        )}
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        {!loading && !error && data && (
-          <Box>
-            <Typography variant="h4" color="primary" gutterBottom>
-              {data.summary?.total || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {data.summary?.change > 0 ? '+' : ''}{data.summary?.change || 0} ({data.summary?.percentage || 0}%)
-            </Typography>
-          </Box>
-        )}
-      </CardContent>
-    </Card>
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`analytics-tabpanel-${index}`}
+      aria-labelledby={`analytics-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
   );
+}
 
-  // Renderizar alertas de error mejoradas
-  const renderErrorAlerts = () => {
-    const alerts: React.ReactElement[] = [];
+// Componente principal de Analytics
+const Analytics: React.FC = () => {
+  // Estado para pestañas
+  const [tabValue, setTabValue] = useState(0);
+  
+  // Estado para menú de exportación
+  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
+  const [exportType, setExportType] = useState<string>('events');
+  const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
 
-    // Alerta para errores de bloqueo por cliente
-    if (dashboardRequest.error && hasBlockedByClientError(dashboardRequest.error)) {
-      alerts.push(
-        <Alert key="blocked-client" severity="warning" sx={{ mb: 2 }}>
-          <AlertTitle>🚨 Petición bloqueada por el navegador</AlertTitle>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            {getErrorMessage(dashboardRequest.error)}
-          </Typography>
-          <Box component="ul" sx={{ pl: 2, mb: 1 }}>
-            {getErrorSuggestions(dashboardRequest.error).map((suggestion, index) => (
-              <li key={index}>
-                <Typography variant="body2">{suggestion}</Typography>
-              </li>
-            ))}
-          </Box>
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={runDiagnostics}
-            startIcon={<BugReportIcon />}
-            sx={{ mt: 1 }}
-          >
-            Diagnosticar problemas de conectividad
-          </Button>
-        </Alert>
-      );
+  // Hook de analytics
+  const {
+    loading,
+    error,
+    dashboard,
+    eventAnalytics,
+    requestAnalytics,
+    userAnalytics,
+    platformAnalytics,
+    trends,
+    locationPerformance,
+    topUsers,
+    filters,
+    setFilters,
+    refreshDashboard,
+    refreshEventAnalytics,
+    refreshRequestAnalytics,
+    refreshUserAnalytics,
+    refreshPlatformAnalytics,
+    refreshTrends,
+    refreshLocationPerformance,
+    refreshTopUsers,
+    exportReport,
+    exportAdminReport
+  } = useAnalytics();
+
+  // Manejar cambio de pestañas
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  // Manejar menú de exportación
+  const handleExportMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setExportAnchorEl(event.currentTarget);
+  };
+
+  const handleExportMenuClose = () => {
+    setExportAnchorEl(null);
+  };
+
+  const handleExport = async () => {
+    try {
+      await exportReport(exportType as any, exportFormat);
+      handleExportMenuClose();
+    } catch (error) {
+      console.error('Error exporting report:', error);
     }
+  };
 
-    // Alerta para errores de permisos
-    if (dashboardRequest.error && hasPermissionError(dashboardRequest.error)) {
-      alerts.push(
-        <Alert key="permission" severity="error" sx={{ mb: 2 }}>
-          <AlertTitle>🚫 Error de permisos</AlertTitle>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            {getErrorMessage(dashboardRequest.error)}
-          </Typography>
-          <Box component="ul" sx={{ pl: 2, mb: 1 }}>
-            {getErrorSuggestions(dashboardRequest.error).map((suggestion, index) => (
-              <li key={index}>
-                <Typography variant="body2">{suggestion}</Typography>
-              </li>
-            ))}
-          </Box>
-          <Typography variant="body2" sx={{ fontStyle: 'italic', mt: 1 }}>
-            Rol actual: <strong>{user?.role}</strong>
-          </Typography>
-        </Alert>
-      );
+  // Cargar datos específicos según la pestaña
+  useEffect(() => {
+    switch (tabValue) {
+      case 0: // Dashboard
+        refreshDashboard();
+        break;
+      case 1: // Eventos
+        refreshEventAnalytics();
+        break;
+      case 2: // Solicitudes
+        refreshRequestAnalytics();
+        break;
+      case 3: // Usuarios
+        refreshUserAnalytics();
+        break;
+      case 4: // Plataforma
+        refreshPlatformAnalytics();
+        break;
+      case 5: // Tendencias
+        refreshTrends();
+        break;
+      case 6: // Ubicaciones
+        refreshLocationPerformance();
+        break;
+      case 7: // Top Usuarios
+        refreshTopUsers();
+        break;
     }
+  }, [tabValue, filters]);
 
-    // Alerta para errores de servidor
-    if (dashboardRequest.error && hasServerError(dashboardRequest.error)) {
-      alerts.push(
-        <Alert key="server" severity="error" sx={{ mb: 2 }}>
-          <AlertTitle>🔧 Error de conectividad</AlertTitle>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            {getErrorMessage(dashboardRequest.error)}
-          </Typography>
-          <Box component="ul" sx={{ pl: 2, mb: 1 }}>
-            {getErrorSuggestions(dashboardRequest.error).map((suggestion, index) => (
-              <li key={index}>
-                <Typography variant="body2">{suggestion}</Typography>
-              </li>
-            ))}
+  // Preparar datos para gráficos
+  const prepareEventChartData = () => {
+    if (!eventAnalytics) return null;
+
+    return {
+      labels: Object.keys(eventAnalytics.eventsByStatus),
+      datasets: [
+        {
+          label: 'Eventos por Estado',
+          data: Object.values(eventAnalytics.eventsByStatus),
+          backgroundColor: [
+            '#4CAF50', // Success
+            '#FF9800', // Warning
+            '#F44336', // Error
+            '#2196F3', // Info
+            '#9C27B0'  // Purple
+          ]
+        }
+      ]
+    };
+  };
+
+  const prepareRequestChartData = () => {
+    if (!requestAnalytics) return null;
+
+    return {
+      labels: Object.keys(requestAnalytics.requestsByStatus),
+      datasets: [
+        {
+          label: 'Solicitudes por Estado',
+          data: Object.values(requestAnalytics.requestsByStatus),
+          backgroundColor: [
+            '#4CAF50', // Success
+            '#FF9800', // Warning
+            '#F44336', // Error
+            '#2196F3', // Info
+            '#9C27B0'  // Purple
+          ]
+        }
+      ]
+    };
+  };
+
+  const prepareTrendsChartData = () => {
+    if (!trends) return null;
+
+    return {
+      labels: trends.eventTrends.map(t => t.month),
+      datasets: [
+        {
+          label: 'Eventos',
+          data: trends.eventTrends.map(t => t.count),
+          borderColor: '#2196F3',
+          backgroundColor: 'rgba(33, 150, 243, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Solicitudes',
+          data: trends.requestTrends.map(t => t.count),
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
+  };
+
+  const prepareUserChartData = () => {
+    if (!userAnalytics) return null;
+
+    return {
+      labels: Object.keys(userAnalytics.usersByRole),
+      datasets: [
+        {
+          label: 'Usuarios por Rol',
+          data: Object.values(userAnalytics.usersByRole),
+          backgroundColor: [
+            '#2196F3', // Admin
+            '#4CAF50', // User
+            '#FF9800', // Musician
+            '#9C27B0'  // Other
+          ]
+        }
+      ]
+    };
+  };
+
+  // Renderizar contenido según la pestaña
+  const renderTabContent = () => {
+    switch (tabValue) {
+      case 0: // Dashboard
+        return (
+          <Box>
+            {dashboard && (
+              <>
+                {/* Métricas principales */}
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Total Eventos"
+                      value={dashboard.events.totalEvents}
+                      subtitle="Eventos en el período"
+                      color="primary"
+                      icon={<EventIcon />}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Total Solicitudes"
+                      value={dashboard.requests.totalRequests}
+                      subtitle="Solicitudes en el período"
+                      color="secondary"
+                      icon={<AssignmentIcon />}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Total Usuarios"
+                      value={dashboard.users.totalUsers}
+                      subtitle="Usuarios registrados"
+                      color="success"
+                      icon={<PeopleIcon />}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Ingresos Totales"
+                      value={`$${dashboard.platform.totalRevenue.toLocaleString()}`}
+                      subtitle="Ingresos de la plataforma"
+                      color="info"
+                      icon={<TrendingUpIcon />}
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Gráficos del dashboard */}
+                <Grid container spacing={3}>
+                  <Grid item xs={12} lg={6}>
+                    <DoughnutChart
+                      title="Eventos por Estado"
+                      data={prepareEventChartData()!}
+                    />
+                  </Grid>
+                  <Grid item xs={12} lg={6}>
+                    <DoughnutChart
+                      title="Solicitudes por Estado"
+                      data={prepareRequestChartData()!}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <LineChart
+                      title="Tendencias de Eventos y Solicitudes"
+                      data={prepareTrendsChartData()!}
+                      height={400}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
           </Box>
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={runDiagnostics}
-            startIcon={<BugReportIcon />}
-            sx={{ mt: 1 }}
-          >
-            Verificar conectividad del backend
-          </Button>
-        </Alert>
-      );
-    }
+        );
 
-    return alerts;
+      case 1: // Eventos
+        return (
+          <Box>
+            {eventAnalytics && (
+              <>
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Total Eventos"
+                      value={eventAnalytics.totalEvents}
+                      color="primary"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Presupuesto Promedio"
+                      value={`$${eventAnalytics.averageBudget.toLocaleString()}`}
+                      color="secondary"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Tasa de Completitud"
+                      value={`${(eventAnalytics.completionRate * 100).toFixed(1)}%`}
+                      color="success"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Tasa de Cancelación"
+                      value={`${(eventAnalytics.cancellationRate * 100).toFixed(1)}%`}
+                      color="error"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} lg={6}>
+                    <DoughnutChart
+                      title="Eventos por Estado"
+                      data={prepareEventChartData()!}
+                    />
+                  </Grid>
+                  <Grid item xs={12} lg={6}>
+                    <BarChart
+                      title="Eventos por Tipo"
+                      data={{
+                        labels: Object.keys(eventAnalytics.eventsByType),
+                        datasets: [{
+                          label: 'Eventos por Tipo',
+                          data: Object.values(eventAnalytics.eventsByType),
+                          backgroundColor: '#2196F3'
+                        }]
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
+          </Box>
+        );
+
+      case 2: // Solicitudes
+        return (
+          <Box>
+            {requestAnalytics && (
+              <>
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Total Solicitudes"
+                      value={requestAnalytics.totalRequests}
+                      color="primary"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Presupuesto Promedio"
+                      value={`$${requestAnalytics.averageBudget.toLocaleString()}`}
+                      color="secondary"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Tasa de Aceptación"
+                      value={`${(requestAnalytics.acceptanceRate * 100).toFixed(1)}%`}
+                      color="success"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Tiempo de Respuesta"
+                      value={`${requestAnalytics.averageResponseTime.toFixed(1)} días`}
+                      color="info"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} lg={6}>
+                    <DoughnutChart
+                      title="Solicitudes por Estado"
+                      data={prepareRequestChartData()!}
+                    />
+                  </Grid>
+                  <Grid item xs={12} lg={6}>
+                    <BarChart
+                      title="Solicitudes por Tipo"
+                      data={{
+                        labels: Object.keys(requestAnalytics.requestsByType),
+                        datasets: [{
+                          label: 'Solicitudes por Tipo',
+                          data: Object.values(requestAnalytics.requestsByType),
+                          backgroundColor: '#4CAF50'
+                        }]
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
+          </Box>
+        );
+
+      case 3: // Usuarios
+        return (
+          <Box>
+            {userAnalytics && (
+              <>
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Total Usuarios"
+                      value={userAnalytics.totalUsers}
+                      color="primary"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Usuarios Activos"
+                      value={userAnalytics.activeUsers}
+                      color="success"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Nuevos este Mes"
+                      value={userAnalytics.newUsersThisMonth}
+                      color="info"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Tasa de Crecimiento"
+                      value={`${(userAnalytics.userGrowthRate * 100).toFixed(1)}%`}
+                      color="warning"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} lg={6}>
+                    <DoughnutChart
+                      title="Usuarios por Rol"
+                      data={prepareUserChartData()!}
+                    />
+                  </Grid>
+                  <Grid item xs={12} lg={6}>
+                    <BarChart
+                      title="Usuarios por Mes"
+                      data={{
+                        labels: Object.keys(userAnalytics.usersByMonth),
+                        datasets: [{
+                          label: 'Nuevos Usuarios',
+                          data: Object.values(userAnalytics.usersByMonth),
+                          backgroundColor: '#9C27B0'
+                        }]
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
+          </Box>
+        );
+
+      case 4: // Plataforma
+        return (
+          <Box>
+            {platformAnalytics && (
+              <>
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Ingresos Totales"
+                      value={`$${platformAnalytics.totalRevenue.toLocaleString()}`}
+                      color="primary"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Valor Promedio"
+                      value={`$${platformAnalytics.averageEventValue.toLocaleString()}`}
+                      color="secondary"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Eventos por Usuario"
+                      value={platformAnalytics.userEngagement.eventsPerUser.toFixed(1)}
+                      color="success"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MetricCard
+                      title="Tasa de Éxito"
+                      value={`${(platformAnalytics.performance.successRate * 100).toFixed(1)}%`}
+                      color="info"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} lg={6}>
+                    <DataTable
+                      title="Tipos de Eventos Populares"
+                      data={platformAnalytics.topEventTypes}
+                      columns={[
+                        { key: 'type', label: 'Tipo' },
+                        { key: 'count', label: 'Cantidad' },
+                        { 
+                          key: 'revenue', 
+                          label: 'Ingresos',
+                          render: (value) => `$${value.toLocaleString()}`
+                        }
+                      ]}
+                    />
+                  </Grid>
+                  <Grid item xs={12} lg={6}>
+                    <DataTable
+                      title="Ubicaciones Top"
+                      data={platformAnalytics.topLocations}
+                      columns={[
+                        { key: 'location', label: 'Ubicación' },
+                        { key: 'count', label: 'Eventos' },
+                        { 
+                          key: 'revenue', 
+                          label: 'Ingresos',
+                          render: (value) => `$${value.toLocaleString()}`
+                        }
+                      ]}
+                    />
+                  </Grid>
+                </Grid>
+              </>
+            )}
+          </Box>
+        );
+
+      case 5: // Tendencias
+        return (
+          <Box>
+            {trends && (
+              <LineChart
+                title="Tendencias de Eventos y Solicitudes"
+                data={prepareTrendsChartData()!}
+                height={500}
+              />
+            )}
+          </Box>
+        );
+
+      case 6: // Ubicaciones
+        return (
+          <Box>
+            {locationPerformance && (
+              <DataTable
+                title="Rendimiento por Ubicación"
+                data={locationPerformance}
+                columns={[
+                  { key: 'location', label: 'Ubicación' },
+                  { key: 'totalEvents', label: 'Eventos' },
+                  { key: 'totalRequests', label: 'Solicitudes' },
+                  { 
+                    key: 'totalRevenue', 
+                    label: 'Ingresos',
+                    render: (value) => `$${value.toLocaleString()}`
+                  },
+                  { 
+                    key: 'completionRate', 
+                    label: 'Tasa Completitud',
+                    render: (value) => `${(value * 100).toFixed(1)}%`
+                  },
+                  { 
+                    key: 'acceptanceRate', 
+                    label: 'Tasa Aceptación',
+                    render: (value) => `${(value * 100).toFixed(1)}%`
+                  }
+                ]}
+              />
+            )}
+          </Box>
+        );
+
+      case 7: // Top Usuarios
+        return (
+          <Box>
+            {topUsers && (
+              <DataTable
+                title="Usuarios Más Activos"
+                data={topUsers}
+                columns={[
+                  { 
+                    key: 'user', 
+                    label: 'Usuario',
+                    render: (value) => `${value.name} (${value.email})`
+                  },
+                  { key: 'eventsCreated', label: 'Eventos Creados' },
+                  { key: 'requestsCreated', label: 'Solicitudes Creadas' },
+                  { key: 'eventsCompleted', label: 'Eventos Completados' },
+                  { key: 'requestsAccepted', label: 'Solicitudes Aceptadas' },
+                  { 
+                    key: 'totalRevenue', 
+                    label: 'Ingresos Totales',
+                    render: (value) => `$${value.toLocaleString()}`
+                  }
+                ]}
+              />
+            )}
+          </Box>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
-    <ResponsiveLayout
-      spacing="lg"
-      sx={{ maxWidth: '100%', mx: 'auto' }}
-    >
+    <ResponsiveLayout spacing="lg">
       {/* Header */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', md: 'row' },
-        justifyContent: 'space-between', 
-        alignItems: { xs: 'flex-start', md: 'center' }, 
-        gap: { xs: 2, md: 0 },
-        mb: 4
-      }}>
-        <Box>
-          <Typography 
-            variant="h3" 
-            sx={{ 
-              fontWeight: 700,
-              fontSize: responsiveTypography.h3,
-              mb: 1
-            }}
-          >
-            Analytics & Reportes
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h3" sx={{ fontSize: responsiveTypography.h3 }}>
+            Analytics y Reportes
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Análisis detallado del rendimiento de la plataforma
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-            disabled={dashboardRequest.loading || eventsRequest.loading || usersRequest.loading}
-            sx={{ 
-              ...buttonStyles.secondary,
-              '&:hover': {
-                backgroundColor: 'rgba(25, 118, 210, 0.04)'
-              }
-            }}
-          >
-            Actualizar
-          </Button>
           
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={() => handleExport('all')}
-            sx={{ 
-              ...buttonStyles.secondary,
-              '&:hover': {
-                backgroundColor: 'rgba(76, 175, 80, 0.04)'
-              }
-            }}
-          >
-            Exportar
-          </Button>
-          
-          <Button
-            variant="outlined"
-            startIcon={<BugReportIcon />}
-            onClick={runDiagnostics}
-            sx={{ 
-              ...buttonStyles.secondary,
-              '&:hover': {
-                backgroundColor: 'rgba(255, 152, 0, 0.04)'
-              }
-            }}
-          >
-            Diagnóstico
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="contained"
+              startIcon={<RefreshIcon />}
+              onClick={refreshDashboard}
+              disabled={loading}
+              sx={buttonStyles.secondary}
+            >
+              Actualizar
+            </Button>
+            
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              onClick={handleExportMenuOpen}
+              sx={buttonStyles.primary}
+            >
+              Exportar
+            </Button>
+          </Box>
         </Box>
+
+        {/* Filtros */}
+        <AnalyticsFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          eventTypes={['wedding', 'corporate', 'private', 'concert', 'other']}
+          statuses={['pending', 'active', 'completed', 'cancelled']}
+          userRoles={['admin', 'user', 'musician', 'organizer']}
+          locations={['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Bilbao']}
+        />
       </Box>
 
-      {/* Filtros */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: { xs: 'column', md: 'row' },
-            gap: 2,
-            alignItems: { xs: 'stretch', md: 'center' }
-          }}>
-            <TextField
-              select
-              label="Período"
-              value={filters.period}
-              onChange={(e) => handleFilterChange('period', e.target.value)}
-              sx={{ minWidth: 150 }}
-            >
-              <MenuItem value="day">Día</MenuItem>
-              <MenuItem value="week">Semana</MenuItem>
-              <MenuItem value="month">Mes</MenuItem>
-              <MenuItem value="quarter">Trimestre</MenuItem>
-              <MenuItem value="year">Año</MenuItem>
-            </TextField>
-            
-            <TextField
-              select
-              label="Agrupar por"
-              value={filters.groupBy}
-              onChange={(e) => handleFilterChange('groupBy', e.target.value)}
-              sx={{ minWidth: 150 }}
-            >
-              <MenuItem value="hour">Hora</MenuItem>
-              <MenuItem value="day">Día</MenuItem>
-              <MenuItem value="week">Semana</MenuItem>
-              <MenuItem value="month">Mes</MenuItem>
-            </TextField>
-            
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {['dashboard', 'events', 'requests', 'users', 'platform', 'trends'].map((metric) => (
-                <Chip
-                  key={metric}
-                  label={metric.charAt(0).toUpperCase() + metric.slice(1)}
-                  onClick={() => toggleMetric(metric)}
-                  color={selectedMetrics.includes(metric) ? 'primary' : 'default'}
-                  variant={selectedMetrics.includes(metric) ? 'filled' : 'outlined'}
-                  sx={{ 
-                    '&:hover': {
-                      backgroundColor: selectedMetrics.includes(metric) 
-                        ? 'rgba(25, 118, 210, 0.12)' 
-                        : 'rgba(0, 0, 0, 0.04)'
-                    }
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+      {/* Mensajes de error */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-      {/* Alertas de errores */}
-      {renderErrorAlerts()}
+      {/* Pestañas */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+          <Tab label="Dashboard" icon={<AnalyticsIcon />} iconPosition="start" />
+          <Tab label="Eventos" icon={<EventIcon />} iconPosition="start" />
+          <Tab label="Solicitudes" icon={<AssignmentIcon />} iconPosition="start" />
+          <Tab label="Usuarios" icon={<PeopleIcon />} iconPosition="start" />
+          <Tab label="Plataforma" icon={<TrendingUpIcon />} iconPosition="start" />
+          <Tab label="Tendencias" icon={<TrendingUpIcon />} iconPosition="start" />
+          <Tab label="Ubicaciones" icon={<LocationIcon />} iconPosition="start" />
+          <Tab label="Top Usuarios" icon={<StarIcon />} iconPosition="start" />
+        </Tabs>
+      </Box>
 
-      {/* Métricas */}
-      <ResponsiveGrid
-        type="metrics"
-        gap={3}
+      {/* Contenido de las pestañas */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        renderTabContent()
+      )}
+
+      {/* Menú de exportación */}
+      <Menu
+        anchorEl={exportAnchorEl}
+        open={Boolean(exportAnchorEl)}
+        onClose={handleExportMenuClose}
       >
-        {selectedMetrics.includes('dashboard') && renderMetric(
-          'Dashboard Analytics',
-          dashboardRequest.data,
-          dashboardRequest.loading,
-          dashboardRequest.error,
-          <TrendingUpIcon />
-        )}
-        
-        {selectedMetrics.includes('events') && renderMetric(
-          'Eventos Analytics',
-          eventsRequest.data,
-          eventsRequest.loading,
-          eventsRequest.error,
-          <EventIcon />
-        )}
-        
-        {selectedMetrics.includes('requests') && renderMetric(
-          'Solicitudes Analytics',
-          requestsRequest.data,
-          requestsRequest.loading,
-          requestsRequest.error,
-          <LibraryMusicIcon />
-        )}
-        
-        {selectedMetrics.includes('users') && canAccessUserAnalytics && renderMetric(
-          'Usuarios Analytics',
-          usersRequest.data,
-          usersRequest.loading,
-          usersRequest.error,
-          <PeopleIcon />
-        )}
-        
-        {selectedMetrics.includes('platform') && renderMetric(
-          'Plataforma Analytics',
-          platformRequest.data,
-          platformRequest.loading,
-          platformRequest.error,
-          <BarChartIcon />
-        )}
-        
-        {selectedMetrics.includes('trends') && renderMetric(
-          'Tendencias Analytics',
-          trendsRequest.data,
-          trendsRequest.loading,
-          trendsRequest.error,
-          <TimelineIcon />
-        )}
-      </ResponsiveGrid>
+        <MenuItem>
+          <FormControl fullWidth size="small">
+            <InputLabel>Tipo de Reporte</InputLabel>
+            <Select
+              value={exportType}
+              onChange={(e) => setExportType(e.target.value)}
+              label="Tipo de Reporte"
+            >
+              <MenuItem value="events">Eventos</MenuItem>
+              <MenuItem value="requests">Solicitudes</MenuItem>
+              <MenuItem value="users">Usuarios</MenuItem>
+              <MenuItem value="platform">Plataforma</MenuItem>
+              <MenuItem value="trends">Tendencias</MenuItem>
+              <MenuItem value="location">Ubicaciones</MenuItem>
+            </Select>
+          </FormControl>
+        </MenuItem>
+        <MenuItem>
+          <FormControl fullWidth size="small">
+            <InputLabel>Formato</InputLabel>
+            <Select
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as 'csv' | 'json')}
+              label="Formato"
+            >
+              <MenuItem value="csv">CSV</MenuItem>
+              <MenuItem value="json">JSON</MenuItem>
+            </Select>
+          </FormControl>
+        </MenuItem>
+        <MenuItem onClick={handleExport}>
+          <DownloadIcon sx={{ mr: 1 }} />
+          Descargar Reporte
+        </MenuItem>
+      </Menu>
     </ResponsiveLayout>
   );
 };

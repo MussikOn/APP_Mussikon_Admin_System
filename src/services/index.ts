@@ -1,101 +1,79 @@
-// Exportar todos los servicios del admin system
-export { apiService } from './api';
-export { mobileUsersService } from './mobileUsersService';
-export { eventsService } from './eventsService';
-export { musicianRequestsService } from './musicianRequestsService';
-export { imagesService } from './imagesService';
-export { musiciansService } from './musiciansService';
+// Exportación centralizada de servicios - MussikOn Admin System
 
-// Nuevos servicios implementados
-export { searchService } from './searchService';
-export { notificationService } from './notificationService';
-export { paymentService } from './paymentService';
-export { geolocationService } from './geolocationService';
-export { superadminService } from './superadminService';
-export { deviceService } from './deviceService';
-export { contentService } from './contentService';
-export { chatService } from './chatService';
+// Servicios principales
+export { default as apiService } from './api';
+export { default as authService } from './authService';
+export { default as centralizedApiService } from './centralizedApiService';
+export { default as contentService } from './contentService';
+export { default as deviceService } from './deviceService';
+export { default as eventsService } from './eventsService';
+export { default as geolocationService } from './geolocationService';
+export { default as httpClient } from './httpClient';
+export { default as imagesService } from './imagesService';
+export { default as mobileUsersService } from './mobileUsersService';
+export { default as musicianRequestsService } from './musicianRequestsService';
+export { default as musiciansService } from './musiciansService';
+export { default as notificationService } from './notificationService';
+export { default as paymentService } from './paymentService';
+export { default as searchService } from './searchService';
+export { default as superadminService } from './superadminService';
+export { default as usersService } from './usersService';
+export { default as chatService } from './chatService';
+export { default as analyticsService } from './analyticsService';
 
-// Exportar tipos de los servicios
+// Tipos de servicios
 export type {
-  SearchFilters,
-  SearchResult,
-  SearchResponse,
-  AnalyticsFilters,
-  AnalyticsData,
-  AnalyticsResponse
-} from './searchService';
-
-export type {
-  Notification,
-  CreateNotificationData,
-  BulkNotificationData,
-  NotificationFilters,
-  NotificationStats
-} from './notificationService';
-
-export type {
-  PaymentMethod,
-  CreatePaymentMethodData,
-  PaymentIntent,
-  CreatePaymentIntentData,
-  Invoice,
-  InvoiceItem,
-  CreateInvoiceData,
-  Refund,
-  ProcessRefundData,
-  PaymentStats,
-  PaymentGateway
-} from './paymentService';
-
-export type {
-  Location,
-  SearchByProximityFilters,
-  NearbyEvent,
-  NearbyMusician,
-  RouteOptimizationRequest,
-  OptimizedRoute,
-  GeocodingResult,
-  DistanceCalculationRequest,
-  DistanceResult,
-  LocationStats
-} from './geolocationService';
-
-export type {
-  SystemBackup,
-  CreateBackupRequest,
-  SystemLog,
-  SystemHealth,
-  SystemConfig,
-  MaintenanceMode,
-  AuditLog
-} from './superadminService';
-
-export type {
-  Device,
-  DeviceActivity,
-  DeviceStats
-} from './deviceService';
-
-export type {
-  Post,
-  CreatePostData,
-  Announcement,
-  CreateAnnouncementData,
-  Broadcast,
-  CreateBroadcastData,
-  ContentTemplate,
-  CreateTemplateData,
-  ContentStats
-} from './contentService';
-
-export type {
-  Message,
+  // Auth types
+  LoginCredentials,
+  AuthResponse,
+  User,
+  UserRole,
+  
+  // Event types
+  Event,
+  EventFormData,
+  EventFilters,
+  
+  // Musician types
+  Musician,
+  MusicianFormData,
+  MusicianFilters,
+  
+  // Request types
+  MusicianRequest,
+  RequestFormData,
+  RequestFilters,
+  
+  // Image types
+  Image,
+  ImageFormData,
+  ImageFilters,
+  
+  // Mobile user types
+  MobileUser,
+  MobileUserFormData,
+  MobileUserFilters,
+  
+  // Chat types
   Conversation,
-  CreateConversationData,
-  SendMessageData,
+  Message,
   ChatFilters,
-  ChatResponse,
-  ConversationListResponse,
-  MessageListResponse
+  
+  // Analytics types
+  AnalyticsFilters,
+  DashboardAnalytics,
+  EventAnalytics,
+  RequestAnalytics,
+  UserAnalytics,
+  PlatformAnalytics,
+  TrendsData,
+  LocationPerformance,
+  TopUser
+} from './analyticsService';
+
+// Re-export chat types
+export type {
+  Conversation as ChatConversation,
+  Message as ChatMessage,
+  ChatFilters as ChatFiltersType
 } from './chatService'; 
