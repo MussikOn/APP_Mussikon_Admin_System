@@ -38,8 +38,7 @@ import {
   Visibility as VisibilityIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  VerifiedUser as VerifiedUserIcon,
-  Warning as WarningIcon
+  VerifiedUser as VerifiedUserIcon
 } from '@mui/icons-material';
 
 // Importar servicios y hooks
