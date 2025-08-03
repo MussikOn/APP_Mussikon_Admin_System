@@ -26,10 +26,12 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
+import ModernCard from '../../components/ui/ModernCard';
+import ModernButton from '../../components/ui/ModernButton';
 import ResponsiveLayout from '../../components/ResponsiveLayout';
 import ResponsiveGrid from '../../components/ResponsiveGrid';
 import { responsiveTypography } from '../../theme/breakpoints';
-import { buttonStyles, chipStyles } from '../../theme/buttonStyles';
+import { chipStyles } from '../../theme/buttonStyles';
 import {
   People as PeopleIcon,
   Event as EventIcon,
@@ -352,14 +354,26 @@ const Dashboard: React.FC = () => {
               </span>
             </Tooltip>
         
-        <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/users')}
-              sx={buttonStyles.primary}
-            >
-              Nuevo Usuario
-        </Button>
+        <ModernButton
+          variant="primary"
+          size="lg"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/users')}
+          sx={{
+            px: 3,
+            py: 1.5,
+            borderRadius: 3,
+            fontWeight: 600,
+            textTransform: 'none',
+            boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+            '&:hover': {
+              boxShadow: '0 12px 35px rgba(0,0,0,0.25)',
+              transform: 'translateY(-3px)',
+            },
+          }}
+        >
+          Nuevo Usuario
+        </ModernButton>
           </Box>
         </Box>
       </Box>
@@ -372,25 +386,29 @@ const Dashboard: React.FC = () => {
           const errors = [errorUsersCount, errorEventsCount, errorRequestsCount, errorImagesCount];
           
           return (
-            <Card
+            <ModernCard
               key={index}
+              variant="elevated"
               onClick={() => handleCardClick(card.path)}
               sx={{
                 cursor: 'pointer',
                 background: isDark 
                   ? 'rgba(31, 38, 135, 0.15)'
                   : 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(12px)',
+                backdropFilter: 'blur(12px)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)'}`,
                 borderRadius: 4,
-                transition: 'all 0.3s ease-in-out',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
                 overflow: 'hidden',
                 '&:hover': {
-                  transform: 'translateY(-8px)',
-                  boxShadow: `0 20px 60px ${card.color}40`,
+                  transform: 'translateY(-12px) scale(1.02)',
+                  boxShadow: `0 25px 60px ${card.color}40`,
                   '& .metric-icon': {
-                    transform: 'scale(1.1) rotate(5deg)',
+                    transform: 'scale(1.15) rotate(8deg)',
+                  },
+                  '& .metric-value': {
+                    transform: 'scale(1.05)',
                   },
                 },
                 '&::before': {
@@ -401,6 +419,20 @@ const Dashboard: React.FC = () => {
                   right: 0,
                   height: '4px',
                   background: card.gradient,
+                },
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: `linear-gradient(135deg, ${card.color}05 0%, transparent 100%)`,
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease',
+                },
+                '&:hover::after': {
+                  opacity: 1,
                 },
               }}
             >
@@ -436,7 +468,17 @@ const Dashboard: React.FC = () => {
                   />
                 </Box>
                 
-                <Typography variant="h3" sx={{ fontWeight: 800, mb: 1, color: card.color }}>
+                <Typography 
+                  className="metric-value"
+                  variant="h3" 
+                  sx={{ 
+                    fontWeight: 800, 
+                    mb: 1, 
+                    color: card.color,
+                    transition: 'all 0.3s ease',
+                    textShadow: `0 2px 4px ${card.color}20`,
+                  }}
+                >
                   {errors[index] ? (
                     <Alert severity="error" sx={{ fontSize: '0.75rem' }}>
                       {String(errors[index])}
@@ -456,7 +498,7 @@ const Dashboard: React.FC = () => {
                   {card.subtitle}
                 </Typography>
               </CardContent>
-            </Card>
+            </ModernCard>
           );
         })}
       </ResponsiveGrid>

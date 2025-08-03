@@ -6,26 +6,25 @@ import {
   Box,
   Typography,
   Grid,
-  Button,
   Alert,
   CircularProgress,
   Tabs,
   Tab,
   Chip,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Card,
-  CardContent,
-  Divider,
   Badge,
+  Avatar,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText
 } from '@mui/material';
 import {
   Smartphone as SmartphoneIcon,
@@ -35,19 +34,24 @@ import {
   Refresh as RefreshIcon,
   Download as DownloadIcon,
   TrendingUp as TrendingUpIcon,
-  AccountBalance as AccountBalanceIcon,
   Warning as WarningIcon,
-  ZoomIn as ZoomInIcon,
+  FilterList as FilterIcon,
+  AttachMoney as MoneyIcon
 } from '@mui/icons-material';
 
 // Importar servicios y hooks
 import { useMobilePayments } from '../../hooks/useMobilePayments';
 import type { MobilePayment } from '../../services/mobilePaymentsService';
 
+// Importar componentes modernos
+import ModernCard from '../../components/ui/ModernCard';
+import ModernButton from '../../components/ui/ModernButton';
+import ModernInput from '../../components/ui/ModernInput';
+
 // Importar estilos
-import { buttonStyles, chipStyles, cardStyles } from '../../theme/buttonStyles';
 import { ResponsiveLayout } from '../../components/ResponsiveLayout';
-import { responsiveTypography } from '../../theme/breakpoints';
+import { designSystem } from '../../theme/designSystem';
+import PaymentCard from './components/PaymentCard';
 
 // Tipos para las pestañas
 interface TabPanelProps {
@@ -99,17 +103,10 @@ const MobilePayments: React.FC = () => {
     payments,
     stats,
     loading,
-    statsLoading,
-    verifyLoading,
-    rejectLoading,
     error,
-    statsError,
-    verifyError,
-    rejectError,
-    loadPayments,
     verifyPayment,
     rejectPayment,
-    refreshData,
+    refreshData
   } = useMobilePayments();
 
   // Manejar cambio de pestañas
@@ -137,19 +134,17 @@ const MobilePayments: React.FC = () => {
   const confirmVerification = async () => {
     if (!selectedPayment) return;
 
-    const success = await verifyPayment(selectedPayment.id, {
-      notes: verificationNotes,
-      verificationMethod,
-    });
-
-    if (success) {
+    try {
+      await verifyPayment(selectedPayment.id, {
+        notes: verificationNotes,
+        verificationMethod
+      });
       setVerifyDialogOpen(false);
       setSelectedPayment(null);
       setVerificationNotes('');
       setVerificationMethod('manual');
-      
-      // Recargar datos
-      refreshData();
+    } catch (error) {
+      console.error('Error verificando pago:', error);
     }
   };
 
@@ -157,23 +152,21 @@ const MobilePayments: React.FC = () => {
   const confirmRejection = async () => {
     if (!selectedPayment) return;
 
-    const success = await rejectPayment(selectedPayment.id, {
-      reason: rejectionReason,
-      notes: rejectionNotes,
-    });
-
-    if (success) {
+    try {
+      await rejectPayment(selectedPayment.id, {
+        reason: rejectionReason,
+        notes: rejectionNotes
+      });
       setRejectDialogOpen(false);
       setSelectedPayment(null);
       setRejectionReason('');
       setRejectionNotes('');
-      
-      // Recargar datos
-      refreshData();
+    } catch (error) {
+      console.error('Error rechazando pago:', error);
     }
   };
 
-  // Ver imagen en pantalla completa
+  // Manejar vista de imagen
   const handleViewImage = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setImageDialogOpen(true);
@@ -212,10 +205,12 @@ const MobilePayments: React.FC = () => {
     switch (method) {
       case 'bank_transfer':
         return 'Transferencia Bancaria';
-      case 'paypal':
-        return 'PayPal';
-      case 'stripe':
-        return 'Tarjeta de Crédito';
+      case 'cash':
+        return 'Efectivo';
+      case 'mobile_payment':
+        return 'Pago Móvil';
+      case 'card':
+        return 'Tarjeta';
       default:
         return method;
     }
@@ -247,13 +242,13 @@ const MobilePayments: React.FC = () => {
 
   // Formatear fecha
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
+    return new Intl.DateTimeFormat('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
+    }).format(date);
   };
 
   // Filtrar pagos
@@ -265,7 +260,7 @@ const MobilePayments: React.FC = () => {
 
   // Renderizar dashboard
   const renderDashboard = () => {
-    if (statsLoading) {
+    if (loading) {
       return (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
@@ -273,136 +268,170 @@ const MobilePayments: React.FC = () => {
       );
     }
 
-    if (statsError) {
-      return (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Error cargando estadísticas: {statsError}
-        </Alert>
-      );
-    }
-
-    if (!stats) return null;
-
     return (
       <Box>
-        {/* Métricas principales */}
+        {/* Tarjetas de estadísticas */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles.default}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <SmartphoneIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6" component="div">
-                    Total Pagos
+            <ModernCard variant="elevated" sx={{ height: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
+                    {formatCurrency(stats?.totalAmount || 0, 'DOP')}
                   </Typography>
-                </Box>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Solicitudes de pago móvil
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles.default}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <WarningIcon sx={{ mr: 1, color: 'warning.main' }} />
-                  <Typography variant="h6" component="div">
-                    Pendientes
-                  </Typography>
-                </Box>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: 'warning.main' }}>
-                  {stats.pending}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Requieren verificación
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles.default}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <CheckCircleIcon sx={{ mr: 1, color: 'success.main' }} />
-                  <Typography variant="h6" component="div">
-                    Verificados
-                  </Typography>
-                </Box>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                  {stats.verified}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pagos confirmados
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles.default}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <AccountBalanceIcon sx={{ mr: 1, color: 'info.main' }} />
-                  <Typography variant="h6" component="div">
+                  <Typography variant="body2" color="text.secondary">
                     Monto Total
                   </Typography>
                 </Box>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
-                  {formatCurrency(stats.totalAmount)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Valor total de pagos
-                </Typography>
-              </CardContent>
-            </Card>
+                <Avatar sx={{ 
+                  bgcolor: 'primary.main', 
+                  width: 56, 
+                  height: 56,
+                  background: designSystem.gradients.primary
+                }}>
+                  <MoneyIcon sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </ModernCard>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <ModernCard variant="elevated" sx={{ height: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main', mb: 1 }}>
+                                         {stats?.verified || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Verificados
+                  </Typography>
+                </Box>
+                <Avatar sx={{ 
+                  bgcolor: 'success.main', 
+                  width: 56, 
+                  height: 56,
+                  background: designSystem.gradients.success
+                }}>
+                  <CheckCircleIcon sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </ModernCard>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <ModernCard variant="elevated" sx={{ height: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.main', mb: 1 }}>
+                                         {stats?.pending || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Pendientes
+                  </Typography>
+                </Box>
+                <Avatar sx={{ 
+                  bgcolor: 'warning.main', 
+                  width: 56, 
+                  height: 56,
+                  background: designSystem.gradients.warning
+                }}>
+                  <WarningIcon sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </ModernCard>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <ModernCard variant="elevated" sx={{ height: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'error.main', mb: 1 }}>
+                                         {stats?.rejected || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Rechazados
+                  </Typography>
+                </Box>
+                <Avatar sx={{ 
+                  bgcolor: 'error.main', 
+                  width: 56, 
+                  height: 56,
+                  background: designSystem.gradients.error
+                }}>
+                  <CancelIcon sx={{ fontSize: 28 }} />
+                </Avatar>
+              </Box>
+            </ModernCard>
           </Grid>
         </Grid>
 
-        {/* Estadísticas adicionales */}
+        {/* Gráficos y análisis */}
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card sx={cardStyles.default}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Tasa de Verificación
+          <Grid item xs={12} lg={8}>
+            <ModernCard variant="elevated" sx={{ height: 400 }}>
+              <Box sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                  Análisis de Pagos Móviles
                 </Typography>
-                <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
-                  {stats.verificationRate}%
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pagos verificados exitosamente
-                </Typography>
-              </CardContent>
-            </Card>
+                <Box sx={{ 
+                  height: 300, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                  borderRadius: 2
+                }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Gráfico de análisis de pagos móviles (implementar con librería de gráficos)
+                  </Typography>
+                </Box>
+              </Box>
+            </ModernCard>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Card sx={cardStyles.default}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Tasa de Rechazo
+          <Grid item xs={12} lg={4}>
+            <ModernCard variant="elevated" sx={{ height: 400 }}>
+              <Box sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                  Actividad Reciente
                 </Typography>
-                <Typography variant="h3" color="error.main" sx={{ fontWeight: 'bold' }}>
-                  {stats.rejectionRate}%
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pagos rechazados
-                </Typography>
-              </CardContent>
-            </Card>
+                <List sx={{ p: 0 }}>
+                                     {payments.slice(0, 5).map((payment) => (
+                    <ListItem key={payment.id} sx={{ px: 0, py: 1 }}>
+                      <ListItemAvatar>
+                        <Avatar sx={{ 
+                          bgcolor: getStatusColor(payment.status) + '.main',
+                          width: 40,
+                          height: 40
+                        }}>
+                          <SmartphoneIcon fontSize="small" />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {formatCurrency(payment.amount, payment.currency)}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            {getStatusText(payment.status)} • {formatDate(payment.createdAt)}
+                          </Typography>
+                        }
+                      />
+                      <Chip
+                        label={getStatusText(payment.status)}
+                        color={getStatusColor(payment.status) as any}
+                        size="small"
+                        sx={{ fontSize: '0.75rem' }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+            </ModernCard>
           </Grid>
         </Grid>
-
-        {/* Alertas importantes */}
-        <Alert severity="info" sx={{ mt: 3 }}>
-          <strong>📱 Sistema de Verificación de Pagos Móviles:</strong> Los usuarios de la app móvil pueden realizar pagos y subir comprobantes para verificación manual por parte de los administradores.
-        </Alert>
       </Box>
     );
   };
@@ -427,11 +456,15 @@ const MobilePayments: React.FC = () => {
 
     return (
       <Box>
-        {/* Filtros */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={6} md={3}>
+        {/* Filtros mejorados */}
+        <ModernCard variant="flat" sx={{ mb: 3 }}>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+              <FilterIcon sx={{ mr: 1 }} />
+              Filtros de Búsqueda
+            </Typography>
+            <Grid container spacing={3} alignItems="center">
+              <Grid item xs={12} sm={6} md={4}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Estado</InputLabel>
                   <Select
@@ -439,14 +472,14 @@ const MobilePayments: React.FC = () => {
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                     label="Estado"
                   >
-                    <MenuItem value="all">Todos</MenuItem>
+                    <MenuItem value="all">Todos los Estados</MenuItem>
                     <MenuItem value="pending">Pendientes</MenuItem>
                     <MenuItem value="verified">Verificados</MenuItem>
                     <MenuItem value="rejected">Rechazados</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Método de Pago</InputLabel>
                   <Select
@@ -454,300 +487,111 @@ const MobilePayments: React.FC = () => {
                     onChange={(e) => setFilters({ ...filters, paymentMethod: e.target.value })}
                     label="Método de Pago"
                   >
-                    <MenuItem value="all">Todos</MenuItem>
+                    <MenuItem value="all">Todos los Métodos</MenuItem>
                     <MenuItem value="bank_transfer">Transferencia Bancaria</MenuItem>
-                    <MenuItem value="paypal">PayPal</MenuItem>
-                    <MenuItem value="stripe">Tarjeta de Crédito</MenuItem>
+                    <MenuItem value="cash">Efectivo</MenuItem>
+                    <MenuItem value="mobile_payment">Pago Móvil</MenuItem>
+                    <MenuItem value="card">Tarjeta</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  variant="contained"
+              <Grid item xs={12} sm={6} md={4}>
+                <ModernButton
+                  variant="outline"
+                  size="sm"
                   startIcon={<RefreshIcon />}
-                  onClick={() => loadPayments()}
+                                     onClick={refreshData}
                   disabled={loading}
-                  sx={{
-                    ...buttonStyles.secondary,
-                    px: 2.5,
-                    py: 1,
-                    borderRadius: 1.5,
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    '&:hover': {
-                      boxShadow: '0 3px 8px rgba(0,0,0,0.15)',
-                      transform: 'translateY(-1px)'
-                    }
-                  }}
+                  sx={{ width: '100%' }}
                 >
-                  Actualizar
-                </Button>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  variant="contained"
-                  startIcon={<DownloadIcon />}
-                  sx={{
-                    ...buttonStyles.primary,
-                    px: 2.5,
-                    py: 1,
-                    borderRadius: 1.5,
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    '&:hover': {
-                      boxShadow: '0 3px 8px rgba(0,0,0,0.15)',
-                      transform: 'translateY(-1px)'
-                    }
-                  }}
-                >
-                  Exportar
-                </Button>
+                  {loading ? 'Actualizando...' : 'Actualizar'}
+                </ModernButton>
               </Grid>
             </Grid>
-          </CardContent>
-        </Card>
+          </Box>
+        </ModernCard>
+
+        {/* Contador de resultados */}
+        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Pagos Móviles ({filteredPayments.length})
+          </Typography>
+          <ModernButton
+            variant="primary"
+            size="sm"
+            startIcon={<DownloadIcon />}
+            sx={{ px: 3 }}
+          >
+            Exportar
+          </ModernButton>
+        </Box>
 
         {/* Lista de pagos */}
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {filteredPayments.map((payment) => (
             <Grid item xs={12} md={6} lg={4} key={payment.id}>
-              <Card sx={cardStyles.default}>
-                <CardContent>
-                  {/* Header con estado */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" component="div">
-                      {payment.user?.name} {payment.user?.lastName}
-                    </Typography>
-                    <Chip
-                      label={getStatusText(payment.status)}
-                      color={getStatusColor(payment.status) as any}
-                      size="small"
-                      sx={chipStyles[getStatusColor(payment.status) as keyof typeof chipStyles]}
-                    />
-                  </Box>
-
-                  {/* Información del pago */}
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                      {formatCurrency(payment.amount, payment.currency)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {payment.description}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Método:</strong> {getPaymentMethodText(payment.paymentMethod)}
-                    </Typography>
-                    {payment.eventName && (
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Evento:</strong> {payment.eventName}
-                      </Typography>
-                    )}
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Fecha:</strong> {formatDate(payment.createdAt)}
-                    </Typography>
-                  </Box>
-
-                  {/* Comprobante */}
-                  {payment.proofImage && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        <strong>Comprobante:</strong>
-                      </Typography>
-                      <Box sx={{ position: 'relative', display: 'inline-block' }}>
-                        <img
-                          src={payment.proofImage}
-                          alt="Comprobante de pago"
-                          style={{
-                            width: '100%',
-                            height: 120,
-                            objectFit: 'cover',
-                            borderRadius: 8,
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => handleViewImage(payment.proofImage!)}
-                        />
-                        <IconButton
-                          size="small"
-                          sx={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            backgroundColor: 'rgba(0,0,0,0.5)',
-                            color: 'white',
-                            '&:hover': {
-                              backgroundColor: 'rgba(0,0,0,0.7)'
-                            }
-                          }}
-                          onClick={() => handleViewImage(payment.proofImage!)}
-                        >
-                          <ZoomInIcon />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  )}
-
-                  {/* Notas */}
-                  {payment.notes && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Notas:</strong> {payment.notes}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {/* Acciones */}
-                  {payment.status === 'pending' && (
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<CheckCircleIcon />}
-                        onClick={() => handleVerifyPayment(payment)}
-                        sx={{
-                          flex: 1,
-                          py: 0.5,
-                          fontSize: '0.875rem',
-                          backgroundColor: 'success.main',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: 'success.dark'
-                          }
-                        }}
-                      >
-                        Verificar
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<CancelIcon />}
-                        onClick={() => handleRejectPayment(payment)}
-                        sx={{
-                          flex: 1,
-                          py: 0.5,
-                          fontSize: '0.875rem',
-                          borderColor: 'error.main',
-                          color: 'error.main',
-                          '&:hover': {
-                            borderColor: 'error.dark',
-                            backgroundColor: 'error.light',
-                            color: 'error.dark'
-                          }
-                        }}
-                      >
-                        Rechazar
-                      </Button>
-                    </Box>
-                  )}
-
-                  {/* Información de verificación/rechazo */}
-                  {payment.status === 'verified' && payment.verificationNotes && (
-                    <Box sx={{ mt: 2, p: 1, backgroundColor: 'success.light', borderRadius: 1 }}>
-                      <Typography variant="body2" color="success.dark">
-                        <strong>Verificado:</strong> {payment.verificationNotes}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {payment.status === 'rejected' && payment.rejectionReason && (
-                    <Box sx={{ mt: 2, p: 1, backgroundColor: 'error.light', borderRadius: 1 }}>
-                      <Typography variant="body2" color="error.dark">
-                        <strong>Rechazado:</strong> {payment.rejectionReason}
-                      </Typography>
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
+              <PaymentCard
+                payment={payment}
+                onVerify={handleVerifyPayment}
+                onReject={handleRejectPayment}
+                onViewImage={handleViewImage}
+                getStatusColor={getStatusColor}
+                getStatusText={getStatusText}
+                getPaymentMethodText={getPaymentMethodText}
+                formatDate={formatDate}
+                formatCurrency={formatCurrency}
+              />
             </Grid>
           ))}
         </Grid>
 
+        {/* Estado vacío */}
         {filteredPayments.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h6" color="text.secondary">
+          <ModernCard variant="flat" sx={{ textAlign: 'center', py: 6 }}>
+            <SmartphoneIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
               No se encontraron pagos móviles
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Intenta ajustar los filtros o recargar los datos
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              No hay pagos que coincidan con los filtros aplicados
             </Typography>
-          </Box>
+            <ModernButton
+              variant="outline"
+              onClick={() => setFilters({ status: 'all', paymentMethod: 'all' })}
+            >
+              Limpiar Filtros
+            </ModernButton>
+          </ModernCard>
         )}
       </Box>
     );
   };
 
   return (
-    <ResponsiveLayout spacing="lg">
+    <ResponsiveLayout>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h3" sx={{ fontSize: responsiveTypography.h3 }}>
-            Verificación de Pagos Móviles
-          </Typography>
-          
-          <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-            <Button
-              variant="contained"
-              startIcon={<RefreshIcon />}
-              onClick={refreshData}
-              disabled={loading || statsLoading}
-              sx={{
-                ...buttonStyles.secondary,
-                px: 3,
-                py: 1.5,
-                borderRadius: 2,
-                fontWeight: 600,
-                textTransform: 'none',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                '&:hover': {
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-1px)'
-                }
-              }}
-            >
-              Actualizar
-            </Button>
-            
-            <Button
-              variant="contained"
-              startIcon={<DownloadIcon />}
-              sx={{
-                ...buttonStyles.primary,
-                px: 3,
-                py: 1.5,
-                borderRadius: 2,
-                fontWeight: 600,
-                textTransform: 'none',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                '&:hover': {
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-1px)'
-                }
-              }}
-            >
-              Exportar
-            </Button>
-          </Box>
-        </Box>
-
+        <Typography variant="h4" sx={{ 
+          fontWeight: 'bold', 
+          mb: 1,
+          background: designSystem.gradients.primary,
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          Pagos Móviles
+        </Typography>
         <Typography variant="body1" color="text.secondary">
-          Gestión y verificación de pagos realizados desde la aplicación móvil
+          Verifica y gestiona pagos realizados desde la aplicación móvil
         </Typography>
       </Box>
 
-      {/* Pestañas */}
-      <Box sx={{ 
-        borderBottom: 2, 
-        borderColor: 'primary.main', 
-        mb: 4,
-        backgroundColor: 'background.paper',
-        borderRadius: 1
-      }}>
+      {/* Pestañas mejoradas */}
+      <Box sx={{ mb: 3 }}>
         <Tabs 
           value={tabValue} 
-          onChange={handleTabChange} 
-          variant="scrollable" 
+          onChange={handleTabChange}
+          variant="scrollable"
           scrollButtons="auto"
           sx={{
             '& .MuiTab-root': {
@@ -755,28 +599,16 @@ const MobilePayments: React.FC = () => {
               fontSize: '1rem',
               fontWeight: 600,
               textTransform: 'none',
-              color: 'text.secondary',
-              padding: '12px 24px',
-              margin: '0 8px',
-              borderRadius: '8px 8px 0 0',
-              transition: 'all 0.2s ease-in-out',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: 'rgba(25, 118, 210, 0.08)',
-                color: 'primary.main',
-                boxShadow: 'none'
-              },
+              borderRadius: 2,
+              mx: 0.5,
               '&.Mui-selected': {
-                color: 'primary.main',
-                backgroundColor: 'rgba(25, 118, 210, 0.12)',
-                fontWeight: 700,
-                boxShadow: 'none'
+                background: 'rgba(127, 95, 255, 0.1)',
+                color: 'primary.main'
               }
             },
             '& .MuiTabs-indicator': {
               height: 3,
-              backgroundColor: 'primary.main',
-              borderRadius: '2px 2px 0 0'
+              borderRadius: 1.5
             }
           }}
         >
@@ -832,200 +664,230 @@ const MobilePayments: React.FC = () => {
         {renderPaymentsList()}
       </TabPanel>
 
-      {/* Diálogo de verificación */}
+      {/* Diálogo de verificación mejorado */}
       <Dialog 
         open={verifyDialogOpen} 
         onClose={() => setVerifyDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: designSystem.shadows.xl
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ 
+          background: designSystem.gradients.success,
+          color: 'white',
+          borderRadius: '12px 12px 0 0'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CheckCircleIcon sx={{ mr: 1, color: 'success.main' }} />
-            Verificar Pago Móvil
+            <CheckCircleIcon sx={{ mr: 1, fontSize: 28 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Verificar Pago
+            </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 3 }}>
           {selectedPayment && (
             <Box>
-              <Typography variant="body1" gutterBottom>
-                <strong>Usuario:</strong> {selectedPayment.user?.name} {selectedPayment.user?.lastName}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Monto:</strong> {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Descripción:</strong> {selectedPayment.description}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Método:</strong> {getPaymentMethodText(selectedPayment.paymentMethod)}
-              </Typography>
+              <ModernCard variant="flat" sx={{ mb: 3 }}>
+                <Box sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                    Información del Pago
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        ID de Pago
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                        {selectedPayment.id}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Usuario
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {selectedPayment.user?.name} {selectedPayment.user?.lastName}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Monto
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                        {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Método
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {getPaymentMethodText(selectedPayment.paymentMethod)}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </ModernCard>
               
-              <Divider sx={{ my: 2 }} />
-              
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Método de Verificación</InputLabel>
-                <Select
-                  value={verificationMethod}
-                  onChange={(e) => setVerificationMethod(e.target.value)}
-                  label="Método de Verificación"
-                >
-                  <MenuItem value="manual">Verificación Manual</MenuItem>
-                  <MenuItem value="bank_verification">Verificación Bancaria</MenuItem>
-                  <MenuItem value="payment_gateway">Gateway de Pago</MenuItem>
-                </Select>
-              </FormControl>
-              
-              <TextField
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Notas de Verificación
+              </Typography>
+              <ModernInput
                 fullWidth
                 multiline
                 rows={4}
-                label="Notas de Verificación"
+                label="Notas sobre la verificación del pago"
                 value={verificationNotes}
                 onChange={(e) => setVerificationNotes(e.target.value)}
-                placeholder="Ej: Comprobante verificado, pago confirmado en cuenta bancaria, etc."
+                placeholder="Ej: Pago verificado en cuenta bancaria, comprobante recibido, etc."
+                variant="outlined"
               />
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 3 }}>
-          <Button 
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <ModernButton
+            variant="ghost"
             onClick={() => setVerifyDialogOpen(false)}
-            sx={{
-              ...buttonStyles.text,
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              fontWeight: 600,
-              textTransform: 'none',
-              border: '1px solid #e0e0e0',
-              '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.04)',
-                borderColor: '#bdbdbd'
-              }
-            }}
+            sx={{ px: 3 }}
           >
             Cancelar
-          </Button>
-          <Button
+          </ModernButton>
+          <ModernButton
+            variant="primary"
             onClick={confirmVerification}
-            disabled={verifyLoading}
-            startIcon={verifyLoading ? <CircularProgress size={16} /> : <CheckCircleIcon />}
-            sx={{
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              fontWeight: 600,
-              textTransform: 'none',
-              backgroundColor: 'success.main',
-              color: 'white',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '&:hover': {
-                backgroundColor: 'success.dark',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                transform: 'translateY(-1px)'
-              }
-            }}
+            startIcon={<CheckCircleIcon />}
+            sx={{ px: 3 }}
           >
-            {verifyLoading ? 'Verificando...' : 'Confirmar Verificación'}
-          </Button>
+            Confirmar Verificación
+          </ModernButton>
         </DialogActions>
       </Dialog>
 
-      {/* Diálogo de rechazo */}
+      {/* Diálogo de rechazo mejorado */}
       <Dialog 
         open={rejectDialogOpen} 
         onClose={() => setRejectDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: designSystem.shadows.xl
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ 
+          background: designSystem.gradients.error,
+          color: 'white',
+          borderRadius: '12px 12px 0 0'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CancelIcon sx={{ mr: 1, color: 'error.main' }} />
-            Rechazar Pago Móvil
+            <CancelIcon sx={{ mr: 1, fontSize: 28 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Rechazar Pago
+            </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 3 }}>
           {selectedPayment && (
             <Box>
-              <Typography variant="body1" gutterBottom>
-                <strong>Usuario:</strong> {selectedPayment.user?.name} {selectedPayment.user?.lastName}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Monto:</strong> {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Descripción:</strong> {selectedPayment.description}
-              </Typography>
+              <ModernCard variant="flat" sx={{ mb: 3 }}>
+                <Box sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                    Información del Pago
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        ID de Pago
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                        {selectedPayment.id}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Usuario
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {selectedPayment.user?.name} {selectedPayment.user?.lastName}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Monto
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                        {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Método
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {getPaymentMethodText(selectedPayment.paymentMethod)}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </ModernCard>
               
-              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Motivo del Rechazo
+              </Typography>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel>Razón</InputLabel>
+                <Select
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  label="Razón"
+                >
+                  <MenuItem value="invalid_proof">Comprobante Inválido</MenuItem>
+                  <MenuItem value="wrong_amount">Monto Incorrecto</MenuItem>
+                  <MenuItem value="duplicate_payment">Pago Duplicado</MenuItem>
+                  <MenuItem value="other">Otro</MenuItem>
+                </Select>
+              </FormControl>
               
-              <TextField
-                fullWidth
-                label="Razón del Rechazo"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Ej: Comprobante no legible, monto incorrecto, etc."
-                sx={{ mb: 2 }}
-              />
-              
-              <TextField
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Notas Adicionales
+              </Typography>
+              <ModernInput
                 fullWidth
                 multiline
                 rows={4}
-                label="Notas Adicionales"
+                label="Notas sobre el rechazo del pago"
                 value={rejectionNotes}
                 onChange={(e) => setRejectionNotes(e.target.value)}
-                placeholder="Detalles adicionales sobre el rechazo..."
+                placeholder="Explica el motivo del rechazo..."
+                variant="outlined"
               />
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 3 }}>
-          <Button 
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <ModernButton
+            variant="ghost"
             onClick={() => setRejectDialogOpen(false)}
-            sx={{
-              ...buttonStyles.text,
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              fontWeight: 600,
-              textTransform: 'none',
-              border: '1px solid #e0e0e0',
-              '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.04)',
-                borderColor: '#bdbdbd'
-              }
-            }}
+            sx={{ px: 3 }}
           >
             Cancelar
-          </Button>
-          <Button
+          </ModernButton>
+          <ModernButton
+            variant="danger"
             onClick={confirmRejection}
-            disabled={rejectLoading || !rejectionReason.trim()}
-            startIcon={rejectLoading ? <CircularProgress size={16} /> : <CancelIcon />}
-            sx={{
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              fontWeight: 600,
-              textTransform: 'none',
-              backgroundColor: 'error.main',
-              color: 'white',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '&:hover': {
-                backgroundColor: 'error.dark',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                transform: 'translateY(-1px)'
-              },
-              '&:disabled': {
-                backgroundColor: 'error.light',
-                color: 'error.contrastText'
-              }
-            }}
+            startIcon={<CancelIcon />}
+            sx={{ px: 3 }}
           >
-            {rejectLoading ? 'Rechazando...' : 'Confirmar Rechazo'}
-          </Button>
+            Confirmar Rechazo
+          </ModernButton>
         </DialogActions>
       </Dialog>
 
@@ -1035,45 +897,47 @@ const MobilePayments: React.FC = () => {
         onClose={() => setImageDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: designSystem.shadows.xl
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ 
+          background: designSystem.gradients.primary,
+          color: 'white',
+          borderRadius: '12px 12px 0 0'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <VisibilityIcon sx={{ mr: 1 }} />
-            Comprobante de Pago
+            <VisibilityIcon sx={{ mr: 1, fontSize: 28 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Comprobante de Pago
+            </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <img
-              src={selectedImage}
-              alt="Comprobante de pago"
-              style={{
-                maxWidth: '100%',
-                maxHeight: '70vh',
-                objectFit: 'contain'
-              }}
-            />
-          </Box>
+        <DialogContent sx={{ p: 3, textAlign: 'center' }}>
+          <img
+            src={selectedImage}
+            alt="Comprobante de pago"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '500px',
+              objectFit: 'contain',
+              borderRadius: 8
+            }}
+          />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setImageDialogOpen(false)}>
+        <DialogActions sx={{ p: 3 }}>
+          <ModernButton
+            variant="ghost"
+            onClick={() => setImageDialogOpen(false)}
+            sx={{ px: 3 }}
+          >
             Cerrar
-          </Button>
+          </ModernButton>
         </DialogActions>
       </Dialog>
-
-      {/* Alertas de error */}
-      {verifyError && (
-        <Alert severity="error" sx={{ position: 'fixed', top: 20, right: 20, zIndex: 9999 }}>
-          Error verificando pago: {verifyError}
-        </Alert>
-      )}
-
-      {rejectError && (
-        <Alert severity="error" sx={{ position: 'fixed', top: 20, right: 20, zIndex: 9999 }}>
-          Error rechazando pago: {rejectError}
-        </Alert>
-      )}
     </ResponsiveLayout>
   );
 };

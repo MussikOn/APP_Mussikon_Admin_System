@@ -252,18 +252,35 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
                   tabIndex={0}
                   sx={{
                     mx: 1,
-                    borderRadius: 2,
-                    minHeight: 48,
+                    borderRadius: 3,
+                    minHeight: 52,
                     background: isItemActive 
-                      ? `linear-gradient(135deg, ${item.color}20 0%, ${item.color}10 100%)`
+                      ? `linear-gradient(135deg, ${item.color}25 0%, ${item.color}15 100%)`
                       : 'transparent',
                     border: isItemActive 
-                      ? `1px solid ${item.color}40`
-                      : '1px solid transparent',
+                      ? `2px solid ${item.color}50`
+                      : '2px solid transparent',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: `linear-gradient(135deg, ${item.color}10 0%, transparent 100%)`,
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease',
+                    },
                     '&:hover': {
-                      background: `linear-gradient(135deg, ${item.color}15 0%, ${item.color}05 100%)`,
-                      border: `1px solid ${item.color}30`,
-                      transform: 'translateX(4px)',
+                      background: `linear-gradient(135deg, ${item.color}20 0%, ${item.color}10 100%)`,
+                      border: `2px solid ${item.color}40`,
+                      transform: 'translateX(6px) scale(1.02)',
+                      boxShadow: `0 4px 12px ${item.color}20`,
+                      '&::before': {
+                        opacity: 1,
+                      },
                     },
                     '&:focus': {
                       outline: '2px solid',
@@ -275,15 +292,18 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
                       outlineColor: item.color,
                       outlineOffset: '2px',
                     },
-                    transition: 'all 0.2s ease-in-out',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      minWidth: collapsed ? 'auto' : 40,
+                      minWidth: collapsed ? 'auto' : 44,
                       color: isItemActive ? item.color : 'text.secondary',
+                      transition: 'all 0.3s ease',
                       '& .MuiSvgIcon-root': {
-                        fontSize: collapsed ? '1.5rem' : '1.25rem',
+                        fontSize: collapsed ? '1.5rem' : '1.375rem',
+                        filter: isItemActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none',
+                        transition: 'all 0.3s ease',
                       },
                     }}
                   >
@@ -295,8 +315,11 @@ const Sidebar: React.FC<{ onLogout: () => void }> = () => {
                       primary={item.label}
                       sx={{
                         '& .MuiTypography-root': {
-                          fontWeight: isItemActive ? 600 : 500,
+                          fontWeight: isItemActive ? 700 : 500,
                           color: isItemActive ? item.color : 'text.primary',
+                          fontSize: '0.9rem',
+                          transition: 'all 0.3s ease',
+                          textShadow: isItemActive ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
                         },
                       }}
                     />
