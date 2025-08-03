@@ -318,24 +318,26 @@ const Users: React.FC = () => {
           
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Tooltip title="Actualizar lista">
-              <IconButton
-                onClick={loadUsers}
-                disabled={loadingUsers}
-                sx={{
-                  background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
-                  color: '#fff',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
-                    transform: 'scale(1.05)',
-                  },
-                  '&:disabled': {
-                    opacity: 0.6,
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                <RefreshIcon />
-              </IconButton>
+              <span>
+                <IconButton
+                  onClick={loadUsers}
+                  disabled={loadingUsers}
+                  sx={{
+                    background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                    color: '#fff',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
+                      transform: 'scale(1.05)',
+                    },
+                    '&:disabled': {
+                      opacity: 0.6,
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </span>
             </Tooltip>
             
             <Button
@@ -536,20 +538,22 @@ const Users: React.FC = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Eliminar usuario">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleConfirmDelete(user)}
-                        disabled={deleteTarget === user._id && loadingDelete}
-                        sx={{
-                          ...buttonStyles.icon,
-                          color: '#ff2eec',
-                          '&:hover': {
-                            background: 'rgba(255, 46, 236, 0.1)',
-                          },
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      <span>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleConfirmDelete(user)}
+                          disabled={deleteTarget === user._id && loadingDelete}
+                          sx={{
+                            ...buttonStyles.icon,
+                            color: '#ff2eec',
+                            '&:hover': {
+                              background: 'rgba(255, 46, 236, 0.1)',
+                            },
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
                     </Tooltip>
                   </Box>
                 )

@@ -101,45 +101,53 @@ const MessageInput: React.FC<MessageInputProps> = ({
       {/* Botones de acción */}
       <Box sx={{ display: 'flex', gap: 0.5 }}>
         <Tooltip title="Adjuntar imagen">
-          <IconButton
-            size="small"
-            onClick={handleAttachImage}
-            disabled={disabled}
-            color="primary"
-          >
-            <ImageIcon />
-          </IconButton>
+          <span>
+            <IconButton
+              size="small"
+              onClick={handleAttachImage}
+              disabled={disabled}
+              color="primary"
+            >
+              <ImageIcon />
+            </IconButton>
+          </span>
         </Tooltip>
 
         <Tooltip title="Adjuntar archivo">
-          <IconButton
-            size="small"
-            onClick={handleAttachFile}
-            disabled={disabled}
-            color="primary"
-          >
-            <AttachFileIcon />
-          </IconButton>
+          <span>
+            <IconButton
+              size="small"
+              onClick={handleAttachFile}
+              disabled={disabled}
+              color="primary"
+            >
+              <AttachFileIcon />
+            </IconButton>
+          </span>
         </Tooltip>
 
         <Tooltip title="Mensaje de voz">
-          <IconButton
-            size="small"
-            disabled={disabled}
-            color="primary"
-          >
-            <MicIcon />
-          </IconButton>
+          <span>
+            <IconButton
+              size="small"
+              disabled={disabled}
+              color="primary"
+            >
+              <MicIcon />
+            </IconButton>
+          </span>
         </Tooltip>
 
         <Tooltip title="Emoji">
-          <IconButton
-            size="small"
-            disabled={disabled}
-            color="primary"
-          >
-            <EmojiIcon />
-          </IconButton>
+          <span>
+            <IconButton
+              size="small"
+              disabled={disabled}
+              color="primary"
+            >
+              <EmojiIcon />
+            </IconButton>
+          </span>
         </Tooltip>
       </Box>
 
@@ -167,30 +175,32 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
       {/* Botón de enviar */}
       <Tooltip title="Enviar mensaje">
-        <IconButton
-          onClick={handleSendMessage}
-          disabled={isMessageEmpty || isSending || disabled}
-          color="primary"
-          sx={{
-            backgroundColor: isMessageEmpty || isSending || disabled 
-              ? 'action.disabledBackground' 
-              : theme.palette.primary.main,
-            color: isMessageEmpty || isSending || disabled 
-              ? 'action.disabled' 
-              : theme.palette.primary.contrastText,
-            '&:hover': {
+        <span>
+          <IconButton
+            onClick={handleSendMessage}
+            disabled={isMessageEmpty || isSending || disabled}
+            color="primary"
+            sx={{
               backgroundColor: isMessageEmpty || isSending || disabled 
                 ? 'action.disabledBackground' 
-                : theme.palette.primary.dark
-            }
-          }}
-        >
-          {isSending ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : (
-            <SendIcon />
-          )}
-        </IconButton>
+                : theme.palette.primary.main,
+              color: isMessageEmpty || isSending || disabled 
+                ? 'action.disabled' 
+                : theme.palette.primary.contrastText,
+              '&:hover': {
+                backgroundColor: isMessageEmpty || isSending || disabled 
+                  ? 'action.disabledBackground' 
+                  : theme.palette.primary.dark
+              }
+            }}
+          >
+            {isSending ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              <SendIcon />
+            )}
+          </IconButton>
+        </span>
       </Tooltip>
 
       {/* Inputs ocultos para archivos */}

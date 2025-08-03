@@ -38,7 +38,8 @@ import {
   Visibility as VisibilityIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  VerifiedUser as VerifiedUserIcon
+  VerifiedUser as VerifiedUserIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 
 // Importar servicios y hooks
@@ -74,6 +75,124 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+// Datos mock para cuando el backend no esté disponible
+const mockStats = {
+  totalRevenue: 125000,
+  totalTransactions: 342,
+  averageTransaction: 365.5,
+  successRate: 0.94
+};
+
+const mockInvoices: Invoice[] = [
+  {
+    id: 'inv_001',
+    userId: 'user_123',
+    amount: 150.00,
+    currency: 'USD',
+    status: 'sent',
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    items: [{
+      id: 'item_001',
+      description: 'Servicios de música',
+      quantity: 1,
+      unitPrice: 150.00,
+      total: 150.00
+    }],
+    total: 150.00,
+    tax: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'inv_002',
+    userId: 'user_456',
+    amount: 75.50,
+    currency: 'USD',
+    status: 'paid',
+    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    items: [{
+      id: 'item_002',
+      description: 'Evento musical',
+      quantity: 1,
+      unitPrice: 75.50,
+      total: 75.50
+    }],
+    total: 75.50,
+    tax: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'inv_003',
+    userId: 'user_789',
+    amount: 200.00,
+    currency: 'USD',
+    status: 'overdue',
+    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    items: [{
+      id: 'item_003',
+      description: 'Concierto privado',
+      quantity: 1,
+      unitPrice: 200.00,
+      total: 200.00
+    }],
+    total: 200.00,
+    tax: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+const mockPaymentMethods = [
+  {
+    id: 'pm_001',
+    userId: 'user_123',
+    type: 'card' as const,
+    last4: '4242',
+    brand: 'visa',
+    expiryMonth: 12,
+    expiryYear: 2025,
+    isDefault: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'pm_002',
+    userId: 'user_456',
+    type: 'paypal' as const,
+    isDefault: false,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+const mockTransactions = [
+  {
+    id: 'pi_001',
+    amount: 150.00,
+    currency: 'USD',
+    status: 'succeeded' as const,
+    paymentMethodId: 'pm_001',
+    description: 'Pago por servicios de música',
+    metadata: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'pi_002',
+    amount: 75.50,
+    currency: 'USD',
+    status: 'succeeded' as const,
+    paymentMethodId: 'pm_002',
+    description: 'Pago por evento',
+    metadata: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
 // Componente principal de Pagos
 const Payments: React.FC = () => {
   // Estado para pestañas
@@ -93,6 +212,9 @@ const Payments: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
 
+  // Estado para modo demo
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
   // Hooks para API requests
   const invoicesRequest = useApiRequest(paymentService.getInvoices.bind(paymentService));
   const paymentMethodsRequest = useApiRequest(paymentService.getPaymentMethods.bind(paymentService));
@@ -102,20 +224,32 @@ const Payments: React.FC = () => {
 
   // Cargar datos según la pestaña
   useEffect(() => {
-    switch (tabValue) {
-      case 0: // Dashboard
-        statsRequest.execute();
-        break;
-      case 1: // Facturas
-        invoicesRequest.execute();
-        break;
-      case 2: // Métodos de Pago
-        paymentMethodsRequest.execute();
-        break;
-      case 3: // Transacciones
-        paymentIntentsRequest.execute();
-        break;
-    }
+    const loadData = async () => {
+      try {
+        switch (tabValue) {
+          case 0: // Dashboard
+            await statsRequest.execute();
+            break;
+          case 1: // Facturas
+            await invoicesRequest.execute();
+            break;
+          case 2: // Métodos de Pago
+            await paymentMethodsRequest.execute();
+            break;
+          case 3: // Transacciones
+            await paymentIntentsRequest.execute();
+            break;
+        }
+      } catch (error: any) {
+        // Si hay error de permisos o conexión, activar modo demo
+        if (error?.response?.status === 403 || error?.response?.status === 500) {
+          console.log('🔧 Activando modo demo debido a error de permisos/conexión');
+          setIsDemoMode(true);
+        }
+      }
+    };
+
+    loadData();
   }, [tabValue]);
 
   // Manejar cambio de pestañas
@@ -133,6 +267,14 @@ const Payments: React.FC = () => {
   // Confirmar verificación
   const confirmVerification = async () => {
     if (!selectedInvoice) return;
+
+    if (isDemoMode) {
+      // En modo demo, simular verificación exitosa
+      setVerifyDialogOpen(false);
+      setSelectedInvoice(null);
+      setVerificationNotes('');
+      return;
+    }
 
     try {
       await markAsPaidRequest.execute(selectedInvoice.id);
@@ -203,7 +345,7 @@ const Payments: React.FC = () => {
 
   // Renderizar dashboard
   const renderDashboard = () => {
-    if (statsRequest.loading) {
+    if (statsRequest.loading && !isDemoMode) {
       return (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
@@ -211,7 +353,7 @@ const Payments: React.FC = () => {
       );
     }
 
-    if (statsRequest.error) {
+    if (statsRequest.error && !isDemoMode) {
       return (
         <Alert severity="error" sx={{ mb: 3 }}>
           Error cargando estadísticas: {statsRequest.error}
@@ -219,10 +361,17 @@ const Payments: React.FC = () => {
       );
     }
 
-    const stats = statsRequest.data;
+    const stats = isDemoMode ? mockStats : statsRequest.data;
 
     return (
       <Box>
+        {/* Alerta de modo demo */}
+        {isDemoMode && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <strong>🔧 Modo Demo Activado:</strong> Mostrando datos de ejemplo porque el backend no está disponible o hay problemas de permisos.
+          </Alert>
+        )}
+
         {/* Métricas principales */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
@@ -312,7 +461,7 @@ const Payments: React.FC = () => {
 
   // Renderizar facturas
   const renderInvoices = () => {
-    if (invoicesRequest.loading) {
+    if (invoicesRequest.loading && !isDemoMode) {
       return (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
@@ -320,7 +469,7 @@ const Payments: React.FC = () => {
       );
     }
 
-    if (invoicesRequest.error) {
+    if (invoicesRequest.error && !isDemoMode) {
       return (
         <Alert severity="error" sx={{ mb: 3 }}>
           Error cargando facturas: {invoicesRequest.error}
@@ -328,10 +477,17 @@ const Payments: React.FC = () => {
       );
     }
 
-    const invoices = invoicesRequest.data || [];
+    const invoices = isDemoMode ? mockInvoices : (invoicesRequest.data || []);
 
     return (
       <Box>
+        {/* Alerta de modo demo */}
+        {isDemoMode && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <strong>🔧 Modo Demo Activado:</strong> Mostrando facturas de ejemplo.
+          </Alert>
+        )}
+
         {/* Filtros */}
         <Card sx={{ mb: 3 }}>
           <CardContent>
@@ -556,7 +712,7 @@ const Payments: React.FC = () => {
 
   // Renderizar métodos de pago
   const renderPaymentMethods = () => {
-    if (paymentMethodsRequest.loading) {
+    if (paymentMethodsRequest.loading && !isDemoMode) {
       return (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
@@ -564,7 +720,7 @@ const Payments: React.FC = () => {
       );
     }
 
-    if (paymentMethodsRequest.error) {
+    if (paymentMethodsRequest.error && !isDemoMode) {
       return (
         <Alert severity="error" sx={{ mb: 3 }}>
           Error cargando métodos de pago: {paymentMethodsRequest.error}
@@ -572,10 +728,17 @@ const Payments: React.FC = () => {
       );
     }
 
-    const paymentMethods = paymentMethodsRequest.data || [];
+    const paymentMethods = isDemoMode ? mockPaymentMethods : (paymentMethodsRequest.data || []);
 
     return (
       <Box>
+        {/* Alerta de modo demo */}
+        {isDemoMode && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <strong>🔧 Modo Demo Activado:</strong> Mostrando métodos de pago de ejemplo.
+          </Alert>
+        )}
+
         <Alert severity="info" sx={{ mb: 3 }}>
           <strong>💳 Métodos de Pago:</strong> Gestión de tarjetas, cuentas bancarias y PayPal de los usuarios.
         </Alert>
@@ -645,7 +808,7 @@ const Payments: React.FC = () => {
 
   // Renderizar transacciones
   const renderTransactions = () => {
-    if (paymentIntentsRequest.loading) {
+    if (paymentIntentsRequest.loading && !isDemoMode) {
       return (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
@@ -653,7 +816,7 @@ const Payments: React.FC = () => {
       );
     }
 
-    if (paymentIntentsRequest.error) {
+    if (paymentIntentsRequest.error && !isDemoMode) {
       return (
         <Alert severity="error" sx={{ mb: 3 }}>
           Error cargando transacciones: {paymentIntentsRequest.error}
@@ -661,10 +824,17 @@ const Payments: React.FC = () => {
       );
     }
 
-    const transactions = paymentIntentsRequest.data || [];
+    const transactions = isDemoMode ? mockTransactions : (paymentIntentsRequest.data || []);
 
     return (
       <Box>
+        {/* Alerta de modo demo */}
+        {isDemoMode && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <strong>🔧 Modo Demo Activado:</strong> Mostrando transacciones de ejemplo.
+          </Alert>
+        )}
+
         <Alert severity="info" sx={{ mb: 3 }}>
           <strong>💳 Transacciones:</strong> Historial completo de todas las transacciones procesadas.
         </Alert>

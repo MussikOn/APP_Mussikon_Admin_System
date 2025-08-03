@@ -330,24 +330,26 @@ const Dashboard: React.FC = () => {
           
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Tooltip title="Actualizar datos">
-              <IconButton
-                onClick={handleRefresh}
-                disabled={isLoading || isRefreshing}
-                sx={{
-                  background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
-                  color: '#fff',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
-                    transform: 'scale(1.05)',
+              <span>
+                <IconButton
+                  onClick={handleRefresh}
+                  disabled={isLoading || isRefreshing}
+                  sx={{
+                    background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                    color: '#fff',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%)',
+                      transform: 'scale(1.05)',
                   },
-                  '&:disabled': {
-                    opacity: 0.6,
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                <RefreshIcon />
-              </IconButton>
+                    '&:disabled': {
+                      opacity: 0.6,
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </span>
             </Tooltip>
         
         <Button

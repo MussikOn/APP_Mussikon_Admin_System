@@ -34,15 +34,25 @@ function PrivateRoute({ children, allowedRoles }: { children: React.ReactElement
   
   // Log del rol del usuario para debugging
   console.log('🔍 Usuario autenticado con rol:', user.roll);
+  
+  // Verificar si el usuario es superadmin (tiene acceso a todo)
+  const isSuperAdmin = user.roll === 'superadmin' || user.roll === 'superAdmin' || user.roll === 'super_admin';
+  
+  if (isSuperAdmin) {
+    console.log('👑 Usuario es superadmin - acceso total permitido');
+    return <PrivateLayout>{children}</PrivateLayout>;
+  }
+  
+  // Si no es superadmin, verificar roles específicos
   if (allowedRoles) {
     console.log('🔍 Roles permitidos:', allowedRoles);
     console.log('🔍 ¿Usuario tiene rol permitido?', allowedRoles.includes(user.roll));
-  }
-  
-  // Si hay roles específicos requeridos y el usuario no los tiene
-  if (allowedRoles && !allowedRoles.includes(user.roll)) {
-    console.log(`🚫 Usuario ${user.roll} no tiene permisos para esta ruta, redirigiendo al dashboard`);
-    return <Navigate to="/" replace />;
+    
+    // Si hay roles específicos requeridos y el usuario no los tiene
+    if (!allowedRoles.includes(user.roll)) {
+      console.log(`🚫 Usuario ${user.roll} no tiene permisos para esta ruta, redirigiendo al dashboard`);
+      return <Navigate to="/" replace />;
+    }
   }
   
   // Usuario autenticado y autorizado
@@ -63,9 +73,9 @@ const AppRoutes = () => (
       <Route path="/search" element={<PrivateRoute><Search /></PrivateRoute>} />
       <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
       <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
-      <Route path="/payments" element={<PrivateRoute allowedRoles={['admin', 'superadmin']}><Payments /></PrivateRoute>} />
-      <Route path="/admin" element={<PrivateRoute allowedRoles={['superadmin']}><AdminTools /></PrivateRoute>} />
-      <Route path="/mobile-payments" element={<PrivateRoute allowedRoles={['admin', 'superadmin']}><MobilePayments /></PrivateRoute>} />
+      <Route path="/payments" element={<PrivateRoute allowedRoles={['admin']}><Payments /></PrivateRoute>} />
+      <Route path="/admin" element={<PrivateRoute allowedRoles={['admin']}><AdminTools /></PrivateRoute>} />
+      <Route path="/mobile-payments" element={<PrivateRoute allowedRoles={['admin']}><MobilePayments /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   </Router>
