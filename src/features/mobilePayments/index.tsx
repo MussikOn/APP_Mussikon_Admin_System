@@ -1,5 +1,5 @@
-// Pantalla de Verificación de Pagos Móviles - MussikOn Admin System
-// Permite a los administradores verificar pagos realizados desde la app móvil
+// Pantalla de Verificación de Depósitos - MussikOn Admin System
+// Permite a los administradores verificar depósitos realizados desde la app móvil
 
 import React, { useState } from 'react';
 import {
@@ -76,7 +76,7 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// Componente principal de Verificación de Pagos Móviles
+// Componente principal de Verificación de Depósitos
 const MobilePayments: React.FC = () => {
   // Estado para pestañas
   const [tabValue, setTabValue] = useState(0);
@@ -93,12 +93,12 @@ const MobilePayments: React.FC = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<MobilePayment | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
-  const [verificationMethod, setVerificationMethod] = useState('manual');
+
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectionNotes, setRejectionNotes] = useState('');
   const [selectedImage, setSelectedImage] = useState<string>('');
 
-  // Hook para pagos móviles
+  // Hook para depósitos
   const {
     payments,
     stats,
@@ -114,15 +114,14 @@ const MobilePayments: React.FC = () => {
     setTabValue(newValue);
   };
 
-  // Manejar verificación de pago
+  // Manejar verificación de depósito
   const handleVerifyPayment = (payment: MobilePayment) => {
     setSelectedPayment(payment);
     setVerificationNotes('');
-    setVerificationMethod('manual');
     setVerifyDialogOpen(true);
   };
 
-  // Manejar rechazo de pago
+  // Manejar rechazo de depósito
   const handleRejectPayment = (payment: MobilePayment) => {
     setSelectedPayment(payment);
     setRejectionReason('');
@@ -136,15 +135,20 @@ const MobilePayments: React.FC = () => {
 
     try {
       await verifyPayment(selectedPayment.id, {
+        approved: true,
         notes: verificationNotes,
-        verificationMethod
+        verificationData: {
+          bankDepositDate: new Date().toISOString().split('T')[0],
+          bankDepositTime: new Date().toLocaleTimeString('es-ES', { hour12: false }),
+          referenceNumber: `REF-${Date.now()}`,
+          accountLastFourDigits: '****'
+        }
       });
       setVerifyDialogOpen(false);
-      setSelectedPayment(null);
+            setSelectedPayment(null);
       setVerificationNotes('');
-      setVerificationMethod('manual');
     } catch (error) {
-      console.error('Error verificando pago:', error);
+      console.error('Error verificando depósito:', error);
     }
   };
 
@@ -154,15 +158,15 @@ const MobilePayments: React.FC = () => {
 
     try {
       await rejectPayment(selectedPayment.id, {
-        reason: rejectionReason,
-        notes: rejectionNotes
+        approved: false,
+        notes: rejectionNotes || rejectionReason
       });
       setRejectDialogOpen(false);
       setSelectedPayment(null);
       setRejectionReason('');
       setRejectionNotes('');
     } catch (error) {
-      console.error('Error rechazando pago:', error);
+      console.error('Error rechazando depósito:', error);
     }
   };
 
@@ -175,7 +179,7 @@ const MobilePayments: React.FC = () => {
   // Obtener color del estado
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'verified':
+      case 'approved':
         return 'success';
       case 'pending':
         return 'warning';
@@ -189,8 +193,8 @@ const MobilePayments: React.FC = () => {
   // Obtener texto del estado
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'verified':
-        return 'Verificado';
+      case 'approved':
+        return 'Aprobado';
       case 'pending':
         return 'Pendiente';
       case 'rejected':
@@ -241,7 +245,8 @@ const MobilePayments: React.FC = () => {
   };
 
   // Formatear fecha
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-ES', {
       year: 'numeric',
       month: 'short',
@@ -251,7 +256,7 @@ const MobilePayments: React.FC = () => {
     }).format(date);
   };
 
-  // Filtrar pagos
+  // Filtrar depósitos
   const filteredPayments = payments.filter(payment => {
     if (filters.status !== 'all' && payment.status !== filters.status) return false;
     if (filters.paymentMethod !== 'all' && payment.paymentMethod !== filters.paymentMethod) return false;
@@ -300,7 +305,7 @@ const MobilePayments: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main', mb: 1 }}>
-                                         {stats?.verified || 0}
+                                         {stats?.approved || 0}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Verificados
@@ -371,7 +376,7 @@ const MobilePayments: React.FC = () => {
             <ModernCard variant="elevated" sx={{ height: 400 }}>
               <Box sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                  Análisis de Pagos Móviles
+                  Análisis de Depósitos
                 </Typography>
                 <Box sx={{ 
                   height: 300, 
@@ -382,7 +387,7 @@ const MobilePayments: React.FC = () => {
                   borderRadius: 2
                 }}>
                   <Typography variant="body1" color="text.secondary">
-                    Gráfico de análisis de pagos móviles (implementar con librería de gráficos)
+                    Gráfico de análisis de depósitos (implementar con librería de gráficos)
                   </Typography>
                 </Box>
               </Box>
@@ -436,7 +441,7 @@ const MobilePayments: React.FC = () => {
     );
   };
 
-  // Renderizar lista de pagos
+  // Renderizar lista de depósitos
   const renderPaymentsList = () => {
     if (loading) {
       return (
@@ -449,7 +454,7 @@ const MobilePayments: React.FC = () => {
     if (error) {
       return (
         <Alert severity="error" sx={{ mb: 3 }}>
-          Error cargando pagos: {error}
+          Error cargando depósitos: {error}
         </Alert>
       );
     }
@@ -514,7 +519,7 @@ const MobilePayments: React.FC = () => {
         {/* Contador de resultados */}
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Pagos Móviles ({filteredPayments.length})
+            Depósitos ({filteredPayments.length})
           </Typography>
           <ModernButton
             variant="primary"
@@ -526,7 +531,7 @@ const MobilePayments: React.FC = () => {
           </ModernButton>
         </Box>
 
-        {/* Lista de pagos */}
+        {/* Lista de depósitos */}
         <Grid container spacing={2}>
           {filteredPayments.map((payment) => (
             <Grid item xs={12} md={6} lg={4} key={payment.id}>
@@ -538,7 +543,7 @@ const MobilePayments: React.FC = () => {
                 getStatusColor={getStatusColor}
                 getStatusText={getStatusText}
                 getPaymentMethodText={getPaymentMethodText}
-                formatDate={formatDate}
+                formatDate={(dateString: string) => formatDate(dateString)}
                 formatCurrency={formatCurrency}
               />
             </Grid>
@@ -550,10 +555,10 @@ const MobilePayments: React.FC = () => {
           <ModernCard variant="flat" sx={{ textAlign: 'center', py: 6 }}>
             <SmartphoneIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
             <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-              No se encontraron pagos móviles
+              No se encontraron depósitos
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              No hay pagos que coincidan con los filtros aplicados
+              No hay depósitos que coincidan con los filtros aplicados
             </Typography>
             <ModernButton
               variant="outline"
@@ -579,10 +584,10 @@ const MobilePayments: React.FC = () => {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          Pagos Móviles
+          Depósitos
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Verifica y gestiona pagos realizados desde la aplicación móvil
+          Verifica y gestiona depósitos realizados desde la aplicación móvil
         </Typography>
       </Box>
 
@@ -626,7 +631,7 @@ const MobilePayments: React.FC = () => {
           <Tab 
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                Pagos
+                Depósitos
                 {payments.filter(p => p.status === 'pending').length > 0 && (
                   <Badge 
                     badgeContent={payments.filter(p => p.status === 'pending').length} 
@@ -685,7 +690,7 @@ const MobilePayments: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <CheckCircleIcon sx={{ mr: 1, fontSize: 28 }} />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Verificar Pago
+              Verificar Depósito
             </Typography>
           </Box>
         </DialogTitle>
@@ -741,10 +746,10 @@ const MobilePayments: React.FC = () => {
                 fullWidth
                 multiline
                 rows={4}
-                label="Notas sobre la verificación del pago"
+                label="Notas sobre la verificación del depósito"
                 value={verificationNotes}
                 onChange={(e) => setVerificationNotes(e.target.value)}
-                placeholder="Ej: Pago verificado en cuenta bancaria, comprobante recibido, etc."
+                placeholder="Ej: Depósito verificado en cuenta bancaria, comprobante recibido, etc."
                 variant="outlined"
               />
             </Box>
@@ -790,7 +795,7 @@ const MobilePayments: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <CancelIcon sx={{ mr: 1, fontSize: 28 }} />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Rechazar Pago
+              Rechazar Depósito
             </Typography>
           </Box>
         </DialogTitle>
@@ -851,7 +856,7 @@ const MobilePayments: React.FC = () => {
                 >
                   <MenuItem value="invalid_proof">Comprobante Inválido</MenuItem>
                   <MenuItem value="wrong_amount">Monto Incorrecto</MenuItem>
-                  <MenuItem value="duplicate_payment">Pago Duplicado</MenuItem>
+                  <MenuItem value="duplicate_payment">Depósito Duplicado</MenuItem>
                   <MenuItem value="other">Otro</MenuItem>
                 </Select>
               </FormControl>
@@ -863,7 +868,7 @@ const MobilePayments: React.FC = () => {
                 fullWidth
                 multiline
                 rows={4}
-                label="Notas sobre el rechazo del pago"
+                label="Notas sobre el rechazo del depósito"
                 value={rejectionNotes}
                 onChange={(e) => setRejectionNotes(e.target.value)}
                 placeholder="Explica el motivo del rechazo..."
@@ -912,14 +917,14 @@ const MobilePayments: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <VisibilityIcon sx={{ mr: 1, fontSize: 28 }} />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Comprobante de Pago
+              Comprobante de Depósito
             </Typography>
           </Box>
         </DialogTitle>
         <DialogContent sx={{ p: 3, textAlign: 'center' }}>
           <img
             src={selectedImage}
-            alt="Comprobante de pago"
+            alt="Comprobante de depósito"
             style={{
               maxWidth: '100%',
               maxHeight: '500px',

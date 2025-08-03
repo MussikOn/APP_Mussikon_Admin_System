@@ -1,4 +1,5 @@
 // Hook para gestión de pagos móviles - MussikOn Admin System
+// Conectado con el backend de MussikOn Express
 
 import { useState, useEffect, useCallback } from 'react';
 import { mobilePaymentsService, type MobilePayment, type MobilePaymentStats, type VerifyPaymentRequest, type RejectPaymentRequest } from '../services/mobilePaymentsService';
@@ -48,7 +49,7 @@ export const useMobilePayments = (): UseMobilePaymentsReturn => {
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [rejectError, setRejectError] = useState<string | null>(null);
 
-  // Cargar pagos móviles
+  // Cargar depósitos pendientes
   const loadPayments = useCallback(async (params?: { status?: string; limit?: number; offset?: number }) => {
     setLoading(true);
     setError(null);
@@ -57,7 +58,7 @@ export const useMobilePayments = (): UseMobilePaymentsReturn => {
       const data = await mobilePaymentsService.getMobilePayments(params);
       setPayments(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error cargando pagos móviles';
+      const errorMessage = err instanceof Error ? err.message : 'Error cargando depósitos pendientes';
       setError(errorMessage);
       console.error('Error en loadPayments:', err);
     } finally {
@@ -82,7 +83,7 @@ export const useMobilePayments = (): UseMobilePaymentsReturn => {
     }
   }, []);
 
-  // Verificar pago
+  // Verificar depósito
   const verifyPayment = useCallback(async (paymentId: string, data: VerifyPaymentRequest): Promise<boolean> => {
     setVerifyLoading(true);
     setVerifyError(null);
@@ -90,31 +91,38 @@ export const useMobilePayments = (): UseMobilePaymentsReturn => {
     try {
       await mobilePaymentsService.verifyMobilePayment(paymentId, data);
       
-      // Actualizar el pago en la lista local
-      setPayments(prev => prev.map(payment => 
-        payment.id === paymentId 
-          ? { 
-              ...payment, 
-              status: 'verified' as const,
-              verifiedAt: new Date(),
-              verificationNotes: data.notes,
-              verificationMethod: data.verificationMethod
-            }
-          : payment
-      ));
+      // Actualizar el depósito en la lista local
+              setPayments(prev => prev.map(payment => 
+          payment.id === paymentId 
+            ? { 
+                ...payment, 
+                status: data.approved ? 'approved' : 'rejected',
+                verifiedAt: new Date().toISOString(),
+                verificationNotes: data.notes,
+                verifiedBy: 'current_admin', // Esto debería venir del contexto de autenticación
+                verificationData: data.verificationData ? {
+                  ...data.verificationData,
+                  verifiedBy: 'current_admin'
+                } : undefined
+              }
+            : payment
+        ));
+      
+      // Recargar estadísticas
+      await loadStats();
       
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error verificando pago';
+      const errorMessage = err instanceof Error ? err.message : 'Error verificando depósito';
       setVerifyError(errorMessage);
       console.error('Error en verifyPayment:', err);
       return false;
     } finally {
       setVerifyLoading(false);
     }
-  }, []);
+  }, [loadStats]);
 
-  // Rechazar pago
+  // Rechazar depósito
   const rejectPayment = useCallback(async (paymentId: string, data: RejectPaymentRequest): Promise<boolean> => {
     setRejectLoading(true);
     setRejectError(null);
@@ -122,29 +130,33 @@ export const useMobilePayments = (): UseMobilePaymentsReturn => {
     try {
       await mobilePaymentsService.rejectMobilePayment(paymentId, data);
       
-      // Actualizar el pago en la lista local
+      // Actualizar el depósito en la lista local
       setPayments(prev => prev.map(payment => 
         payment.id === paymentId 
           ? { 
               ...payment, 
-              status: 'rejected' as const,
-              rejectedAt: new Date(),
-              rejectionReason: data.reason,
+              status: 'rejected',
+              rejectedAt: new Date().toISOString(),
+              rejectionReason: data.notes,
+              rejectedBy: 'current_admin', // Esto debería venir del contexto de autenticación
               rejectionNotes: data.notes
             }
           : payment
       ));
       
+      // Recargar estadísticas
+      await loadStats();
+      
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error rechazando pago';
+      const errorMessage = err instanceof Error ? err.message : 'Error rechazando depósito';
       setRejectError(errorMessage);
       console.error('Error en rejectPayment:', err);
       return false;
     } finally {
       setRejectLoading(false);
     }
-  }, []);
+  }, [loadStats]);
 
   // Refrescar datos
   const refreshData = useCallback(async () => {

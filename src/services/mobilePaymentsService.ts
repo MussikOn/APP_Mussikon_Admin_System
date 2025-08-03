@@ -1,9 +1,9 @@
 // Servicio para gestión de pagos móviles - MussikOn Admin System
-// Maneja la verificación de pagos realizados desde la app móvil
+// Conectado con el backend de MussikOn Express para verificación de depósitos
 
 import { apiService } from './api';
 
-// Tipos para pagos móviles
+// Tipos adaptados al backend de MussikOn Express
 export interface MobilePayment {
   id: string;
   userId: string;
@@ -15,34 +15,55 @@ export interface MobilePayment {
   };
   amount: number;
   currency: string;
-  status: 'pending' | 'verified' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected';
   paymentMethod: string;
   description: string;
   eventId?: string;
   eventName?: string;
   proofImage?: string;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   verifiedBy?: string;
-  verifiedAt?: Date;
+  verifiedAt?: string;
   verificationNotes?: string;
   verificationMethod?: string;
   rejectedBy?: string;
-  rejectedAt?: Date;
+  rejectedAt?: string;
   rejectionReason?: string;
   rejectionNotes?: string;
+  
+  // Campos específicos del backend para depósitos
+  voucherFile?: {
+    url: string;
+    filename: string;
+    uploadedAt: string;
+  };
+  accountHolderName?: string;
+  accountNumber?: string;
+  bankName?: string;
+  depositDate?: string;
+  depositTime?: string;
+  referenceNumber?: string;
+  comments?: string;
+  verificationData?: {
+    bankDepositDate: string;
+    bankDepositTime: string;
+    referenceNumber: string;
+    accountLastFourDigits: string;
+    verifiedBy: string;
+  };
 }
 
 export interface MobilePaymentStats {
   total: number;
   pending: number;
-  verified: number;
+  approved: number;
   rejected: number;
   totalAmount: number;
-  verifiedAmount: number;
+  approvedAmount: number;
   averageAmount: number;
-  verificationRate: string;
+  approvalRate: string;
   rejectionRate: string;
   dailyStats: Array<{
     date: string;
@@ -60,98 +81,177 @@ export interface MobilePaymentStats {
 }
 
 export interface VerifyPaymentRequest {
+  approved: boolean;
   notes?: string;
-  verificationMethod?: string;
+  verificationData?: {
+    bankDepositDate: string;
+    bankDepositTime: string;
+    referenceNumber: string;
+    accountLastFourDigits: string;
+  };
 }
 
 export interface RejectPaymentRequest {
-  reason: string;
-  notes?: string;
+  approved: false;
+  notes: string;
 }
 
 class MobilePaymentsService {
-  private readonly baseUrl = '/admin/mobile-payments';
+  private readonly baseUrl = '/admin/payments';
 
   /**
-   * Obtener todos los pagos móviles
+   * Obtener todos los depósitos pendientes (conectado al backend real)
    */
-  async getMobilePayments(params?: {
+  async getMobilePayments(_params?: {
     status?: string;
     limit?: number;
     offset?: number;
   }): Promise<MobilePayment[]> {
     try {
-      const queryParams = new URLSearchParams();
-      if (params?.status) queryParams.append('status', params.status);
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
-
-      const response = await apiService.get(`${this.baseUrl}?${queryParams}`);
-      return response.data.data || [];
+      // Usar el endpoint real del backend para depósitos pendientes
+      const response = await apiService.get(`${this.baseUrl}/pending-deposits`);
+      
+      if (response.data.success && response.data.data) {
+        // Transformar los datos del backend al formato esperado por el frontend
+        return response.data.data.map((deposit: any) => this.transformDepositToMobilePayment(deposit));
+      }
+      
+      return [];
     } catch (error) {
-      console.error('Error obteniendo pagos móviles:', error);
+      console.error('Error obteniendo depósitos pendientes:', error);
       // Retornar datos mock para desarrollo
       return this.getMockMobilePayments();
     }
   }
 
   /**
-   * Verificar un pago móvil
+   * Verificar un depósito (conectado al backend real)
    */
   async verifyMobilePayment(
     paymentId: string,
     data: VerifyPaymentRequest
   ): Promise<{ paymentId: string; status: string; transactionId: string }> {
     try {
-      const response = await apiService.post(
-        `${this.baseUrl}/${paymentId}/verify`,
-        data
-      );
-      return response.data.data;
+      // Usar el endpoint real del backend para verificar depósitos
+      const response = await apiService.post(`${this.baseUrl}/pending-deposits/${paymentId}/verify`, data);
+      
+      if (response.data.success) {
+        return {
+          paymentId,
+          status: data.approved ? 'approved' : 'rejected',
+          transactionId: response.data.data?.depositId || paymentId
+        };
+      }
+      
+      throw new Error(response.data.error || 'Error verificando depósito');
     } catch (error) {
-      console.error('Error verificando pago móvil:', error);
+      console.error('Error verificando depósito:', error);
       throw error;
     }
   }
 
   /**
-   * Rechazar un pago móvil
+   * Rechazar un depósito (conectado al backend real)
    */
   async rejectMobilePayment(
     paymentId: string,
     data: RejectPaymentRequest
   ): Promise<{ paymentId: string; status: string; reason: string }> {
     try {
-      const response = await apiService.post(
-        `${this.baseUrl}/${paymentId}/reject`,
-        data
-      );
-      return response.data.data;
+      // Usar el mismo endpoint de verificación pero con approved: false
+      const response = await apiService.post(`${this.baseUrl}/pending-deposits/${paymentId}/verify`, data);
+      
+      if (response.data.success) {
+        return {
+          paymentId,
+          status: 'rejected',
+          reason: data.notes
+        };
+      }
+      
+      throw new Error(response.data.error || 'Error rechazando depósito');
     } catch (error) {
-      console.error('Error rechazando pago móvil:', error);
+      console.error('Error rechazando depósito:', error);
       throw error;
     }
   }
 
   /**
-   * Obtener estadísticas de pagos móviles
+   * Obtener estadísticas de depósitos (conectado al backend real)
    */
-  async getMobilePaymentStats(params?: {
+  async getMobilePaymentStats(_params?: {
     period?: '7d' | '30d' | '90d';
   }): Promise<MobilePaymentStats> {
     try {
-      const queryParams = new URLSearchParams();
-      if (params?.period) queryParams.append('period', params.period);
-
-      const response = await apiService.get(
-        `${this.baseUrl}/stats?${queryParams}`
-      );
-      return response.data.data;
+      // Usar el endpoint real del backend para estadísticas
+      const response = await apiService.get(`${this.baseUrl}/statistics`);
+      
+      if (response.data.success && response.data.data) {
+        return this.transformStatsToMobilePaymentStats(response.data.data);
+      }
+      
+      return this.getMockMobilePaymentStats();
     } catch (error) {
-      console.error('Error obteniendo estadísticas de pagos móviles:', error);
-      // Retornar datos mock para desarrollo
+      console.error('Error obteniendo estadísticas:', error);
       return this.getMockMobilePaymentStats();
     }
+  }
+
+  /**
+   * Transformar depósito del backend al formato del frontend
+   */
+  private transformDepositToMobilePayment(deposit: any): MobilePayment {
+    return {
+      id: deposit.id,
+      userId: deposit.userId,
+      amount: deposit.amount,
+      currency: deposit.currency || 'RD$',
+      status: deposit.status,
+      paymentMethod: 'bank_deposit',
+      description: `Depósito bancario - ${deposit.bankName || 'Banco'}`,
+      proofImage: deposit.voucherFile?.url,
+      notes: deposit.comments,
+      createdAt: deposit.createdAt,
+      updatedAt: deposit.updatedAt,
+      verifiedBy: deposit.verifiedBy,
+      verifiedAt: deposit.verifiedAt,
+      verificationNotes: deposit.notes,
+      rejectedBy: deposit.status === 'rejected' ? deposit.verifiedBy : undefined,
+      rejectedAt: deposit.status === 'rejected' ? deposit.verifiedAt : undefined,
+      rejectionReason: deposit.status === 'rejected' ? deposit.notes : undefined,
+      
+      // Campos específicos del backend
+      voucherFile: deposit.voucherFile,
+      accountHolderName: deposit.accountHolderName,
+      accountNumber: deposit.accountNumber,
+      bankName: deposit.bankName,
+      depositDate: deposit.depositDate,
+      depositTime: deposit.depositTime,
+      referenceNumber: deposit.referenceNumber,
+      comments: deposit.comments,
+      verificationData: deposit.verificationData
+    };
+  }
+
+  /**
+   * Transformar estadísticas del backend al formato del frontend
+   */
+  private transformStatsToMobilePaymentStats(stats: any): MobilePaymentStats {
+    return {
+      total: stats.pendingDepositsCount || 0,
+      pending: stats.pendingDepositsCount || 0,
+      approved: 0, // No disponible en el backend actual
+      rejected: 0, // No disponible en el backend actual
+      totalAmount: stats.totalDeposits || 0,
+      approvedAmount: 0, // No disponible en el backend actual
+      averageAmount: stats.totalDeposits && stats.pendingDepositsCount ? 
+        stats.totalDeposits / stats.pendingDepositsCount : 0,
+      approvalRate: '0%', // No disponible en el backend actual
+      rejectionRate: '0%', // No disponible en el backend actual
+      dailyStats: [], // No disponible en el backend actual
+      topPaymentMethods: [], // No disponible en el backend actual
+      topEvents: [] // No disponible en el backend actual
+    };
   }
 
   // Datos mock para desarrollo
@@ -175,8 +275,8 @@ class MobilePaymentsService {
         eventName: 'Concierto de Jazz',
         proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+1',
         notes: 'Transferencia bancaria realizada',
-        createdAt: new Date('2024-01-15T10:30:00Z'),
-        updatedAt: new Date('2024-01-15T10:30:00Z'),
+        createdAt: new Date('2024-01-15T10:30:00Z').toISOString(),
+        updatedAt: new Date('2024-01-15T10:30:00Z').toISOString(),
       },
       {
         id: 'mp_002',
@@ -189,19 +289,18 @@ class MobilePaymentsService {
         },
         amount: 75.50,
         currency: 'EUR',
-        status: 'verified',
+        status: 'approved',
         paymentMethod: 'paypal',
         description: 'Reserva para taller de guitarra',
         eventId: 'event_002',
         eventName: 'Taller de Guitarra',
         proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+2',
         notes: 'Pago realizado a través de PayPal',
-        createdAt: new Date('2024-01-14T15:45:00Z'),
-        updatedAt: new Date('2024-01-15T09:20:00Z'),
+        createdAt: new Date('2024-01-14T15:45:00Z').toISOString(),
+        updatedAt: new Date('2024-01-15T09:20:00Z').toISOString(),
         verifiedBy: 'admin_001',
-        verifiedAt: new Date('2024-01-15T09:20:00Z'),
-        verificationNotes: 'Pago verificado correctamente',
-        verificationMethod: 'manual',
+        verifiedAt: new Date('2024-01-15T09:20:00Z').toISOString(),
+        verificationNotes: 'Depósito verificado correctamente',
       },
       {
         id: 'mp_003',
@@ -221,10 +320,10 @@ class MobilePaymentsService {
         eventName: 'Festival de Música',
         proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+3',
         notes: 'Comprobante no legible',
-        createdAt: new Date('2024-01-13T12:15:00Z'),
-        updatedAt: new Date('2024-01-14T16:30:00Z'),
+        createdAt: new Date('2024-01-13T12:15:00Z').toISOString(),
+        updatedAt: new Date('2024-01-14T16:30:00Z').toISOString(),
         rejectedBy: 'admin_001',
-        rejectedAt: new Date('2024-01-14T16:30:00Z'),
+        rejectedAt: new Date('2024-01-14T16:30:00Z').toISOString(),
         rejectionReason: 'Comprobante no legible',
         rejectionNotes: 'La imagen del comprobante no es clara',
       },
@@ -246,8 +345,8 @@ class MobilePaymentsService {
         eventName: 'Clase de Piano',
         proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+4',
         notes: 'Pago con tarjeta de crédito',
-        createdAt: new Date('2024-01-15T08:20:00Z'),
-        updatedAt: new Date('2024-01-15T08:20:00Z'),
+        createdAt: new Date('2024-01-15T08:20:00Z').toISOString(),
+        updatedAt: new Date('2024-01-15T08:20:00Z').toISOString(),
       },
       {
         id: 'mp_005',
@@ -260,19 +359,18 @@ class MobilePaymentsService {
         },
         amount: 90.00,
         currency: 'EUR',
-        status: 'verified',
+        status: 'approved',
         paymentMethod: 'bank_transfer',
         description: 'Pago por concierto de violín',
         eventId: 'event_005',
         eventName: 'Concierto de Violín',
         proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+5',
         notes: 'Transferencia confirmada',
-        createdAt: new Date('2024-01-12T14:10:00Z'),
-        updatedAt: new Date('2024-01-13T11:45:00Z'),
+        createdAt: new Date('2024-01-12T14:10:00Z').toISOString(),
+        updatedAt: new Date('2024-01-13T11:45:00Z').toISOString(),
         verifiedBy: 'admin_002',
-        verifiedAt: new Date('2024-01-13T11:45:00Z'),
+        verifiedAt: new Date('2024-01-13T11:45:00Z').toISOString(),
         verificationNotes: 'Transferencia verificada en cuenta bancaria',
-        verificationMethod: 'bank_verification',
       },
     ];
   }
@@ -281,13 +379,13 @@ class MobilePaymentsService {
     return {
       total: 25,
       pending: 8,
-      verified: 15,
+      approved: 15,
       rejected: 2,
       totalAmount: 3250.50,
-      verifiedAmount: 1950.75,
+      approvedAmount: 1950.75,
       averageAmount: 130.02,
-      verificationRate: '60.0',
-      rejectionRate: '8.0',
+      approvalRate: '60.0%',
+      rejectionRate: '8.0%',
       dailyStats: [
         { date: '2024-01-15', count: 5, amount: 650.00 },
         { date: '2024-01-14', count: 8, amount: 1200.50 },

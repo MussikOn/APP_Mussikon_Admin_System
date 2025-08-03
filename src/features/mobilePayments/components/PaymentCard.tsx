@@ -29,7 +29,7 @@ interface PaymentCardProps {
   getStatusColor: (status: string) => string;
   getStatusText: (status: string) => string;
   getPaymentMethodText: (method: string) => string;
-  formatDate: (date: Date) => string;
+  formatDate: (dateString: string) => string;
   formatCurrency: (amount: number, currency: string) => string;
 }
 
@@ -241,7 +241,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                 }
               }}
             >
-              Verificar
+              Aprobar
             </Button>
             <Button
               variant="outlined"
@@ -267,10 +267,10 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
         )}
 
         {/* Estado de verificación/rechazo */}
-        {payment.status === 'verified' && payment.verificationNotes && (
+        {payment.status === 'approved' && payment.verificationNotes && (
           <Box sx={{ mt: 1.5, p: 1, backgroundColor: 'success.light', borderRadius: 1 }}>
             <Typography variant="caption" color="success.dark" sx={{ fontWeight: 600 }}>
-              ✓ Verificado: {payment.verificationNotes}
+              ✓ Aprobado: {payment.verificationNotes}
             </Typography>
           </Box>
         )}
