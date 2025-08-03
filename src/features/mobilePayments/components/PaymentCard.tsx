@@ -185,6 +185,13 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                   cursor: 'pointer'
                 }}
                 onClick={() => onViewImage(payment.proofImage!)}
+                onError={(e) => {
+                  console.error('Error cargando imagen:', payment.proofImage);
+                  // Mostrar imagen de fallback
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://via.placeholder.com/300x200?text=Error+al+cargar+imagen';
+                  target.style.filter = 'grayscale(100%) opacity(0.5)';
+                }}
               />
               <Box
                 sx={{

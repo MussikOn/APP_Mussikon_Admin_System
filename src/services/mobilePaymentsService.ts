@@ -201,6 +201,14 @@ class MobilePaymentsService {
    * Transformar depósito del backend al formato del frontend
    */
   private transformDepositToMobilePayment(deposit: any): MobilePayment {
+    console.log('🔍 Transformando depósito del backend:', deposit);
+    console.log('🔍 URL del voucher:', deposit.voucherFile?.url);
+    
+    // Usar el endpoint seguro del backend para las imágenes
+    const secureImageUrl = deposit.voucherFile?.url ? 
+      `/admin/payments/voucher-image/${deposit.id}` : 
+      undefined;
+    
     return {
       id: deposit.id,
       userId: deposit.userId,
@@ -209,7 +217,7 @@ class MobilePaymentsService {
       status: deposit.status,
       paymentMethod: 'bank_deposit',
       description: `Depósito bancario - ${deposit.bankName || 'Banco'}`,
-      proofImage: deposit.voucherFile?.url,
+      proofImage: secureImageUrl,
       notes: deposit.comments,
       createdAt: deposit.createdAt,
       updatedAt: deposit.updatedAt,

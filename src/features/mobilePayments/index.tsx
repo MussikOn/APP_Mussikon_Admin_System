@@ -931,6 +931,12 @@ const MobilePayments: React.FC = () => {
               objectFit: 'contain',
               borderRadius: 8
             }}
+            onError={(e) => {
+              console.error('Error cargando imagen en diálogo:', selectedImage);
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://via.placeholder.com/400x300?text=Error+al+cargar+comprobante';
+              target.style.filter = 'grayscale(100%) opacity(0.5)';
+            }}
           />
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
