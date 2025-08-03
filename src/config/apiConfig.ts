@@ -79,6 +79,26 @@ export const API_CONFIG = {
     ADMIN_ANALYTICS_TOP_USERS: '/analytics/top-users',
     ADMIN_ANALYTICS_EXPORT: '/analytics/export',
     
+    // Pagos - CORREGIDO: Usar rutas exactas del backend
+    PAYMENT_METHODS: '/payments/methods',
+    PAYMENT_METHOD_BY_ID: '/payments/methods/:id',
+    CREATE_PAYMENT_METHOD: '/payments/methods',
+    UPDATE_PAYMENT_METHOD: '/payments/methods/:id',
+    SET_DEFAULT_PAYMENT_METHOD: '/payments/methods/:id/default',
+    DELETE_PAYMENT_METHOD: '/payments/methods/:id',
+    PAYMENT_INTENTS: '/payments/intents',
+    CREATE_PAYMENT_INTENT: '/payments/intents',
+    PROCESS_PAYMENT: '/payments/process',
+    PAYMENT_INVOICES: '/payments/invoices',
+    CREATE_PAYMENT_INVOICE: '/payments/invoices',
+    PAYMENT_INVOICE_BY_ID: '/payments/invoices/:id',
+    MARK_INVOICE_PAID: '/payments/invoices/:id/pay',
+    PAYMENT_REFUNDS: '/payments/refunds',
+    PROCESS_REFUND: '/payments/refunds',
+    PAYMENT_STATS: '/payments/stats',
+    VALIDATE_PAYMENT_METHOD: '/payments/validate',
+    PAYMENT_GATEWAYS: '/payments/gateways',
+    
     // Imágenes (Admin) - Nuevo CRUD
     ADMIN_IMAGES: '/imgs',
     ADMIN_IMAGE_BY_ID: '/imgs/:id',
@@ -110,26 +130,6 @@ export const API_CONFIG = {
     CREATE_NOTIFICATION: '/notifications',
     BULK_NOTIFICATION: '/notifications/bulk',
     NOTIFICATION_STATS: '/notifications/stats',
-    
-    // Pagos
-    PAYMENT_METHODS: '/payments/methods',
-    PAYMENT_METHOD_BY_ID: '/payments/methods/:id',
-    CREATE_PAYMENT_METHOD: '/payments/methods',
-    UPDATE_PAYMENT_METHOD: '/payments/methods/:id',
-    SET_DEFAULT_PAYMENT_METHOD: '/payments/methods/:id/default',
-    DELETE_PAYMENT_METHOD: '/payments/methods/:id',
-    PAYMENT_INTENTS: '/payments/intents',
-    CREATE_PAYMENT_INTENT: '/payments/intents',
-    PROCESS_PAYMENT: '/payments/process',
-    PAYMENT_INVOICES: '/payments/invoices',
-    CREATE_PAYMENT_INVOICE: '/payments/invoices',
-    PAYMENT_INVOICE_BY_ID: '/payments/invoices/:id',
-    MARK_INVOICE_PAID: '/payments/invoices/:id/pay',
-    PAYMENT_REFUNDS: '/payments/refunds',
-    PROCESS_REFUND: '/payments/refunds',
-    PAYMENT_STATS: '/payments/stats',
-    VALIDATE_PAYMENT_METHOD: '/payments/validate',
-    PAYMENT_GATEWAYS: '/payments/gateways',
     
     // Geolocalización
     GEOLOCATION_SEARCH: '/geolocation/search',

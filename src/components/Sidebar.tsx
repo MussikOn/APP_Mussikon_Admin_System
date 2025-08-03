@@ -20,14 +20,15 @@ import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
   Event as EventIcon,
-  LibraryMusic as LibraryMusicIcon,
+  MusicNote as MusicNoteIcon,
   Image as ImageIcon,
-  Person as PersonIcon,
-  AdminPanelSettings as AdminPanelSettingsIcon,
+  Chat as ChatIcon,
+  Analytics as AnalyticsIcon,
+  Payment as PaymentIcon,
   Smartphone as SmartphoneIcon,
   Search as SearchIcon,
-  Analytics as AnalyticsIcon,
-  Chat as ChatIcon,
+  AdminPanelSettings as AdminIcon,
+  Settings as SettingsIcon,
   Menu as MenuIcon,
   KeyboardArrowLeft as CollapseIcon,
   KeyboardArrowRight as ExpandIcon
@@ -48,7 +49,7 @@ const navigationItems = [
     to: '/users', 
     label: 'Usuarios', 
     icon: <PeopleIcon />,
-    color: '#00e0ff',
+    color: '#ff6b6b',
     description: 'Gestión de usuarios del sistema'
   },
   { 
@@ -61,7 +62,7 @@ const navigationItems = [
   { 
     to: '/musician-requests', 
     label: 'Solicitudes', 
-    icon: <LibraryMusicIcon />,
+    icon: <MusicNoteIcon />,
     color: '#b993d6',
     description: 'Solicitudes de músicos pendientes'
   },
@@ -75,7 +76,7 @@ const navigationItems = [
   { 
     to: '/musicians', 
     label: 'Músicos', 
-    icon: <PersonIcon />,
+    icon: <PeopleIcon />,
     color: '#ff6b35',
     description: 'Perfiles y gestión de músicos'
   },
@@ -108,11 +109,25 @@ const navigationItems = [
     description: 'Sistema de mensajería y comunicación'
   },
   { 
+    to: '/payments', 
+    label: 'Pagos', 
+    icon: <PaymentIcon />,
+    color: '#FFD700',
+    description: 'Sistema de pagos y verificación de depósitos'
+  },
+  { 
     to: '/admin', 
     label: 'Admin', 
-    icon: <AdminPanelSettingsIcon />,
+    icon: <AdminIcon />,
     color: '#8ca6db',
     description: 'Herramientas de administración avanzada'
+  },
+  { 
+    to: '/mobile-payments', 
+    label: 'Verificar Pagos', 
+    icon: <SettingsIcon />,
+    color: '#ff6b35',
+    description: 'Verificación de pagos móviles'
   },
 ];
 

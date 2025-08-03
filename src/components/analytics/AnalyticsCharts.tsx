@@ -1,7 +1,13 @@
-// Componentes de gráficos para Analytics - MussikOn Admin System
-// Este archivo contiene componentes de gráficos para visualizar datos de analytics
+// Componentes de Gráficos para Analytics - MussikOn Admin System
+// Gráficos interactivos usando Chart.js y react-chartjs-2
 
 import React from 'react';
+import {
+  Line as LineChartComponent,
+  Bar as BarChartComponent,
+  Doughnut as DoughnutChartComponent,
+  Radar as RadarChartComponent
+} from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,16 +15,27 @@ import {
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
+  RadialLinearScale,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-  RadialLinearScale,
   Filler
 } from 'chart.js';
-import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2';
-import { Box, Typography, Paper } from '@mui/material';
-import { colors } from '../../theme/colors';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from '@mui/material';
+import { useTheme } from '../../hooks/useTheme';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -27,110 +44,122 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
+  RadialLinearScale,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-  RadialLinearScale,
   Filler
 );
 
-// Configuración común de gráficos
-const chartOptions = {
+// Configuración de colores para gráficos
+const chartColors = {
+  primary: '#2196F3',
+  secondary: '#4CAF50',
+  success: '#4CAF50',
+  warning: '#FF9800',
+  error: '#F44336',
+  info: '#00BCD4',
+  purple: '#9C27B0',
+  pink: '#E91E63',
+  indigo: '#3F51B5',
+  teal: '#009688',
+  orange: '#FF5722',
+  brown: '#795548',
+  grey: '#9E9E9E',
+  blueGrey: '#607D8B'
+};
+
+// Opciones base para gráficos
+const getChartOptions = (title: string, isDark: boolean) => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: {
       position: 'top' as const,
       labels: {
-        color: colors.text.primary,
+        color: isDark ? '#ffffff' : '#000000',
         font: {
           size: 12
         }
       }
     },
+    title: {
+      display: true,
+      text: title,
+      color: isDark ? '#ffffff' : '#000000',
+      font: {
+        size: 16,
+        weight: 'bold' as const
+      }
+    },
     tooltip: {
-      backgroundColor: colors.background.paper,
-      titleColor: colors.text.primary,
-      bodyColor: colors.text.secondary,
-      borderColor: colors.border.primary,
+      backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+      titleColor: isDark ? '#ffffff' : '#000000',
+      bodyColor: isDark ? '#ffffff' : '#000000',
+      borderColor: isDark ? '#333333' : '#e0e0e0',
       borderWidth: 1
     }
   },
   scales: {
     x: {
       ticks: {
-        color: colors.text.secondary
+        color: isDark ? '#ffffff' : '#000000'
       },
       grid: {
-        color: colors.border.secondary
+        color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
       }
     },
     y: {
       ticks: {
-        color: colors.text.secondary
+        color: isDark ? '#ffffff' : '#000000'
       },
       grid: {
-        color: colors.border.secondary
+        color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
       }
     }
   }
-};
+});
 
-// Colores para gráficos
-const chartColors = {
-  primary: colors.primary.main,
-  secondary: colors.secondary.main,
-  success: colors.success.main,
-  warning: colors.warning.main,
-  error: colors.error.main,
-  info: colors.info.main,
-  gradient: [
-    colors.primary.main,
-    colors.secondary.main,
-    colors.success.main,
-    colors.warning.main,
-    colors.error.main,
-    colors.info.main
-  ]
-};
-
-// Componente de gráfico de líneas para tendencias
+// Componente de gráfico de líneas
 interface LineChartProps {
   title: string;
   data: {
     labels: string[];
-    datasets: Array<{
-      label: string;
-      data: number[];
-      borderColor?: string;
-      backgroundColor?: string;
-    }>;
+    data: number[];
   };
   height?: number;
 }
 
 export const LineChart: React.FC<LineChartProps> = ({ title, data, height = 300 }) => {
+  const { isDark } = useTheme();
+
+  const chartData = {
+    labels: data.labels,
+    datasets: [
+      {
+        label: title,
+        data: data.data,
+        borderColor: chartColors.primary,
+        backgroundColor: `${chartColors.primary}20`,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: chartColors.primary,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }
+    ]
+  };
+
   return (
-    <Paper elevation={2} sx={{ p: 2, height: height + 80 }}>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      <Box sx={{ height, position: 'relative' }}>
-        <Line
-          data={data}
-          options={{
-            ...chartOptions,
-            plugins: {
-              ...chartOptions.plugins,
-              title: {
-                display: false
-              }
-            }
-          }}
-        />
-      </Box>
-    </Paper>
+    <Card sx={{ height, p: 2 }}>
+      <CardContent>
+        <LineChartComponent data={chartData} options={getChartOptions(title, isDark)} />
+      </CardContent>
+    </Card>
   );
 };
 
@@ -139,37 +168,57 @@ interface BarChartProps {
   title: string;
   data: {
     labels: string[];
-    datasets: Array<{
-      label: string;
-      data: number[];
-      backgroundColor?: string | string[];
-      borderColor?: string | string[];
-    }>;
+    data: number[];
   };
   height?: number;
 }
 
 export const BarChart: React.FC<BarChartProps> = ({ title, data, height = 300 }) => {
+  const { isDark } = useTheme();
+
+  const chartData = {
+    labels: data.labels,
+    datasets: [
+      {
+        label: title,
+        data: data.data,
+        backgroundColor: [
+          chartColors.primary,
+          chartColors.secondary,
+          chartColors.success,
+          chartColors.warning,
+          chartColors.error,
+          chartColors.info,
+          chartColors.purple,
+          chartColors.pink,
+          chartColors.indigo,
+          chartColors.teal
+        ],
+        borderColor: [
+          chartColors.primary,
+          chartColors.secondary,
+          chartColors.success,
+          chartColors.warning,
+          chartColors.error,
+          chartColors.info,
+          chartColors.purple,
+          chartColors.pink,
+          chartColors.indigo,
+          chartColors.teal
+        ],
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false
+      }
+    ]
+  };
+
   return (
-    <Paper elevation={2} sx={{ p: 2, height: height + 80 }}>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      <Box sx={{ height, position: 'relative' }}>
-        <Bar
-          data={data}
-          options={{
-            ...chartOptions,
-            plugins: {
-              ...chartOptions.plugins,
-              title: {
-                display: false
-              }
-            }
-          }}
-        />
-      </Box>
-    </Paper>
+    <Card sx={{ height, p: 2 }}>
+      <CardContent>
+        <BarChartComponent data={chartData} options={getChartOptions(title, isDark)} />
+      </CardContent>
+    </Card>
   );
 };
 
@@ -178,36 +227,56 @@ interface DoughnutChartProps {
   title: string;
   data: {
     labels: string[];
-    datasets: Array<{
-      data: number[];
-      backgroundColor?: string[];
-      borderColor?: string[];
-    }>;
+    data: number[];
   };
   height?: number;
 }
 
 export const DoughnutChart: React.FC<DoughnutChartProps> = ({ title, data, height = 300 }) => {
+  const { isDark } = useTheme();
+
+  const chartData = {
+    labels: data.labels,
+    datasets: [
+      {
+        label: title,
+        data: data.data,
+        backgroundColor: [
+          chartColors.primary,
+          chartColors.secondary,
+          chartColors.success,
+          chartColors.warning,
+          chartColors.error,
+          chartColors.info,
+          chartColors.purple,
+          chartColors.pink,
+          chartColors.indigo,
+          chartColors.teal
+        ],
+        borderColor: isDark ? '#333333' : '#ffffff',
+        borderWidth: 2,
+        cutout: '60%'
+      }
+    ]
+  };
+
+  const options = {
+    ...getChartOptions(title, isDark),
+    plugins: {
+      ...getChartOptions(title, isDark).plugins,
+      legend: {
+        ...getChartOptions(title, isDark).plugins.legend,
+        position: 'bottom' as const
+      }
+    }
+  };
+
   return (
-    <Paper elevation={2} sx={{ p: 2, height: height + 80 }}>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      <Box sx={{ height, position: 'relative' }}>
-        <Doughnut
-          data={data}
-          options={{
-            ...chartOptions,
-            plugins: {
-              ...chartOptions.plugins,
-              title: {
-                display: false
-              }
-            }
-          }}
-        />
-      </Box>
-    </Paper>
+    <Card sx={{ height, p: 2 }}>
+      <CardContent>
+        <DoughnutChartComponent data={chartData} options={options} />
+      </CardContent>
+    </Card>
   );
 };
 
@@ -216,400 +285,377 @@ interface RadarChartProps {
   title: string;
   data: {
     labels: string[];
-    datasets: Array<{
-      label: string;
-      data: number[];
-      backgroundColor?: string;
-      borderColor?: string;
-    }>;
+    data: number[];
   };
   height?: number;
 }
 
 export const RadarChart: React.FC<RadarChartProps> = ({ title, data, height = 300 }) => {
+  const { isDark } = useTheme();
+
+  const chartData = {
+    labels: data.labels,
+    datasets: [
+      {
+        label: title,
+        data: data.data,
+        borderColor: chartColors.primary,
+        backgroundColor: `${chartColors.primary}20`,
+        borderWidth: 2,
+        fill: true,
+        pointBackgroundColor: chartColors.primary,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }
+    ]
+  };
+
+  const options = {
+    ...getChartOptions(title, isDark),
+    scales: {
+      r: {
+        beginAtZero: true,
+        ticks: {
+          color: isDark ? '#ffffff' : '#000000',
+          backdropColor: 'transparent'
+        },
+        grid: {
+          color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+        },
+        pointLabels: {
+          color: isDark ? '#ffffff' : '#000000'
+        }
+      }
+    }
+  };
+
   return (
-    <Paper elevation={2} sx={{ p: 2, height: height + 80 }}>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      <Box sx={{ height, position: 'relative' }}>
-        <Radar
-          data={data}
-          options={{
-            ...chartOptions,
-            plugins: {
-              ...chartOptions.plugins,
-              title: {
-                display: false
-              }
-            }
-          }}
-        />
-      </Box>
-    </Paper>
+    <Card sx={{ height, p: 2 }}>
+      <CardContent>
+        <RadarChartComponent data={chartData} options={options} />
+      </CardContent>
+    </Card>
   );
 };
 
-// Componente de métricas con tarjetas
+// Componente de tarjeta de métrica
 interface MetricCardProps {
   title: string;
   value: string | number;
-  subtitle?: string;
-  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
   icon?: React.ReactNode;
+  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
+  subtitle?: string;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
   value, 
-  subtitle, 
+  icon, 
   color = 'primary',
-  icon 
+  subtitle 
 }) => {
-  const colorMap = {
-    primary: colors.primary.main,
-    secondary: colors.secondary.main,
-    success: colors.success.main,
-    warning: colors.warning.main,
-    error: colors.error.main,
-    info: colors.info.main
+  const { isDark } = useTheme();
+
+  const getColorValue = (colorName: string) => {
+    switch (colorName) {
+      case 'primary': return chartColors.primary;
+      case 'secondary': return chartColors.secondary;
+      case 'success': return chartColors.success;
+      case 'warning': return chartColors.warning;
+      case 'error': return chartColors.error;
+      case 'info': return chartColors.info;
+      default: return chartColors.primary;
+    }
   };
 
   return (
-    <Paper 
-      elevation={2} 
+    <Card 
       sx={{ 
-        p: 3, 
-        textAlign: 'center',
-        borderLeft: `4px solid ${colorMap[color]}`,
-        height: '100%'
+        height: '100%',
+        background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: isDark 
+            ? '0 8px 25px rgba(0, 0, 0, 0.3)' 
+            : '0 8px 25px rgba(0, 0, 0, 0.1)'
+        }
       }}
     >
-      {icon && (
-        <Box sx={{ mb: 1, color: colorMap[color] }}>
-          {icon}
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          {icon && (
+            <Box 
+              sx={{ 
+                mr: 1, 
+                color: getColorValue(color),
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              {icon}
+            </Box>
+          )}
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              color: isDark ? '#ffffff' : '#000000',
+              fontWeight: 600
+            }}
+          >
+            {title}
+          </Typography>
         </Box>
-      )}
-      <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
-        {value}
-      </Typography>
-      <Typography variant="h6" color="text.secondary" gutterBottom>
-        {title}
-      </Typography>
-      {subtitle && (
-        <Typography variant="body2" color="text.secondary">
-          {subtitle}
+        
+        <Typography 
+          variant="h4" 
+          component="div" 
+          sx={{ 
+            fontWeight: 'bold',
+            color: getColorValue(color),
+            mb: subtitle ? 1 : 0
+          }}
+        >
+          {value}
         </Typography>
-      )}
-    </Paper>
+        
+        {subtitle && (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)'
+            }}
+          >
+            {subtitle}
+          </Typography>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
 // Componente de tabla de datos
 interface DataTableProps {
   title: string;
-  data: Array<Record<string, any>>;
+  data: Array<{
+    [key: string]: string | number;
+  }>;
   columns: Array<{
     key: string;
     label: string;
-    render?: (value: any, row: any) => React.ReactNode;
+    align?: 'left' | 'center' | 'right';
   }>;
 }
 
 export const DataTable: React.FC<DataTableProps> = ({ title, data, columns }) => {
+  const { isDark } = useTheme();
+
   return (
-    <Paper elevation={2} sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      <Box sx={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: `1px solid ${colors.border.primary}` }}>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'left',
-                    fontWeight: 'bold',
-                    color: colors.text.primary
-                  }}
-                >
-                  {column.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, index) => (
-              <tr
-                key={index}
-                style={{
-                  borderBottom: `1px solid ${colors.border.secondary}`,
-                  '&:hover': {
-                    backgroundColor: colors.action.hover
-                  }
-                }}
-              >
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Typography 
+          variant="h6" 
+          gutterBottom 
+          sx={{ 
+            color: isDark ? '#ffffff' : '#000000',
+            fontWeight: 600,
+            mb: 2
+          }}
+        >
+          {title}
+        </Typography>
+        
+        <TableContainer 
+          component={Paper} 
+          sx={{ 
+            maxHeight: 400,
+            background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+            border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+          }}
+        >
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
                 {columns.map((column) => (
-                  <td
+                  <TableCell
                     key={column.key}
-                    style={{
-                      padding: '12px',
-                      color: colors.text.secondary
+                    align={column.align || 'left'}
+                    sx={{
+                      backgroundColor: isDark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.05)',
+                      color: isDark ? '#ffffff' : '#000000',
+                      fontWeight: 600,
+                      borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
                     }}
                   >
-                    {column.render 
-                      ? column.render(row[column.key], row)
-                      : row[column.key]
-                    }
-                  </td>
+                    {column.label}
+                  </TableCell>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Box>
-    </Paper>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.map((row, index) => (
+                <TableRow
+                  key={index}
+                  sx={{
+                    '&:nth-of-type(odd)': {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)'
+                    },
+                    '&:hover': {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.key}
+                      align={column.align || 'left'}
+                      sx={{
+                        color: isDark ? '#ffffff' : '#000000',
+                        borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'}`
+                      }}
+                    >
+                      {row[column.key]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+    </Card>
   );
 };
 
 // Componente de filtros de analytics
 interface AnalyticsFiltersProps {
   filters: {
-    dateFrom?: string;
-    dateTo?: string;
-    eventType?: string;
-    status?: string;
-    userRole?: string;
-    location?: string;
-    period?: string;
-    groupBy?: string;
+    dateFrom: string;
+    dateTo: string;
+    eventType: string;
+    status: string;
+    location: string;
   };
   onFiltersChange: (filters: any) => void;
-  eventTypes?: string[];
-  statuses?: string[];
-  userRoles?: string[];
-  locations?: string[];
-  periods?: string[];
-  groupByOptions?: string[];
+  eventTypes: string[];
+  statuses: string[];
+  locations: string[];
 }
 
 export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
   filters,
   onFiltersChange,
-  eventTypes = [],
-  statuses = [],
-  userRoles = [],
-  locations = [],
-  periods = ['day', 'week', 'month', 'quarter'],
-  groupByOptions = []
+  eventTypes,
+  statuses,
+  locations
 }) => {
+  const { isDark } = useTheme();
+
   const handleFilterChange = (key: string, value: string) => {
-    onFiltersChange({ ...filters, [key]: value });
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Filtros de Analytics
-      </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
-        <Box>
-          <Typography variant="body2" gutterBottom>
-            Fecha Desde
-          </Typography>
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Typography 
+          variant="h6" 
+          gutterBottom 
+          sx={{ 
+            color: isDark ? '#ffffff' : '#000000',
+            fontWeight: 600,
+            mb: 2
+          }}
+        >
+          Filtros de Analytics
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <input
             type="date"
-            value={filters.dateFrom || ''}
+            value={filters.dateFrom}
             onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
             style={{
-              width: '100%',
-              padding: '8px',
-              border: `1px solid ${colors.border.primary}`,
-              borderRadius: '4px'
+              padding: '8px 12px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+              borderRadius: '4px',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+              color: isDark ? '#ffffff' : '#000000'
             }}
           />
-        </Box>
-        
-        <Box>
-          <Typography variant="body2" gutterBottom>
-            Fecha Hasta
-          </Typography>
+          
           <input
             type="date"
-            value={filters.dateTo || ''}
+            value={filters.dateTo}
             onChange={(e) => handleFilterChange('dateTo', e.target.value)}
             style={{
-              width: '100%',
-              padding: '8px',
-              border: `1px solid ${colors.border.primary}`,
-              borderRadius: '4px'
+              padding: '8px 12px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+              borderRadius: '4px',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+              color: isDark ? '#ffffff' : '#000000'
             }}
           />
+          
+          <select
+            value={filters.eventType}
+            onChange={(e) => handleFilterChange('eventType', e.target.value)}
+            style={{
+              padding: '8px 12px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+              borderRadius: '4px',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+              color: isDark ? '#ffffff' : '#000000'
+            }}
+          >
+            <option value="">Todos los tipos</option>
+            {eventTypes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+          
+          <select
+            value={filters.status}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            style={{
+              padding: '8px 12px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+              borderRadius: '4px',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+              color: isDark ? '#ffffff' : '#000000'
+            }}
+          >
+            <option value="">Todos los estados</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+          
+          <select
+            value={filters.location}
+            onChange={(e) => handleFilterChange('location', e.target.value)}
+            style={{
+              padding: '8px 12px',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+              borderRadius: '4px',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+              color: isDark ? '#ffffff' : '#000000'
+            }}
+          >
+            <option value="">Todas las ubicaciones</option>
+            {locations.map((location) => (
+              <option key={location} value={location}>{location}</option>
+            ))}
+          </select>
         </Box>
-
-        {eventTypes.length > 0 && (
-          <Box>
-            <Typography variant="body2" gutterBottom>
-              Tipo de Evento
-            </Typography>
-            <select
-              value={filters.eventType || ''}
-              onChange={(e) => handleFilterChange('eventType', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: `1px solid ${colors.border.primary}`,
-                borderRadius: '4px'
-              }}
-            >
-              <option value="">Todos</option>
-              {eventTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </Box>
-        )}
-
-        {statuses.length > 0 && (
-          <Box>
-            <Typography variant="body2" gutterBottom>
-              Estado
-            </Typography>
-            <select
-              value={filters.status || ''}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: `1px solid ${colors.border.primary}`,
-                borderRadius: '4px'
-              }}
-            >
-              <option value="">Todos</option>
-              {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </Box>
-        )}
-
-        {userRoles.length > 0 && (
-          <Box>
-            <Typography variant="body2" gutterBottom>
-              Rol de Usuario
-            </Typography>
-            <select
-              value={filters.userRole || ''}
-              onChange={(e) => handleFilterChange('userRole', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: `1px solid ${colors.border.primary}`,
-                borderRadius: '4px'
-              }}
-            >
-              <option value="">Todos</option>
-              {userRoles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-          </Box>
-        )}
-
-        {locations.length > 0 && (
-          <Box>
-            <Typography variant="body2" gutterBottom>
-              Ubicación
-            </Typography>
-            <select
-              value={filters.location || ''}
-              onChange={(e) => handleFilterChange('location', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: `1px solid ${colors.border.primary}`,
-                borderRadius: '4px'
-              }}
-            >
-              <option value="">Todas</option>
-              {locations.map((location) => (
-                <option key={location} value={location}>
-                  {location}
-                </option>
-              ))}
-            </select>
-          </Box>
-        )}
-
-        {periods.length > 0 && (
-          <Box>
-            <Typography variant="body2" gutterBottom>
-              Período
-            </Typography>
-            <select
-              value={filters.period || ''}
-              onChange={(e) => handleFilterChange('period', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: `1px solid ${colors.border.primary}`,
-                borderRadius: '4px'
-              }}
-            >
-              <option value="">Seleccionar</option>
-              {periods.map((period) => (
-                <option key={period} value={period}>
-                  {period}
-                </option>
-              ))}
-            </select>
-          </Box>
-        )}
-
-        {groupByOptions.length > 0 && (
-          <Box>
-            <Typography variant="body2" gutterBottom>
-              Agrupar Por
-            </Typography>
-            <select
-              value={filters.groupBy || ''}
-              onChange={(e) => handleFilterChange('groupBy', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: `1px solid ${colors.border.primary}`,
-                borderRadius: '4px'
-              }}
-            >
-              <option value="">Seleccionar</option>
-              {groupByOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </Box>
-        )}
-      </Box>
-    </Paper>
+      </CardContent>
+    </Card>
   );
-};
-
-export default {
-  LineChart,
-  BarChart,
-  DoughnutChart,
-  RadarChart,
-  MetricCard,
-  DataTable,
-  AnalyticsFilters
 }; 

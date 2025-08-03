@@ -314,8 +314,9 @@ export const paymentService = {
    */
   async markInvoiceAsPaid(invoiceId: string): Promise<Invoice> {
     try {
-      const response = await apiService.put(
-        API_CONFIG.ENDPOINTS.MARK_INVOICE_PAID.replace(':id', invoiceId)
+      const response = await apiService.post(
+        API_CONFIG.ENDPOINTS.MARK_INVOICE_PAID.replace(':id', invoiceId),
+        { paymentMethodId: 'default' } // Método de pago por defecto para verificación manual
       );
 
       return response.data.data;

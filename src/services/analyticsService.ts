@@ -2,6 +2,7 @@
 // Este servicio maneja todas las llamadas a la API de analytics
 
 import { apiService } from './api';
+import { API_CONFIG } from '../config/apiConfig';
 
 // Tipos para Analytics
 export interface AnalyticsFilters {
@@ -128,7 +129,7 @@ const analyticsService = {
   // Dashboard completo de analytics
   async getDashboard(filters: AnalyticsFilters = {}): Promise<DashboardAnalytics> {
     try {
-      const response = await apiService.get('/analytics/dashboard', { params: filters });
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_DASHBOARD, { params: filters });
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard analytics:', error);
@@ -220,42 +221,42 @@ const analyticsService = {
             'Mayo': 72,
             'Junio': 78,
             'Julio': 85,
-            'Agosto': 82,
-            'Septiembre': 79,
-            'Octubre': 76,
-            'Noviembre': 73,
-            'Diciembre': 70
+            'Agosto': 92,
+            'Septiembre': 88,
+            'Octubre': 82,
+            'Noviembre': 76,
+            'Diciembre': 69
           },
-          activeUsers: 678,
-          newUsersThisMonth: 85,
+          activeUsers: 567,
+          newUsersThisMonth: 45,
           userGrowthRate: 0.12
         },
         platform: {
-          totalRevenue: 1250000,
-          averageEventValue: 3200,
+          totalRevenue: 811200,
+          averageEventValue: 2200,
           topEventTypes: [
-            { type: 'Boda', count: 67, revenue: 234500 },
-            { type: 'Corporativo', count: 45, revenue: 189000 },
-            { type: 'Concierto', count: 42, revenue: 168000 },
-            { type: 'Privado', count: 38, revenue: 152000 },
-            { type: 'Otro', count: 42, revenue: 168000 }
+            { type: 'Boda', count: 45, revenue: 135000 },
+            { type: 'Corporativo', count: 32, revenue: 96000 },
+            { type: 'Privado', count: 28, revenue: 84000 },
+            { type: 'Concierto', count: 25, revenue: 75000 },
+            { type: 'Otro', count: 26, revenue: 78000 }
           ],
           topLocations: [
-            { location: 'Madrid', count: 89, revenue: 356000 },
-            { location: 'Barcelona', count: 67, revenue: 268000 },
-            { location: 'Valencia', count: 45, revenue: 180000 },
-            { location: 'Sevilla', count: 34, revenue: 136000 },
-            { location: 'Bilbao', count: 28, revenue: 112000 }
+            { location: 'Madrid', count: 45, revenue: 135000 },
+            { location: 'Barcelona', count: 38, revenue: 114000 },
+            { location: 'Valencia', count: 32, revenue: 96000 },
+            { location: 'Sevilla', count: 28, revenue: 84000 },
+            { location: 'Bilbao', count: 25, revenue: 75000 }
           ],
           userEngagement: {
-            eventsPerUser: 2.3,
-            requestsPerUser: 3.1,
-            averageSessionDuration: 45
+            eventsPerUser: 0.17,
+            requestsPerUser: 0.26,
+            averageSessionDuration: 8.5
           },
           performance: {
-            averageResponseTime: 150,
-            successRate: 0.95,
-            errorRate: 0.05
+            averageResponseTime: 2.3,
+            successRate: 0.92,
+            errorRate: 0.08
           }
         },
         trends: {
@@ -276,12 +277,12 @@ const analyticsService = {
             { month: 'Junio', count: 35, acceptanceRate: 0.88 }
           ],
           userTrends: [
-            { month: 'Enero', newUsers: 45, activeUsers: 320 },
-            { month: 'Febrero', newUsers: 52, activeUsers: 345 },
-            { month: 'Marzo', newUsers: 58, activeUsers: 378 },
-            { month: 'Abril', newUsers: 65, activeUsers: 412 },
-            { month: 'Mayo', newUsers: 72, activeUsers: 445 },
-            { month: 'Junio', newUsers: 78, activeUsers: 478 }
+            { month: 'Enero', newUsers: 45, activeUsers: 567 },
+            { month: 'Febrero', newUsers: 52, activeUsers: 589 },
+            { month: 'Marzo', newUsers: 58, activeUsers: 612 },
+            { month: 'Abril', newUsers: 65, activeUsers: 634 },
+            { month: 'Mayo', newUsers: 72, activeUsers: 657 },
+            { month: 'Junio', newUsers: 78, activeUsers: 679 }
           ]
         }
       };
@@ -291,12 +292,13 @@ const analyticsService = {
   // Analytics de eventos
   async getEventAnalytics(filters: AnalyticsFilters = {}): Promise<EventAnalytics> {
     try {
-      const response = await apiService.get('/analytics/events', { params: filters });
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_EVENTS, { params: filters });
       return response.data;
     } catch (error) {
       console.error('Error fetching event analytics:', error);
       console.log('🔍 Using mock data for event analytics');
       
+      // Datos mock para eventos
       return {
         totalEvents: 156,
         eventsByStatus: {
@@ -337,12 +339,13 @@ const analyticsService = {
   // Analytics de solicitudes
   async getRequestAnalytics(filters: AnalyticsFilters = {}): Promise<RequestAnalytics> {
     try {
-      const response = await apiService.get('/analytics/requests', { params: filters });
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_REQUESTS, { params: filters });
       return response.data;
     } catch (error) {
       console.error('Error fetching request analytics:', error);
       console.log('🔍 Using mock data for request analytics');
       
+      // Datos mock para solicitudes
       return {
         totalRequests: 234,
         requestsByStatus: {
@@ -383,12 +386,13 @@ const analyticsService = {
   // Analytics de usuarios
   async getUserAnalytics(filters: AnalyticsFilters = {}): Promise<UserAnalytics> {
     try {
-      const response = await apiService.get('/analytics/users', { params: filters });
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_USERS, { params: filters });
       return response.data;
     } catch (error) {
       console.error('Error fetching user analytics:', error);
       console.log('🔍 Using mock data for user analytics');
       
+      // Datos mock para usuarios
       return {
         totalUsers: 892,
         usersByRole: {
@@ -405,14 +409,14 @@ const analyticsService = {
           'Mayo': 72,
           'Junio': 78,
           'Julio': 85,
-          'Agosto': 82,
-          'Septiembre': 79,
-          'Octubre': 76,
-          'Noviembre': 73,
-          'Diciembre': 70
+          'Agosto': 92,
+          'Septiembre': 88,
+          'Octubre': 82,
+          'Noviembre': 76,
+          'Diciembre': 69
         },
-        activeUsers: 678,
-        newUsersThisMonth: 85,
+        activeUsers: 567,
+        newUsersThisMonth: 45,
         userGrowthRate: 0.12
       };
     }
@@ -421,38 +425,39 @@ const analyticsService = {
   // Analytics de plataforma
   async getPlatformAnalytics(filters: AnalyticsFilters = {}): Promise<PlatformAnalytics> {
     try {
-      const response = await apiService.get('/analytics/platform', { params: filters });
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_PLATFORM, { params: filters });
       return response.data;
     } catch (error) {
       console.error('Error fetching platform analytics:', error);
       console.log('🔍 Using mock data for platform analytics');
       
+      // Datos mock para plataforma
       return {
-        totalRevenue: 1250000,
-        averageEventValue: 3200,
+        totalRevenue: 811200,
+        averageEventValue: 2200,
         topEventTypes: [
-          { type: 'Boda', count: 67, revenue: 234500 },
-          { type: 'Corporativo', count: 45, revenue: 189000 },
-          { type: 'Concierto', count: 42, revenue: 168000 },
-          { type: 'Privado', count: 38, revenue: 152000 },
-          { type: 'Otro', count: 42, revenue: 168000 }
+          { type: 'Boda', count: 45, revenue: 135000 },
+          { type: 'Corporativo', count: 32, revenue: 96000 },
+          { type: 'Privado', count: 28, revenue: 84000 },
+          { type: 'Concierto', count: 25, revenue: 75000 },
+          { type: 'Otro', count: 26, revenue: 78000 }
         ],
         topLocations: [
-          { location: 'Madrid', count: 89, revenue: 356000 },
-          { location: 'Barcelona', count: 67, revenue: 268000 },
-          { location: 'Valencia', count: 45, revenue: 180000 },
-          { location: 'Sevilla', count: 34, revenue: 136000 },
-          { location: 'Bilbao', count: 28, revenue: 112000 }
+          { location: 'Madrid', count: 45, revenue: 135000 },
+          { location: 'Barcelona', count: 38, revenue: 114000 },
+          { location: 'Valencia', count: 32, revenue: 96000 },
+          { location: 'Sevilla', count: 28, revenue: 84000 },
+          { location: 'Bilbao', count: 25, revenue: 75000 }
         ],
         userEngagement: {
-          eventsPerUser: 2.3,
-          requestsPerUser: 3.1,
-          averageSessionDuration: 45
+          eventsPerUser: 0.17,
+          requestsPerUser: 0.26,
+          averageSessionDuration: 8.5
         },
         performance: {
-          averageResponseTime: 150,
-          successRate: 0.95,
-          errorRate: 0.05
+          averageResponseTime: 2.3,
+          successRate: 0.92,
+          errorRate: 0.08
         }
       };
     }
@@ -641,7 +646,7 @@ const analyticsService = {
     filters: AnalyticsFilters = {}
   ): Promise<Blob> {
     try {
-      const response = await apiService.get('/analytics/export', {
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.ADMIN_ANALYTICS_EXPORT, {
         params: { type, format, ...filters },
         responseType: 'blob'
       });
