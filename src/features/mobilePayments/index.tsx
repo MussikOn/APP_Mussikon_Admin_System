@@ -223,10 +223,26 @@ const MobilePayments: React.FC = () => {
 
   // Formatear moneda
   const formatCurrency = (amount: number, currency: string = 'EUR') => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+    // Mapear códigos de moneda no válidos a códigos ISO válidos
+    const currencyMap: { [key: string]: string } = {
+      'RD$': 'DOP', // Peso Dominicano
+      'USD': 'USD',
+      'EUR': 'EUR',
+      'DOP': 'DOP'
+    };
+
+    // Obtener el código de moneda válido
+    const validCurrency = currencyMap[currency] || 'EUR';
+
+    try {
+      return new Intl.NumberFormat('es-ES', {
+        style: 'currency',
+        currency: validCurrency
+      }).format(amount);
+    } catch (error) {
+      // Fallback si hay algún error con el formateo
+      return `${amount.toFixed(2)} ${validCurrency}`;
+    }
   };
 
   // Formatear fecha
