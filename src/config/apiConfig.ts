@@ -11,7 +11,7 @@ const getBaseUrl = (): string => {
   }
   
   // URL por defecto (puede ser cambiada aquí)
-  const defaultUrl = 'http://172.20.10.2:3001';
+  const defaultUrl = 'http://192.168.100.101:3001';
   console.log('🌐 Usando URL del backend por defecto:', defaultUrl);
   return defaultUrl;
 };
@@ -174,7 +174,7 @@ export const API_CONFIG = {
 // Configuración de Socket.IO
 export const SOCKET_CONFIG = {
   // URL del servidor Socket.IO (misma que la API)
-  SOCKET_URL: 'http://localhost:3001',
+  SOCKET_URL: 'http://192.168.54.26:3001',
   
   // Configuración de conexión
   CONNECTION_OPTIONS: {

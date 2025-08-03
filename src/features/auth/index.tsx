@@ -167,23 +167,6 @@ const Auth = () => {
               }}
             />
 
-            {/* Link para recuperar contraseña */}
-            <Box sx={{ textAlign: 'center' }}>
-              <Link
-                component="button"
-                variant="body2"
-                onClick={() => setShowForgotPassword(true)}
-                sx={{
-                  color: 'primary.main',
-                  textDecoration: 'none',
-                  '&:hover': {
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </Box>
 
             {/* Mensaje de error */}
             {error && (
@@ -223,6 +206,25 @@ const Auth = () => {
               )}
             </Button>
           </Box>
+
+          
+            {/* Link para recuperar contraseña */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => setShowForgotPassword(true)}
+                sx={{
+                  color: 'primary.main',
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </Box>
 
           {/* Footer */}
           <Box sx={{ textAlign: 'center', mt: 4, pt: 3, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
