@@ -17,7 +17,8 @@ import {
   ZoomIn as ZoomInIcon,
   Person as PersonIcon,
   Event as EventIcon,
-  Payment as PaymentIcon
+  Payment as PaymentIcon,
+  Visibility as VisibilityIcon
 } from '@mui/icons-material';
 import type { MobilePayment } from '../../../services/mobilePaymentsService';
 
@@ -26,6 +27,7 @@ interface PaymentCardProps {
   onVerify: (payment: MobilePayment) => void;
   onReject: (payment: MobilePayment) => void;
   onViewImage: (imageUrl: string) => void;
+  onViewDetails: (payment: MobilePayment) => void;
   getStatusColor: (status: string) => string;
   getStatusText: (status: string) => string;
   getPaymentMethodText: (method: string) => string;
@@ -38,6 +40,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
   onVerify,
   onReject,
   onViewImage,
+  onViewDetails,
   getStatusColor,
   getStatusText,
   getPaymentMethodText,
@@ -272,6 +275,30 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
             </Button>
           </Box>
         )}
+
+        {/* Botón Ver Detalles */}
+        <Box sx={{ mt: 2 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            fullWidth
+            startIcon={<VisibilityIcon />}
+            onClick={() => onViewDetails(payment)}
+            sx={{
+              py: 0.75,
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              borderColor: 'primary.main',
+              color: 'primary.main',
+              '&:hover': {
+                borderColor: 'primary.dark',
+                backgroundColor: 'primary.light'
+              }
+            }}
+          >
+            Ver Detalles
+          </Button>
+        </Box>
 
         {/* Estado de verificación/rechazo */}
         {payment.status === 'approved' && payment.verificationNotes && (

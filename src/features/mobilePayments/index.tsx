@@ -36,7 +36,8 @@ import {
   TrendingUp as TrendingUpIcon,
   Warning as WarningIcon,
   FilterList as FilterIcon,
-  AttachMoney as MoneyIcon
+  AttachMoney as MoneyIcon,
+  AccountBalance as AccountBalanceIcon
 } from '@mui/icons-material';
 
 // Importar servicios y hooks
@@ -87,10 +88,11 @@ const MobilePayments: React.FC = () => {
     paymentMethod: 'all',
   });
 
-  // Estado para diálogos
+  // Estados para diálogos
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<MobilePayment | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
 
@@ -174,6 +176,11 @@ const MobilePayments: React.FC = () => {
   const handleViewImage = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setImageDialogOpen(true);
+  };
+
+  const handleViewDetails = (payment: MobilePayment) => {
+    setSelectedPayment(payment);
+    setDetailsDialogOpen(true);
   };
 
   // Obtener color del estado
@@ -540,6 +547,7 @@ const MobilePayments: React.FC = () => {
                 onVerify={handleVerifyPayment}
                 onReject={handleRejectPayment}
                 onViewImage={handleViewImage}
+                onViewDetails={handleViewDetails}
                 getStatusColor={getStatusColor}
                 getStatusText={getStatusText}
                 getPaymentMethodText={getPaymentMethodText}
@@ -943,6 +951,357 @@ const MobilePayments: React.FC = () => {
           <ModernButton
             variant="ghost"
             onClick={() => setImageDialogOpen(false)}
+            sx={{ px: 3 }}
+          >
+            Cerrar
+          </ModernButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de Detalles del Depósito */}
+      <Dialog 
+        open={detailsDialogOpen} 
+        onClose={() => setDetailsDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: designSystem.shadows.xl
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: designSystem.gradients.primary,
+          color: 'white',
+          borderRadius: '12px 12px 0 0'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <AccountBalanceIcon sx={{ mr: 1, fontSize: 28 }} />
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Detalles del Depósito
+              </Typography>
+            </Box>
+            {selectedPayment && (
+              <Chip
+                label={getStatusText(selectedPayment.status)}
+                color={getStatusColor(selectedPayment.status) as any}
+                sx={{ fontWeight: 600 }}
+              />
+            )}
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          {selectedPayment && (
+            <Box>
+              {/* Información General */}
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                Información General
+              </Typography>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      ID del Depósito
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedPayment.id}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      Monto
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
+                      {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      Fecha de Creación
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {formatDate(selectedPayment.createdAt)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      Última Actualización
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {formatDate(selectedPayment.updatedAt)}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* Información del Usuario */}
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                Información del Usuario
+              </Typography>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      ID del Usuario
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedPayment.userId}
+                    </Typography>
+                  </Box>
+                </Grid>
+                {selectedPayment.user && (
+                  <>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          Nombre Completo
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedPayment.user.name} {selectedPayment.user.lastName}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          Email
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedPayment.user.userEmail}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </>
+                )}
+              </Grid>
+
+              {/* Información Bancaria */}
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                Información Bancaria
+              </Typography>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      Banco
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedPayment.bankName || 'No especificado'}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      Titular de la Cuenta
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedPayment.accountHolderName || 'No especificado'}
+                    </Typography>
+                  </Box>
+                </Grid>
+                {selectedPayment.accountNumber && (
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        Número de Cuenta
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        {selectedPayment.accountNumber}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+                {selectedPayment.referenceNumber && (
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        Número de Referencia
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        {selectedPayment.referenceNumber}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+                {selectedPayment.depositDate && (
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        Fecha del Depósito
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        {selectedPayment.depositDate}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+                {selectedPayment.depositTime && (
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        Hora del Depósito
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        {selectedPayment.depositTime}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
+
+              {/* Comprobante */}
+              {selectedPayment.proofImage && (
+                <>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                    Comprobante de Depósito
+                  </Typography>
+                  <Box sx={{ mb: 3 }}>
+                    <img
+                      src={selectedPayment.proofImage}
+                      alt="Comprobante de depósito"
+                      style={{
+                        width: '100%',
+                        maxHeight: '300px',
+                        objectFit: 'contain',
+                        borderRadius: 8,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        setSelectedImage(selectedPayment.proofImage!);
+                        setImageDialogOpen(true);
+                        setDetailsDialogOpen(false);
+                      }}
+                      onError={(e) => {
+                        console.error('Error cargando imagen en detalles:', selectedPayment.proofImage);
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/400x300?text=Error+al+cargar+comprobante';
+                        target.style.filter = 'grayscale(100%) opacity(0.5)';
+                      }}
+                    />
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+                      Haz clic en la imagen para verla en tamaño completo
+                    </Typography>
+                  </Box>
+                </>
+              )}
+
+              {/* Notas y Comentarios */}
+              {(selectedPayment.notes || selectedPayment.comments) && (
+                <>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                    Notas y Comentarios
+                  </Typography>
+                  <Box sx={{ mb: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 2 }}>
+                    {selectedPayment.notes && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          Notas del Sistema
+                        </Typography>
+                        <Typography variant="body1">
+                          {selectedPayment.notes}
+                        </Typography>
+                      </Box>
+                    )}
+                    {selectedPayment.comments && (
+                      <Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          Comentarios del Usuario
+                        </Typography>
+                        <Typography variant="body1">
+                          {selectedPayment.comments}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </>
+              )}
+
+              {/* Información de Verificación */}
+              {selectedPayment.verifiedBy && (
+                <>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                    Información de Verificación
+                  </Typography>
+                  <Grid container spacing={2} sx={{ mb: 3 }}>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          Verificado por
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedPayment.verifiedBy}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    {selectedPayment.verifiedAt && (
+                      <Grid item xs={12} md={6}>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            Fecha de Verificación
+                          </Typography>
+                          <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                            {formatDate(selectedPayment.verifiedAt)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                    {selectedPayment.verificationNotes && (
+                      <Grid item xs={12}>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            Notas de Verificación
+                          </Typography>
+                          <Typography variant="body1">
+                            {selectedPayment.verificationNotes}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                  </Grid>
+                </>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          {selectedPayment?.status === 'pending' && (
+            <>
+              <ModernButton
+                variant="primary"
+                onClick={() => {
+                  setDetailsDialogOpen(false);
+                  handleVerifyPayment(selectedPayment);
+                }}
+                startIcon={<CheckCircleIcon />}
+                sx={{ px: 3 }}
+              >
+                Aprobar Depósito
+              </ModernButton>
+              <ModernButton
+                variant="danger"
+                onClick={() => {
+                  setDetailsDialogOpen(false);
+                  handleRejectPayment(selectedPayment);
+                }}
+                startIcon={<CancelIcon />}
+                sx={{ px: 3 }}
+              >
+                Rechazar Depósito
+              </ModernButton>
+            </>
+          )}
+          <ModernButton
+            variant="ghost"
+            onClick={() => setDetailsDialogOpen(false)}
             sx={{ px: 3 }}
           >
             Cerrar
