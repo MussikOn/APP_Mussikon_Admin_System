@@ -1,66 +1,73 @@
-// Módulo de Pagos - MussikOn Admin System
-// Sistema completo de gestión de pagos con verificación de depósitos por admin
+// Componente Principal de Gestión de Pagos - MussikOn Admin System
+// Sistema completo de verificación de depósitos y gestión de pagos
 
 import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Grid,
-  Alert,
-  CircularProgress,
-  Tabs,
-  Tab,
-  Chip,
+  Card,
+  CardContent,
+  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Grid,
+  Chip,
+  Alert,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip,
+  Badge,
+  TextField,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Badge,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider
+  Pagination,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import {
-  Payment as PaymentIcon,
   Receipt as ReceiptIcon,
   AccountBalance as AccountBalanceIcon,
-  CreditCard as CreditCardIcon,
   TrendingUp as TrendingUpIcon,
-  CheckCircle as CheckCircleIcon,
+  Search as SearchIcon,
   Visibility as VisibilityIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  Security as SecurityIcon,
+  ExpandMore as ExpandMoreIcon,
   Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  VerifiedUser as VerifiedUserIcon,
-  AttachMoney as MoneyIcon,
-  Schedule as ScheduleIcon,
-  CalendarToday as CalendarIcon,
-  FilterList as FilterIcon
+  Assessment as AssessmentIcon
 } from '@mui/icons-material';
 
-// Importar servicios y hooks
-import { paymentService } from '../../services/paymentService';
-import type { Invoice } from '../../services/paymentService';
+// Importar servicios
+import { depositService } from '../../services/depositService';
+import type { 
+  UserDeposit, 
+  WithdrawalRequest, 
+  DepositStats 
+} from '../../services/depositService';
 import { useApiRequest } from '../../hooks/useApiRequest';
 
-// Importar componentes modernos
-import ModernCard from '../../components/ui/ModernCard';
-import ModernButton from '../../components/ui/ModernButton';
-import ModernInput from '../../components/ui/ModernInput';
+// Importar componentes
+import DepositVerification from './components/DepositVerification';
 import VoucherImage from '../../components/VoucherImage';
-import VoucherList from '../../components/VoucherList';
 
 // Importar estilos
-import { ResponsiveLayout } from '../../components/ResponsiveLayout';
-import { designSystem } from '../../theme/designSystem';
+import { chipStyles } from '../../theme/buttonStyles';
 
-// Tipos para las pestañas
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -74,221 +81,111 @@ function TabPanel(props: TabPanelProps) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`payments-tabpanel-${index}`}
-      aria-labelledby={`payments-tab-${index}`}
+      id={`payment-tabpanel-${index}`}
+      aria-labelledby={`payment-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
 
-// Datos mock para cuando el backend no esté disponible
-const mockStats = {
-  totalRevenue: 125000,
-  totalTransactions: 342,
-  averageTransaction: 365.5,
-  successRate: 0.94
-};
+const PaymentsManagement: React.FC = () => {
+  // Estado principal
+  const [activeTab, setActiveTab] = useState(0);
+  const [deposits, setDeposits] = useState<UserDeposit[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+  const [stats, setStats] = useState<DepositStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const mockInvoices: Invoice[] = [
-  {
-    id: 'inv_001',
-    userId: 'user_123',
-    amount: 150.00,
-    currency: 'USD',
-    status: 'sent',
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    items: [{
-      id: 'item_001',
-      description: 'Servicios de música',
-      quantity: 1,
-      unitPrice: 150.00,
-      total: 150.00
-    }],
-    total: 150.00,
-    tax: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'inv_002',
-    userId: 'user_456',
-    amount: 250.00,
-    currency: 'USD',
-    status: 'paid',
-    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    items: [{
-      id: 'item_002',
-      description: 'Evento corporativo',
-      quantity: 1,
-      unitPrice: 250.00,
-      total: 250.00
-    }],
-    total: 250.00,
-    tax: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'inv_003',
-    userId: 'user_789',
-    amount: 75.00,
-    currency: 'USD',
-    status: 'overdue',
-    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    items: [{
-      id: 'item_003',
-      description: 'Sesión de práctica',
-      quantity: 1,
-      unitPrice: 75.00,
-      total: 75.00
-    }],
-    total: 75.00,
-    tax: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-const Payments: React.FC = () => {
-  // Estado para pestañas
-  const [tabValue, setTabValue] = useState(0);
-  
-  // Estado para filtros
-  const [filters, setFilters] = useState({
-    status: 'all',
-    dateFrom: '',
-    dateTo: '',
-    amount: '',
-    userId: ''
-  });
+  // Estado para filtros y búsqueda
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Estado para diálogos
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [verificationNotes, setVerificationNotes] = useState('');
-
-  // Estado para modo demo
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [selectedDeposit, setSelectedDeposit] = useState<UserDeposit | null>(null);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
   // Hooks para API requests
-  const invoicesRequest = useApiRequest(paymentService.getInvoices.bind(paymentService));
-  const paymentMethodsRequest = useApiRequest(paymentService.getPaymentMethods.bind(paymentService));
-  const paymentIntentsRequest = useApiRequest(paymentService.getPaymentIntents.bind(paymentService));
-  const statsRequest = useApiRequest(paymentService.getPaymentStats.bind(paymentService));
-  const markAsPaidRequest = useApiRequest(paymentService.markInvoiceAsPaid.bind(paymentService));
+  const depositsRequest = useApiRequest(depositService.getPendingDeposits.bind(depositService));
+  const withdrawalsRequest = useApiRequest(depositService.getPendingWithdrawals.bind(depositService));
+  const statsRequest = useApiRequest(depositService.getDepositStats.bind(depositService));
 
-  // Cargar datos según la pestaña
+  // Cargar datos iniciales
   useEffect(() => {
+    loadData();
+  }, []);
+
     const loadData = async () => {
       try {
-        switch (tabValue) {
-          case 0: // Dashboard
-            await statsRequest.execute();
-            break;
-          case 1: // Facturas
-            await invoicesRequest.execute();
-            break;
-          case 2: // Métodos de Pago
-            await paymentMethodsRequest.execute();
-            break;
-          case 3: // Transacciones
-            await paymentIntentsRequest.execute();
-            break;
-          case 4: // Vouchers
-            // Los vouchers se cargan automáticamente en el componente VoucherList
-            break;
-        }
-      } catch (error: any) {
-        // Si hay error de permisos o conexión, activar modo demo
-        if (error?.response?.status === 403 || error?.response?.status === 500) {
-          console.log('🔧 Activando modo demo debido a error de permisos/conexión');
-          setIsDemoMode(true);
-        }
-      }
-    };
+      setLoading(true);
+      setError(null);
 
-    loadData();
-  }, [tabValue]);
+      // Cargar datos en paralelo
+      const [depositsData, withdrawalsData, statsData] = await Promise.all([
+        depositsRequest.execute(),
+        withdrawalsRequest.execute(),
+        statsRequest.execute()
+      ]);
 
-  // Manejar cambio de pestañas
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  // Manejar verificación de depósito
-  const handleVerifyDeposit = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setVerificationNotes('');
-    setVerifyDialogOpen(true);
-  };
-
-  // Confirmar verificación
-  const confirmVerification = async () => {
-    if (!selectedInvoice) return;
-
-    if (isDemoMode) {
-      // En modo demo, simular verificación exitosa
-      setVerifyDialogOpen(false);
-      setSelectedInvoice(null);
-      setVerificationNotes('');
-      return;
-    }
-
-    try {
-      await markAsPaidRequest.execute(selectedInvoice.id);
-      setVerifyDialogOpen(false);
-      setSelectedInvoice(null);
-      setVerificationNotes('');
-      
-      // Recargar datos
-      invoicesRequest.execute();
-      statsRequest.execute();
-    } catch (error) {
-      console.error('Error verificando depósito:', error);
+      setDeposits(depositsData || []);
+      setWithdrawals(withdrawalsData || []);
+      setStats(statsData || null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error cargando datos';
+      setError(errorMessage);
+      console.error('[PaymentsManagement] Error cargando datos:', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Obtener color del estado
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return 'success';
-      case 'sent':
-        return 'warning';
-      case 'overdue':
-        return 'error';
-      case 'cancelled':
-        return 'default';
-      default:
-        return 'info';
-    }
+  // Manejar cambio de tab
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
-  // Obtener texto del estado
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return 'Pagado';
-      case 'sent':
-        return 'Pendiente';
-      case 'overdue':
-        return 'Vencido';
-      case 'cancelled':
-        return 'Cancelado';
-      case 'draft':
-        return 'Borrador';
-      default:
-        return status;
-    }
-  };
+  // Filtrar depósitos
+  const filteredDeposits = deposits.filter(deposit => {
+    const matchesSearch = 
+      deposit.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.user?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.user?.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.amount.toString().includes(searchTerm);
+
+    const matchesStatus = statusFilter === 'all' || deposit.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Paginación
+  const totalPages = Math.ceil(filteredDeposits.length / itemsPerPage);
+  const paginatedDeposits = filteredDeposits.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Formatear moneda
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currency: string = 'DOP') => {
+    // Mapear códigos de moneda a códigos ISO válidos
+    const currencyMap: Record<string, string> = {
+      'RD$': 'DOP',
+      'DOP': 'DOP',
+      'USD': 'USD',
+      'EUR': 'EUR'
+    };
+    
+    const isoCurrency = currencyMap[currency] || 'DOP';
+    
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: currency
+      currency: isoCurrency
     }).format(amount);
   };
 
@@ -303,721 +200,671 @@ const Payments: React.FC = () => {
     });
   };
 
-  // Renderizar dashboard
-  const renderDashboard = () => {
-    if (statsRequest.loading && !isDemoMode) {
+  // Obtener color de estado
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'warning';
+      case 'verified':
+        return 'success';
+      case 'rejected':
+        return 'error';
+      case 'processing':
+        return 'info';
+      default:
+        return 'default';
+    }
+  };
+
+  // Manejar verificación completada
+  const handleVerificationComplete = () => {
+    setShowVerificationDialog(false);
+    setSelectedDeposit(null);
+    loadData(); // Recargar datos
+  };
+
+  // Renderizar estado de carga
+  if (loading) {
       return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ ml: 2 }}>
+          Cargando sistema de pagos...
+        </Typography>
         </Box>
       );
     }
 
-    const stats = isDemoMode ? mockStats : (statsRequest.data || mockStats);
-
+  // Renderizar error
+  if (error) {
     return (
-      <Box>
-        {/* Alerta de modo demo */}
-        {isDemoMode && (
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <strong>🔧 Modo Demo Activado:</strong> Mostrando estadísticas de ejemplo.
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Error Cargando Datos
+          </Typography>
+          <Typography variant="body2">
+            {error}
+          </Typography>
           </Alert>
-        )}
-
-        {/* Tarjetas de estadísticas */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
-                    {formatCurrency(stats.totalRevenue, 'USD')}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Ingresos Totales
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'primary.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.primary
-                }}>
-                  <MoneyIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main', mb: 1 }}>
-                    {stats.totalTransactions}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Transacciones
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'success.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.success
-                }}>
-                  <TrendingUpIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.main', mb: 1 }}>
-                    {formatCurrency(stats.averageTransaction, 'USD')}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Promedio por Transacción
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'warning.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.warning
-                }}>
-                  <AccountBalanceIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'info.main', mb: 1 }}>
-                    {(stats.successRate * 100).toFixed(1)}%
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Tasa de Éxito
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'info.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.secondary
-                }}>
-                  <CheckCircleIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-        </Grid>
-
-        {/* Gráficos y análisis */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} lg={8}>
-            <ModernCard variant="elevated" sx={{ height: 400 }}>
-              <Box sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                  Análisis de Pagos
-                </Typography>
-                <Box sx={{ 
-                  height: 300, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                  borderRadius: 2
-                }}>
-                  <Typography variant="body1" color="text.secondary">
-                    Gráfico de análisis de pagos (implementar con librería de gráficos)
-                  </Typography>
-                </Box>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} lg={4}>
-            <ModernCard variant="elevated" sx={{ height: 400 }}>
-              <Box sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                  Actividad Reciente
-                </Typography>
-                <List sx={{ p: 0 }}>
-                                     {mockInvoices.slice(0, 5).map((invoice) => (
-                    <ListItem key={invoice.id} sx={{ px: 0, py: 1 }}>
-                      <ListItemAvatar>
-                        <Avatar sx={{ 
-                          bgcolor: getStatusColor(invoice.status) + '.main',
-                          width: 40,
-                          height: 40
-                        }}>
-                          <ReceiptIcon fontSize="small" />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {formatCurrency(invoice.amount, invoice.currency)}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
-                            {getStatusText(invoice.status)} • {formatDate(invoice.dueDate)}
-                          </Typography>
-                        }
-                      />
-                      <Chip
-                        label={getStatusText(invoice.status)}
-                        color={getStatusColor(invoice.status) as any}
-                        size="small"
-                        sx={{ fontSize: '0.75rem' }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            </ModernCard>
-          </Grid>
-        </Grid>
+        <Button
+          variant="contained"
+          onClick={loadData}
+          startIcon={<RefreshIcon />}
+        >
+          Reintentar
+        </Button>
       </Box>
     );
-  };
-
-  // Renderizar facturas
-  const renderInvoices = () => {
-    if (invoicesRequest.loading && !isDemoMode) {
-      return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      );
-    }
-
-    if (invoicesRequest.error && !isDemoMode) {
-      return (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Error cargando facturas: {invoicesRequest.error}
-        </Alert>
-      );
-    }
-
-    const invoices = isDemoMode ? mockInvoices : (invoicesRequest.data || []);
-
-    return (
-      <Box>
-        {/* Alerta de modo demo */}
-        {isDemoMode && (
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <strong>🔧 Modo Demo Activado:</strong> Mostrando facturas de ejemplo.
-          </Alert>
-        )}
-
-        {/* Filtros mejorados */}
-        <ModernCard variant="flat" sx={{ mb: 3 }}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-              <FilterIcon sx={{ mr: 1 }} />
-              Filtros de Búsqueda
-            </Typography>
-            <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Estado</InputLabel>
-                  <Select
-                    value={filters.status}
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                    label="Estado"
-                  >
-                    <MenuItem value="all">Todos los Estados</MenuItem>
-                    <MenuItem value="sent">Pendientes</MenuItem>
-                    <MenuItem value="paid">Pagados</MenuItem>
-                    <MenuItem value="overdue">Vencidos</MenuItem>
-                    <MenuItem value="cancelled">Cancelados</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <ModernInput
-                  fullWidth
-                  size="sm"
-                  label="Fecha Desde"
-                  type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                  startIcon={<CalendarIcon />}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <ModernInput
-                  fullWidth
-                  size="sm"
-                  label="Fecha Hasta"
-                  type="date"
-                  value={filters.dateTo}
-                  onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                  startIcon={<CalendarIcon />}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <ModernButton
-                  variant="outline"
-                  size="sm"
-                  startIcon={<RefreshIcon />}
-                  onClick={() => invoicesRequest.execute()}
-                  disabled={invoicesRequest.loading}
-                  sx={{ width: '100%' }}
-                >
-                  {invoicesRequest.loading ? 'Actualizando...' : 'Actualizar'}
-                </ModernButton>
-              </Grid>
-            </Grid>
-          </Box>
-        </ModernCard>
-
-        {/* Contador de resultados */}
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Facturas ({invoices.length})
-          </Typography>
-          <ModernButton
-            variant="primary"
-            size="sm"
-            startIcon={<DownloadIcon />}
-            sx={{ px: 3 }}
-          >
-            Exportar
-          </ModernButton>
-        </Box>
-
-        {/* Lista de facturas mejorada */}
-        <Grid container spacing={2}>
-          {invoices.map((invoice) => (
-            <Grid item xs={12} md={6} lg={4} key={invoice.id}>
-              <ModernCard 
-                variant="elevated" 
-                sx={{ 
-                  height: '100%',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: designSystem.shadows.xl
-                  }
-                }}
-              >
-                <Box sx={{ p: 3 }}>
-                  {/* Header */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar sx={{ 
-                        bgcolor: getStatusColor(invoice.status) + '.main',
-                        width: 40,
-                        height: 40,
-                        mr: 2
-                      }}>
-                        <ReceiptIcon fontSize="small" />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
-                          {invoice.id.slice(0, 8)}...
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDate(invoice.createdAt)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Chip
-                      label={getStatusText(invoice.status)}
-                      color={getStatusColor(invoice.status) as any}
-                      size="small"
-                      sx={{ fontWeight: 600 }}
-                    />
-                  </Box>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  {/* Información principal */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h5" sx={{ 
-                      fontWeight: 'bold', 
-                      color: 'primary.main',
-                      mb: 1
-                    }}>
-                      {formatCurrency(invoice.amount, invoice.currency)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Usuario: {invoice.userId.slice(0, 8)}...
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <ScheduleIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Vence: {formatDate(invoice.dueDate)}
-                      </Typography>
-                    </Box>
-                    
-                    {/* Voucher del depósito */}
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Comprobante:
-                      </Typography>
-                      <VoucherImage 
-                        depositId={invoice.id}
-                        size="small"
-                        showPreview={true}
-                        onError={(error) => {
-                          console.error('Error cargando voucher:', error);
-                        }}
-                      />
-                    </Box>
-                  </Box>
-
-                  {/* Acciones */}
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <ModernButton
-                      variant="ghost"
-                      size="sm"
-                      startIcon={<VisibilityIcon />}
-                      sx={{ flex: 1 }}
-                    >
-                      Ver Detalles
-                    </ModernButton>
-                    {invoice.status === 'sent' && (
-                      <ModernButton
-                        variant="primary"
-                        size="sm"
-                        startIcon={<CheckCircleIcon />}
-                        onClick={() => handleVerifyDeposit(invoice)}
-                        sx={{ flex: 1 }}
-                      >
-                        Verificar
-                      </ModernButton>
-                    )}
-                  </Box>
-                </Box>
-              </ModernCard>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Estado vacío */}
-        {invoices.length === 0 && (
-          <ModernCard variant="flat" sx={{ textAlign: 'center', py: 6 }}>
-            <ReceiptIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-              No se encontraron facturas
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              No hay facturas que coincidan con los filtros aplicados
-            </Typography>
-            <ModernButton
-              variant="outline"
-              onClick={() => setFilters({ status: 'all', dateFrom: '', dateTo: '', amount: '', userId: '' })}
-            >
-              Limpiar Filtros
-            </ModernButton>
-          </ModernCard>
-        )}
-      </Box>
-    );
-  };
-
-  // Renderizar métodos de pago
-  const renderPaymentMethods = () => {
-    return (
-      <ModernCard variant="elevated">
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            Métodos de Pago Configurados
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Configuración de métodos de pago (implementar según necesidades)
-          </Typography>
-        </Box>
-      </ModernCard>
-    );
-  };
-
-  // Renderizar transacciones
-  const renderTransactions = () => {
-    return (
-      <ModernCard variant="elevated">
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            Historial de Transacciones
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Historial detallado de transacciones (implementar según necesidades)
-          </Typography>
-        </Box>
-      </ModernCard>
-    );
-  };
+  }
 
   return (
-    <ResponsiveLayout>
+    <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ 
-          fontWeight: 'bold', 
-          mb: 1,
-          background: designSystem.gradients.primary,
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          Sistema de Pagos
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Sistema de Gestión de Pagos
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Gestiona facturas, verifica depósitos y monitorea transacciones
+          Verificación de depósitos y gestión de pagos de usuarios
         </Typography>
       </Box>
 
-      {/* Pestañas mejoradas */}
-      <Box sx={{ mb: 3 }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            '& .MuiTab-root': {
-              minHeight: 64,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              borderRadius: 2,
-              mx: 0.5,
-              '&.Mui-selected': {
-                background: 'rgba(127, 95, 255, 0.1)',
-                color: 'primary.main'
-              }
-            },
-            '& .MuiTabs-indicator': {
-              height: 3,
-              borderRadius: 1.5
-            }
-          }}
-        >
+      {/* Estadísticas Rápidas */}
+      {stats && (
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <ReceiptIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Box>
+                    <Typography variant="h4" component="div">
+                      {stats.pending}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                      Depósitos Pendientes
+                  </Typography>
+                </Box>
+              </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CheckCircleIcon sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
+                <Box>
+                    <Typography variant="h4" component="div">
+                      {stats.verified}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                      Verificados Hoy
+                  </Typography>
+                </Box>
+              </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <TrendingUpIcon sx={{ fontSize: 40, color: 'info.main', mr: 2 }} />
+                <Box>
+                                         <Typography variant="h4" component="div">
+                       {formatCurrency(stats.totalAmount, 'DOP')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                      Total Procesado
+                  </Typography>
+                </Box>
+              </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <SecurityIcon sx={{ fontSize: 40, color: 'warning.main', mr: 2 }} />
+                <Box>
+                    <Typography variant="h4" component="div">
+                      {stats.fraudDetection.duplicatesDetected}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                      Duplicados Detectados
+                  </Typography>
+                </Box>
+              </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Tabs de Navegación */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange} aria-label="payment management tabs">
           <Tab 
-            label="Dashboard" 
-            icon={<TrendingUpIcon />} 
-            iconPosition="start"
-            sx={{ 
-              '& .MuiTab-iconWrapper': {
-                marginRight: 1,
-                fontSize: '1.2rem'
-              }
-            }}
+            label={
+              <Badge badgeContent={deposits.filter(d => d.status === 'pending').length} color="warning">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <ReceiptIcon sx={{ mr: 1 }} />
+                  Depósitos
+                </Box>
+              </Badge>
+            } 
+          />
+          <Tab 
+            label={
+              <Badge badgeContent={withdrawals.filter(w => w.status === 'pending').length} color="info">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AccountBalanceIcon sx={{ mr: 1 }} />
+                  Retiros
+              </Box>
+              </Badge>
+            } 
           />
           <Tab 
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                Facturas
-                {invoicesRequest.data && invoicesRequest.data.filter(i => i.status === 'sent').length > 0 && (
-                  <Badge 
-                    badgeContent={invoicesRequest.data.filter(i => i.status === 'sent').length} 
-                    color="warning" 
-                    sx={{ 
-                      ml: 1,
-                      '& .MuiBadge-badge': {
-                        fontSize: '0.75rem',
-                        height: 20,
-                        minWidth: 20
-                      }
-                    }}
-                  />
-                )}
+                <AssessmentIcon sx={{ mr: 1 }} />
+                Estadísticas
               </Box>
             } 
-            icon={<ReceiptIcon />} 
-            iconPosition="start"
-            sx={{ 
-              '& .MuiTab-iconWrapper': {
-                marginRight: 1,
-                fontSize: '1.2rem'
-              }
-            }}
-          />
-          <Tab 
-            label="Métodos de Pago" 
-            icon={<CreditCardIcon />} 
-            iconPosition="start"
-            sx={{ 
-              '& .MuiTab-iconWrapper': {
-                marginRight: 1,
-                fontSize: '1.2rem'
-              }
-            }}
-          />
-          <Tab 
-            label="Transacciones" 
-            icon={<PaymentIcon />} 
-            iconPosition="start"
-            sx={{ 
-              '& .MuiTab-iconWrapper': {
-                marginRight: 1,
-                fontSize: '1.2rem'
-              }
-            }}
-          />
-          <Tab 
-            label="Vouchers" 
-            icon={<ReceiptIcon />} 
-            iconPosition="start"
-            sx={{ 
-              '& .MuiTab-iconWrapper': {
-                marginRight: 1,
-                fontSize: '1.2rem'
-              }
-            }}
           />
         </Tabs>
+              </Box>
+
+      {/* Tab Panel - Depósitos */}
+      <TabPanel value={activeTab} index={0}>
+      <Box>
+          {/* Filtros y Búsqueda */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    placeholder="Buscar por usuario, email, ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth>
+                  <InputLabel>Estado</InputLabel>
+                  <Select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                    label="Estado"
+                  >
+                      <MenuItem value="all">Todos</MenuItem>
+                      <MenuItem value="pending">Pendientes</MenuItem>
+                      <MenuItem value="verified">Verificados</MenuItem>
+                      <MenuItem value="rejected">Rechazados</MenuItem>
+                      <MenuItem value="processing">Procesando</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Fecha</InputLabel>
+                    <Select
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      label="Fecha"
+                    >
+                      <MenuItem value="all">Todas las fechas</MenuItem>
+                      <MenuItem value="today">Hoy</MenuItem>
+                      <MenuItem value="week">Esta semana</MenuItem>
+                      <MenuItem value="month">Este mes</MenuItem>
+                    </Select>
+                  </FormControl>
+              </Grid>
+                
+                <Grid item xs={12} md={2}>
+                  <Button
+                  fullWidth
+                    variant="outlined"
+                    onClick={loadData}
+                  startIcon={<RefreshIcon />}
+                >
+                    Actualizar
+                  </Button>
+              </Grid>
+            </Grid>
+            </CardContent>
+          </Card>
+
+          {/* Tabla de Depósitos */}
+          <Card>
+            <CardContent>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Usuario</TableCell>
+                      <TableCell>Monto</TableCell>
+                      <TableCell>Voucher</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedDeposits.map((deposit) => (
+                      <TableRow key={deposit.id}>
+                        <TableCell>
+                      <Box>
+                            <Typography variant="body2" fontWeight="bold">
+                              {deposit.user?.name} {deposit.user?.lastName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                              {deposit.user?.userEmail}
+                        </Typography>
+                      </Box>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold" color="primary">
+                            {formatCurrency(deposit.amount, deposit.currency)}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <VoucherImage
+                            depositId={deposit.id}
+                            size="small"
+                            showPreview={false}
+                            showDuplicateCheck={true}
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                    <Chip
+                            label={deposit.status}
+                            color={getStatusColor(deposit.status) as any}
+                      size="small"
+                            sx={chipStyles[getStatusColor(deposit.status) as keyof typeof chipStyles]}
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2">
+                            {formatDate(deposit.createdAt)}
+                    </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Ver detalles">
+                              <IconButton
+                        size="small"
+                                onClick={() => {
+                                  setSelectedDeposit(deposit);
+                                  setShowDetailsDialog(true);
+                                }}
+                              >
+                                <VisibilityIcon />
+                              </IconButton>
+                            </Tooltip>
+                            
+                            {deposit.status === 'pending' && (
+                              <Tooltip title="Verificar depósito">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => {
+                                    setSelectedDeposit(deposit);
+                                    setShowVerificationDialog(true);
+                                  }}
+                                >
+                                  <CheckCircleIcon />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            
+                            {deposit.duplicateCheck?.isDuplicate && (
+                              <Tooltip title="Voucher duplicado detectado">
+                                <IconButton size="small" color="warning">
+                                  <SecurityIcon />
+                                </IconButton>
+                              </Tooltip>
+                    )}
+                  </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={(_event, page) => setCurrentPage(page)}
+                    color="primary"
+                  />
+                </Box>
+              )}
+            </CardContent>
+          </Card>
       </Box>
-
-      {/* Contenido de las pestañas */}
-      <TabPanel value={tabValue} index={0}>
-        {renderDashboard()}
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={1}>
-        {renderInvoices()}
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={2}>
-        {renderPaymentMethods()}
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={3}>
-        {renderTransactions()}
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={4}>
-        <VoucherList 
-          title="Vouchers de Depósitos"
-          showFilters={true}
-          maxItems={20}
-          onVoucherClick={(voucher) => {
-            console.log('Voucher seleccionado:', voucher);
-          }}
-        />
       </TabPanel>
 
-      {/* Diálogo de verificación de depósito mejorado */}
-      <Dialog 
-        open={verifyDialogOpen} 
-        onClose={() => setVerifyDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: designSystem.shadows.xl
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          background: designSystem.gradients.success,
-          color: 'white',
-          borderRadius: '12px 12px 0 0'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <VerifiedUserIcon sx={{ mr: 1, fontSize: 28 }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Verificar Depósito
-            </Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          {selectedInvoice && (
+      {/* Tab Panel - Retiros */}
+      <TabPanel value={activeTab} index={1}>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Solicitudes de Retiro Pendientes
+          </Typography>
+          
+          <Card>
+            <CardContent>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Músico</TableCell>
+                      <TableCell>Cuenta Bancaria</TableCell>
+                      <TableCell>Monto</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {withdrawals.map((withdrawal) => (
+                      <TableRow key={withdrawal.id}>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" fontWeight="bold">
+                              {withdrawal.musician?.name} {withdrawal.musician?.lastName}
+          </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {withdrawal.musician?.userEmail}
+          </Typography>
+        </Box>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2">
+                            {withdrawal.bankAccount?.bankName}
+        </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {withdrawal.bankAccount?.accountNumber}
+        </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold" color="primary">
+                            {formatCurrency(withdrawal.amount, withdrawal.currency)}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Chip
+                            label={withdrawal.status}
+                            color={getStatusColor(withdrawal.status) as any}
+                            size="small"
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2">
+                            {formatDate(withdrawal.createdAt)}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Ver detalles">
+                              <IconButton size="small">
+                                <VisibilityIcon />
+                              </IconButton>
+                            </Tooltip>
+                            
+                            {withdrawal.status === 'pending' && (
+                              <>
+                                <Tooltip title="Aprobar retiro">
+                                  <IconButton size="small" color="success">
+                                    <CheckCircleIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                
+                                <Tooltip title="Rechazar retiro">
+                                  <IconButton size="small" color="error">
+                                    <CancelIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Box>
+      </TabPanel>
+      
+      {/* Tab Panel - Estadísticas */}
+      <TabPanel value={activeTab} index={2}>
             <Box>
-              <ModernCard variant="flat" sx={{ mb: 3 }}>
-                <Box sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                    Información de la Factura
+          {stats && (
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Estadísticas de Depósitos
                   </Typography>
+                    
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography>Resumen General</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
-                        ID de Factura
+                              Total de Depósitos
                       </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
-                        {selectedInvoice.id}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Usuario ID
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
-                        {selectedInvoice.userId}
+                            <Typography variant="h6">
+                              {stats.total}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
-                        Monto
+                              Monto Total
                       </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                        {formatCurrency(selectedInvoice.amount, selectedInvoice.currency)}
+                            <Typography variant="h6">
+                              {formatCurrency(stats.totalAmount, 'RD$')}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
-                        Fecha de Vencimiento
+                              Tasa de Verificación
                       </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {formatDate(selectedInvoice.dueDate)}
+                            <Typography variant="h6">
+                              {stats.verificationRate}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                              Tasa de Rechazo
+                      </Typography>
+                            <Typography variant="h6">
+                              {stats.rejectionRate}
                       </Typography>
                     </Grid>
                   </Grid>
-                </Box>
-              </ModernCard>
+                      </AccordionDetails>
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </Grid>
               
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Notas de Verificación
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Detección de Fraude
               </Typography>
-              <ModernInput
+                    
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography>Actividad Sospechosa</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Grid container spacing={2}>
+                          <Grid item xs={6}>
+                            <Typography variant="body2" color="text.secondary">
+                              Duplicados Detectados
+                            </Typography>
+                            <Typography variant="h6" color="warning.main">
+                              {stats.fraudDetection.duplicatesDetected}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="body2" color="text.secondary">
+                              Actividad Sospechosa
+                            </Typography>
+                            <Typography variant="h6" color="error.main">
+                              {stats.fraudDetection.suspiciousActivity}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="body2" color="text.secondary">
+                              Total Rechazados
+                            </Typography>
+                            <Typography variant="h6" color="error.main">
+                              {stats.fraudDetection.totalRejected}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </AccordionDetails>
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
+      </TabPanel>
+
+      {/* Diálogo de Verificación */}
+      <Dialog
+        open={showVerificationDialog}
+        onClose={() => setShowVerificationDialog(false)}
+        maxWidth="lg"
                 fullWidth
-                multiline
-                rows={4}
-                label="Notas sobre la verificación del depósito"
-                value={verificationNotes}
-                onChange={(e) => setVerificationNotes(e.target.value)}
-                placeholder="Ej: Depósito verificado en cuenta bancaria, comprobante recibido, etc."
-                variant="outlined"
-              />
+      >
+        <DialogTitle>
+          Verificación de Depósito
+        </DialogTitle>
+        <DialogContent>
+          {selectedDeposit && (
+            <DepositVerification
+              deposit={selectedDeposit}
+              onVerificationComplete={handleVerificationComplete}
+              onCancel={() => setShowVerificationDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Detalles */}
+      <Dialog
+        open={showDetailsDialog}
+        onClose={() => setShowDetailsDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Detalles del Depósito
+        </DialogTitle>
+        <DialogContent>
+          {selectedDeposit && (
+            <Box>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Información del Usuario
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Nombre:</strong> {selectedDeposit.user?.name} {selectedDeposit.user?.lastName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Email:</strong> {selectedDeposit.user?.userEmail}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Teléfono:</strong> {selectedDeposit.user?.phone || 'No especificado'}
+                  </Typography>
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Información del Depósito
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>ID:</strong> {selectedDeposit.id}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Monto:</strong> {formatCurrency(selectedDeposit.amount, selectedDeposit.currency)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Estado:</strong> {selectedDeposit.status}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Fecha:</strong> {formatDate(selectedDeposit.createdAt)}
+                  </Typography>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom>
+                    Voucher
+                  </Typography>
+                  <VoucherImage
+                    depositId={selectedDeposit.id}
+                    size="large"
+                    showPreview={true}
+                    showDuplicateCheck={true}
+                  />
+                </Grid>
+              </Grid>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 2 }}>
-          <ModernButton
-            variant="ghost"
-            onClick={() => setVerifyDialogOpen(false)}
-            sx={{ px: 3 }}
-          >
-            Cancelar
-          </ModernButton>
-          <ModernButton
-            variant="primary"
-            onClick={confirmVerification}
-            disabled={markAsPaidRequest.loading}
-            loading={markAsPaidRequest.loading}
-            startIcon={<CheckCircleIcon />}
-            sx={{ px: 3 }}
-          >
-            {markAsPaidRequest.loading ? 'Verificando...' : 'Confirmar Verificación'}
-          </ModernButton>
+        <DialogActions>
+          <Button onClick={() => setShowDetailsDialog(false)}>
+            Cerrar
+          </Button>
         </DialogActions>
       </Dialog>
-    </ResponsiveLayout>
+    </Box>
   );
 };
 
-export default Payments; 
+export default PaymentsManagement; 

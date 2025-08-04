@@ -11,7 +11,7 @@ const getBaseUrl = (): string => {
   }
   
   // URL por defecto (puede ser cambiada aquí)
-  const defaultUrl = 'http://192.168.54.68:3001';
+  const defaultUrl = 'http://192.168.54.90:3001';
   console.log('🌐 Usando URL del backend por defecto:', defaultUrl);
   return defaultUrl;
 };
@@ -105,6 +105,13 @@ export const API_CONFIG = {
     PENDING_WITHDRAWALS: '/admin/payments/pending-withdrawals',
     PROCESS_WITHDRAWAL: '/admin/payments/process-withdrawal/:id',
     PAYMENT_SYSTEM_STATS: '/admin/payments/statistics',
+    DEPOSIT_INFO: '/admin/payments/deposit-info/:id',
+    CHECK_DUPLICATE: '/admin/payments/check-duplicate/:id',
+    VOUCHER_IMAGE: '/admin/payments/voucher-image/:id',
+    VOUCHER_IMAGE_DIRECT: '/admin/payments/voucher-image-direct/:id',
+    DOWNLOAD_VOUCHER: '/admin/payments/download-voucher/:id',
+    DEPOSIT_STATS: '/admin/payments/deposit-stats',
+    FLAG_SUSPICIOUS: '/admin/payments/flag-suspicious/:id',
     
     // Imágenes (Admin) - Nuevo CRUD
     ADMIN_IMAGES: '/imgs',

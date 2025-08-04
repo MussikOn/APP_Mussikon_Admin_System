@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "check-backend": "node check-backend.cjs"
+    "check-backend": "node check-backend.cjs",
+    "check-payments": "node scripts/check-payment-endpoints.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

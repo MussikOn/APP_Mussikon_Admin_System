@@ -18,7 +18,10 @@ import {
   Grid,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  Alert,
+  Tooltip,
+  Badge
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import {
@@ -27,8 +30,14 @@ import {
   OpenInNew as OpenInNewIcon,
   Error as ErrorIcon,
   Refresh as RefreshIcon,
-  Receipt as ReceiptIcon
+  Receipt as ReceiptIcon,
+  Warning as WarningIcon,
+  Security as SecurityIcon
 } from '@mui/icons-material';
+
+// Importar servicios
+import { depositService } from '../services/depositService';
+import type { VoucherImageData, DuplicateCheckResult } from '../services/depositService';
 
 // Importar estilos
 import { buttonStyles } from '../theme/buttonStyles';
@@ -40,21 +49,7 @@ interface VoucherImageProps {
   className?: string;
   onError?: (error: string) => void;
   onLoad?: () => void;
-}
-
-interface VoucherData {
-  id: string;
-  userId: string;
-  amount: number;
-  currency: string;
-  status: string;
-  voucherFile: {
-    url: string;
-    filename: string;
-    uploadedAt: string;
-  } | null;
-  hasVoucherFile: boolean;
-  voucherUrl: string | null;
+  showDuplicateCheck?: boolean;
 }
 
 const VoucherImage: React.FC<VoucherImageProps> = ({
@@ -63,14 +58,17 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
   showPreview = true,
   className = '',
   onError,
-  onLoad
+  onLoad,
+  showDuplicateCheck = true
 }) => {
-  const [voucherData, setVoucherData] = useState<VoucherData | null>(null);
+  const [voucherData, setVoucherData] = useState<VoucherImageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [useDirectRoute, setUseDirectRoute] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [duplicateCheck, setDuplicateCheck] = useState<DuplicateCheckResult | null>(null);
 
   // Tamaños de imagen
   const imageSizes = {
@@ -79,31 +77,23 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
     large: { width: 300, height: 200 }
   };
 
+  // Máximo número de reintentos
+  const MAX_RETRIES = 3;
+
   // Cargar datos del voucher
   const loadVoucherData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/admin/payments/deposit-info/${depositId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const data = await depositService.getDepositInfo(depositId);
+      setVoucherData(data);
+      setImageError(false);
+      onLoad?.();
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success && data.data) {
-        setVoucherData(data.data);
-        setImageError(false);
-        onLoad?.();
-      } else {
-        throw new Error(data.error || 'Error cargando datos del voucher');
+      // Verificar duplicados si está habilitado
+      if (showDuplicateCheck && data.hasVoucherFile) {
+        await checkForDuplicates();
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
@@ -116,6 +106,20 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
     }
   };
 
+  // Verificar duplicados
+  const checkForDuplicates = async () => {
+    try {
+      const result = await depositService.checkDuplicateVoucher(depositId);
+      setDuplicateCheck(result);
+      
+      if (result.isDuplicate) {
+        console.warn('[VoucherImage] Duplicado detectado:', result);
+      }
+    } catch (error) {
+      console.error('[VoucherImage] Error verificando duplicados:', error);
+    }
+  };
+
   // Cargar datos al montar el componente
   useEffect(() => {
     if (depositId) {
@@ -123,28 +127,53 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
     }
   }, [depositId]);
 
-  // Manejar error de imagen
+  // Manejar error de imagen con reintentos
   const handleImageError = () => {
-    if (useDirectRoute) {
-      // Intentar con ruta de redirección
-      setUseDirectRoute(false);
-      setImageError(false);
+    if (retryCount < MAX_RETRIES) {
+      if (useDirectRoute) {
+        // Intentar con ruta de redirección
+        setUseDirectRoute(false);
+        setRetryCount(prev => prev + 1);
+        setImageError(false);
+      } else {
+        // Volver a intentar con ruta directa
+        setUseDirectRoute(true);
+        setRetryCount(prev => prev + 1);
+        setImageError(false);
+      }
     } else {
       setImageError(true);
-      setError('No se pudo cargar la imagen del voucher');
-      onError?.('No se pudo cargar la imagen del voucher');
+      const errorMsg = 'No se pudo cargar la imagen del voucher después de varios intentos';
+      setError(errorMsg);
+      onError?.(errorMsg);
     }
   };
 
   // Descargar imagen
-  const handleDownload = () => {
-    if (voucherData?.voucherUrl) {
+  const handleDownload = async () => {
+    if (!voucherData?.hasVoucherFile) return;
+    
+    try {
+      const blob = await depositService.downloadVoucher(depositId);
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = voucherData.voucherUrl;
+      link.href = url;
       link.download = voucherData.voucherFile?.filename || `voucher-${depositId}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error descargando voucher:', error);
+      // Fallback: usar URL directa
+      if (voucherData.voucherUrl) {
+        const link = document.createElement('a');
+        link.href = voucherData.voucherUrl;
+        link.download = voucherData.voucherFile?.filename || `voucher-${depositId}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }
   };
 
@@ -159,11 +188,24 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
   const getImageUrl = () => {
     if (!voucherData?.hasVoucherFile) return null;
     
+    if (voucherData.voucherUrl) {
+      return voucherData.voucherUrl;
+    }
+    
     const baseUrl = useDirectRoute 
       ? `/admin/payments/voucher-image-direct/${depositId}`
       : `/admin/payments/voucher-image/${depositId}`;
     
     return baseUrl;
+  };
+
+  // Formatear tamaño de archivo
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // Renderizar estado de carga
@@ -295,6 +337,24 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
             <ZoomInIcon sx={{ fontSize: 16, color: 'white' }} />
           </Box>
         )}
+
+        {/* Badge de duplicado */}
+        {duplicateCheck?.isDuplicate && (
+          <Tooltip title="Voucher duplicado detectado">
+            <Badge
+              badgeContent={<SecurityIcon sx={{ fontSize: 12, color: 'warning.main' }} />}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                '& .MuiBadge-badge': {
+                  bgcolor: 'warning.main',
+                  color: 'white'
+                }
+              }}
+            />
+          </Tooltip>
+        )}
       </Card>
 
       {/* Diálogo de vista previa */}
@@ -309,6 +369,15 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <ReceiptIcon sx={{ mr: 1 }} />
               Voucher de Depósito
+              {duplicateCheck?.isDuplicate && (
+                <Chip
+                  label="DUPLICADO"
+                  color="warning"
+                  size="small"
+                  icon={<WarningIcon />}
+                  sx={{ ml: 2 }}
+                />
+              )}
             </Box>
             <IconButton onClick={() => setShowDialog(false)}>
               <CloseIcon />
@@ -317,6 +386,24 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
         </DialogTitle>
         
         <DialogContent>
+          {/* Alerta de duplicado */}
+          {duplicateCheck?.isDuplicate && (
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                ⚠️ Voucher Duplicado Detectado
+              </Typography>
+              <Typography variant="body2">
+                Este voucher tiene una similitud del {duplicateCheck.similarityScore}% con otros depósitos.
+                Verifique cuidadosamente antes de aprobar.
+              </Typography>
+              {duplicateCheck.duplicateIds.length > 0 && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  IDs de depósitos similares: {duplicateCheck.duplicateIds.join(', ')}
+                </Typography>
+              )}
+            </Alert>
+          )}
+
           <Box sx={{ mb: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
@@ -370,9 +457,33 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
                   </ListItem>
                   <ListItem>
                     <ListItemText
+                      primary="Tamaño"
+                      secondary={voucherData.voucherFile?.fileSize ? 
+                        formatFileSize(voucherData.voucherFile.fileSize) : 'N/A'
+                      }
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="Tipo de archivo"
+                      secondary={voucherData.voucherFile?.mimeType || 'N/A'}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
                       primary="Fecha de subida"
                       secondary={voucherData.voucherFile?.uploadedAt ? 
                         new Date(voucherData.voucherFile.uploadedAt).toLocaleString() : 'N/A'
+                      }
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="Hash del archivo"
+                      secondary={
+                        <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                          {voucherData.voucherFile?.hash || 'N/A'}
+                        </Typography>
                       }
                     />
                   </ListItem>
