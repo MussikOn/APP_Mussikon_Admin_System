@@ -418,3 +418,4 @@ class MobilePaymentsService {
 }
 
 export const mobilePaymentsService = new MobilePaymentsService(); 
+

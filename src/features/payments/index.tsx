@@ -53,6 +53,8 @@ import { useApiRequest } from '../../hooks/useApiRequest';
 import ModernCard from '../../components/ui/ModernCard';
 import ModernButton from '../../components/ui/ModernButton';
 import ModernInput from '../../components/ui/ModernInput';
+import VoucherImage from '../../components/VoucherImage';
+import VoucherList from '../../components/VoucherList';
 
 // Importar estilos
 import { ResponsiveLayout } from '../../components/ResponsiveLayout';
@@ -193,6 +195,9 @@ const Payments: React.FC = () => {
             break;
           case 3: // Transacciones
             await paymentIntentsRequest.execute();
+            break;
+          case 4: // Vouchers
+            // Los vouchers se cargan automáticamente en el componente VoucherList
             break;
         }
       } catch (error: any) {
@@ -657,6 +662,21 @@ const Payments: React.FC = () => {
                         Vence: {formatDate(invoice.dueDate)}
                       </Typography>
                     </Box>
+                    
+                    {/* Voucher del depósito */}
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Comprobante:
+                      </Typography>
+                      <VoucherImage 
+                        depositId={invoice.id}
+                        size="small"
+                        showPreview={true}
+                        onError={(error) => {
+                          console.error('Error cargando voucher:', error);
+                        }}
+                      />
+                    </Box>
                   </Box>
 
                   {/* Acciones */}
@@ -848,6 +868,17 @@ const Payments: React.FC = () => {
               }
             }}
           />
+          <Tab 
+            label="Vouchers" 
+            icon={<ReceiptIcon />} 
+            iconPosition="start"
+            sx={{ 
+              '& .MuiTab-iconWrapper': {
+                marginRight: 1,
+                fontSize: '1.2rem'
+              }
+            }}
+          />
         </Tabs>
       </Box>
 
@@ -866,6 +897,17 @@ const Payments: React.FC = () => {
       
       <TabPanel value={tabValue} index={3}>
         {renderTransactions()}
+      </TabPanel>
+      
+      <TabPanel value={tabValue} index={4}>
+        <VoucherList 
+          title="Vouchers de Depósitos"
+          showFilters={true}
+          maxItems={20}
+          onVoucherClick={(voucher) => {
+            console.log('Voucher seleccionado:', voucher);
+          }}
+        />
       </TabPanel>
 
       {/* Diálogo de verificación de depósito mejorado */}

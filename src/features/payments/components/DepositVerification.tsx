@@ -43,6 +43,9 @@ import { paymentService } from '../../../services/paymentService';
 import type { Invoice } from '../../../services/paymentService';
 import { useApiRequest } from '../../../hooks/useApiRequest';
 
+// Importar componentes
+import VoucherImage from '../../../components/VoucherImage';
+
 // Importar estilos
 import { buttonStyles, chipStyles } from '../../../theme/buttonStyles';
 
@@ -249,6 +252,24 @@ const DepositVerification: React.FC<DepositVerificationProps> = ({
                   {/* Contenido específico de cada paso */}
                   {index === 0 && (
                     <Box>
+                      {/* Voucher del depósito */}
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                          Comprobante de Depósito
+                        </Typography>
+                        <VoucherImage 
+                          depositId={invoice.id}
+                          size="large"
+                          showPreview={true}
+                          onError={(error) => {
+                            console.error('Error cargando voucher:', error);
+                          }}
+                          onLoad={() => {
+                            console.log('Voucher cargado exitosamente');
+                          }}
+                        />
+                      </Box>
+                      
                       <FormControl fullWidth sx={{ mb: 2 }}>
                         <InputLabel>Método de Verificación</InputLabel>
                         <Select
