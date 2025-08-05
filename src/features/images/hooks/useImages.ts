@@ -188,7 +188,7 @@ export const useImages = () => {
   useEffect(() => {
     loadImages();
     loadStats();
-  }, [loadImages, loadStats]);
+  }, []); // Solo se ejecuta una vez al montar el componente
 
   return {
     images,

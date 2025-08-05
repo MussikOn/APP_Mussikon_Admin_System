@@ -165,9 +165,9 @@ const VoucherList: React.FC<VoucherListProps> = ({
   // Descargar todos los vouchers
   const downloadAllVouchers = () => {
     filteredVouchers.forEach(voucher => {
-      if (voucher.voucherUrl) {
+      if (voucher.hasVoucherFile) {
         const link = document.createElement('a');
-        link.href = voucher.voucherUrl;
+        link.href = `/imgs/voucher/${voucher.id}`;
         link.download = voucher.voucherFile?.filename || `voucher-${voucher.id}.jpg`;
         document.body.appendChild(link);
         link.click();
@@ -532,13 +532,13 @@ const VoucherList: React.FC<VoucherListProps> = ({
         </DialogContent>
         
         <DialogActions>
-          {selectedVoucher?.voucherUrl && (
+          {selectedVoucher?.hasVoucherFile && (
             <>
               <Button
                 startIcon={<DownloadIcon />}
                 onClick={() => {
                   const link = document.createElement('a');
-                  link.href = selectedVoucher.voucherUrl!;
+                  link.href = `/imgs/voucher/${selectedVoucher.id}`;
                   link.download = selectedVoucher.voucherFile?.filename || `voucher-${selectedVoucher.id}.jpg`;
                   document.body.appendChild(link);
                   link.click();
@@ -550,7 +550,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
               </Button>
               <Button
                 startIcon={<OpenInNewIcon />}
-                onClick={() => selectedVoucher.voucherUrl && window.open(selectedVoucher.voucherUrl, '_blank')}
+                onClick={() => window.open(`/imgs/voucher/${selectedVoucher.id}`, '_blank')}
                 sx={buttonStyles.primary}
               >
                 Abrir en Nueva Pestaña

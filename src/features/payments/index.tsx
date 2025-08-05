@@ -1,7 +1,7 @@
 // Componente Principal de Gestión de Pagos - MussikOn Admin System
 // Sistema completo de verificación de depósitos y gestión de pagos
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -49,7 +49,8 @@ import {
   Security as SecurityIcon,
   ExpandMore as ExpandMoreIcon,
   Refresh as RefreshIcon,
-  Assessment as AssessmentIcon
+  Assessment as AssessmentIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 
 // Importar servicios
@@ -59,7 +60,7 @@ import type {
   WithdrawalRequest, 
   DepositStats 
 } from '../../services/depositService';
-import { useApiRequest } from '../../hooks/useApiRequest';
+
 
 // Importar componentes
 import DepositVerification from './components/DepositVerification';
@@ -95,9 +96,27 @@ const PaymentsManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [deposits, setDeposits] = useState<UserDeposit[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
-  const [stats, setStats] = useState<DepositStats | null>(null);
+  const [stats, setStats] = useState<DepositStats>({
+    total: 0,
+    pending: 0,
+    verified: 0,
+    rejected: 0,
+    processing: 0,
+    totalAmount: 0,
+    verifiedAmount: 0,
+    averageAmount: 0,
+    verificationRate: '0%',
+    rejectionRate: '0%',
+    dailyStats: [],
+    fraudDetection: {
+      duplicatesDetected: 0,
+      suspiciousActivity: 0,
+      totalRejected: 0
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDemoAlert, setShowDemoAlert] = useState(true);
 
   // Estado para filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,31 +130,47 @@ const PaymentsManagement: React.FC = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
-  // Hooks para API requests
-  const depositsRequest = useApiRequest(depositService.getPendingDeposits.bind(depositService));
-  const withdrawalsRequest = useApiRequest(depositService.getPendingWithdrawals.bind(depositService));
-  const statsRequest = useApiRequest(depositService.getDepositStats.bind(depositService));
+  // Nota: Los datos se cargan directamente usando depositService para evitar re-renders infinitos
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    loadData();
-  }, []);
-
-    const loadData = async () => {
-      try {
+    // Función para cargar datos
+  const loadData = useCallback(async () => {
+    try {
       setLoading(true);
       setError(null);
 
       // Cargar datos en paralelo
       const [depositsData, withdrawalsData, statsData] = await Promise.all([
-        depositsRequest.execute(),
-        withdrawalsRequest.execute(),
-        statsRequest.execute()
+        depositService.getPendingDeposits(),
+        depositService.getPendingWithdrawals(),
+        depositService.getDepositStats()
       ]);
 
       setDeposits(depositsData || []);
       setWithdrawals(withdrawalsData || []);
-      setStats(statsData || null);
+      // Asegurar que stats siempre tenga una estructura válida
+      if (statsData && typeof statsData === 'object') {
+        setStats(statsData);
+      } else {
+        console.warn('⚠️ Datos de estadísticas no válidos, usando valores por defecto');
+        setStats({
+          total: 0,
+          pending: 0,
+          verified: 0,
+          rejected: 0,
+          processing: 0,
+          totalAmount: 0,
+          verifiedAmount: 0,
+          averageAmount: 0,
+          verificationRate: '0%',
+          rejectionRate: '0%',
+          dailyStats: [],
+          fraudDetection: {
+            duplicatesDetected: 0,
+            suspiciousActivity: 0,
+            totalRejected: 0
+          }
+        });
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error cargando datos';
       setError(errorMessage);
@@ -143,7 +178,12 @@ const PaymentsManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Sin dependencias para que solo se ejecute una vez
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    loadData();
+  }, []); // Solo se ejecuta una vez al montar el componente
 
   // Manejar cambio de tab
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -260,6 +300,26 @@ const PaymentsManagement: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Alerta de Demostración */}
+      {showDemoAlert && (
+        <Alert 
+          severity="info" 
+          sx={{ mb: 3 }}
+          onClose={() => setShowDemoAlert(false)}
+          icon={<InfoIcon />}
+        >
+          <Typography variant="h6" gutterBottom>
+            🎯 Modo Demostración
+          </Typography>
+          <Typography variant="body2">
+            El backend no está disponible en este momento. Estás viendo datos de demostración que te permiten explorar todas las funcionalidades del sistema de pagos.
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            <strong>Funcionalidades disponibles:</strong> Verificación de depósitos, gestión de retiros, estadísticas, detección de duplicados y más.
+          </Typography>
+        </Alert>
+      )}
+
       {/* Header */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom>
@@ -279,9 +339,9 @@ const PaymentsManagement: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <ReceiptIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
                 <Box>
-                    <Typography variant="h4" component="div">
-                      {stats.pending}
-                  </Typography>
+                                        <Typography variant="h4" component="div">
+                      {stats?.pending || 0}
+                    </Typography>
                   <Typography variant="body2" color="text.secondary">
                       Depósitos Pendientes
                   </Typography>
@@ -297,9 +357,9 @@ const PaymentsManagement: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <CheckCircleIcon sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
                 <Box>
-                    <Typography variant="h4" component="div">
-                      {stats.verified}
-                  </Typography>
+                                        <Typography variant="h4" component="div">
+                      {stats?.verified || 0}
+                    </Typography>
                   <Typography variant="body2" color="text.secondary">
                       Verificados Hoy
                   </Typography>
@@ -315,8 +375,8 @@ const PaymentsManagement: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <TrendingUpIcon sx={{ fontSize: 40, color: 'info.main', mr: 2 }} />
                 <Box>
-                                         <Typography variant="h4" component="div">
-                       {formatCurrency(stats.totalAmount, 'DOP')}
+                                                             <Typography variant="h4" component="div">
+                      {formatCurrency(stats?.totalAmount || 0, 'DOP')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                       Total Procesado
@@ -334,7 +394,7 @@ const PaymentsManagement: React.FC = () => {
                   <SecurityIcon sx={{ fontSize: 40, color: 'warning.main', mr: 2 }} />
                 <Box>
                     <Typography variant="h4" component="div">
-                      {stats.fraudDetection.duplicatesDetected}
+                      {stats?.fraudDetection?.duplicatesDetected || 0}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                       Duplicados Detectados
@@ -487,12 +547,14 @@ const PaymentsManagement: React.FC = () => {
                         </TableCell>
                         
                         <TableCell>
-                          <VoucherImage
-                            depositId={deposit.id}
-                            size="small"
-                            showPreview={false}
-                            showDuplicateCheck={true}
-                          />
+                          {deposit.hasVoucherFile && (
+                            <VoucherImage
+                              depositId={deposit.id}
+                              size="small"
+                              showPreview={false}
+                              showDuplicateCheck={false}
+                            />
+                          )}
                         </TableCell>
                         
                         <TableCell>
@@ -692,7 +754,7 @@ const PaymentsManagement: React.FC = () => {
                               Total de Depósitos
                       </Typography>
                             <Typography variant="h6">
-                              {stats.total}
+                              {stats?.total || 0}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -700,7 +762,7 @@ const PaymentsManagement: React.FC = () => {
                               Monto Total
                       </Typography>
                             <Typography variant="h6">
-                              {formatCurrency(stats.totalAmount, 'RD$')}
+                              {formatCurrency(stats?.totalAmount || 0, 'RD$')}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -708,7 +770,7 @@ const PaymentsManagement: React.FC = () => {
                               Tasa de Verificación
                       </Typography>
                             <Typography variant="h6">
-                              {stats.verificationRate}
+                              {stats?.verificationRate || '0%'}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -716,7 +778,7 @@ const PaymentsManagement: React.FC = () => {
                               Tasa de Rechazo
                       </Typography>
                             <Typography variant="h6">
-                              {stats.rejectionRate}
+                              {stats?.rejectionRate || '0%'}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -744,7 +806,7 @@ const PaymentsManagement: React.FC = () => {
                               Duplicados Detectados
                             </Typography>
                             <Typography variant="h6" color="warning.main">
-                              {stats.fraudDetection.duplicatesDetected}
+                              {stats?.fraudDetection?.duplicatesDetected || 0}
                             </Typography>
                           </Grid>
                           <Grid item xs={6}>
@@ -752,7 +814,7 @@ const PaymentsManagement: React.FC = () => {
                               Actividad Sospechosa
                             </Typography>
                             <Typography variant="h6" color="error.main">
-                              {stats.fraudDetection.suspiciousActivity}
+                              {stats?.fraudDetection?.suspiciousActivity || 0}
                             </Typography>
                           </Grid>
                           <Grid item xs={6}>
@@ -760,7 +822,7 @@ const PaymentsManagement: React.FC = () => {
                               Total Rechazados
                             </Typography>
                             <Typography variant="h6" color="error.main">
-                              {stats.fraudDetection.totalRejected}
+                              {stats?.fraudDetection?.totalRejected || 0}
                             </Typography>
                           </Grid>
                         </Grid>
@@ -846,12 +908,14 @@ const PaymentsManagement: React.FC = () => {
                   <Typography variant="h6" gutterBottom>
                     Voucher
                   </Typography>
-                  <VoucherImage
-                    depositId={selectedDeposit.id}
-                    size="large"
-                    showPreview={true}
-                    showDuplicateCheck={true}
-                  />
+                  {showDetailsDialog && (
+                    <VoucherImage
+                      depositId={selectedDeposit.id}
+                      size="large"
+                      showPreview={true}
+                      showDuplicateCheck={true}
+                    />
+                  )}
                 </Grid>
               </Grid>
             </Box>

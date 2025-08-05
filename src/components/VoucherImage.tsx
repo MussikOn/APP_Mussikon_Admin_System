@@ -1,7 +1,7 @@
 // Componente VoucherImage - MussikOn Admin System
 // Muestra imágenes de vouchers de depósitos con manejo de errores y opciones de visualización
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -39,6 +39,16 @@ import {
 import { depositService } from '../services/depositService';
 import type { VoucherImageData, DuplicateCheckResult } from '../services/depositService';
 
+// Cache para evitar peticiones duplicadas
+const voucherDataCache = new Map<string, VoucherImageData>();
+const loadingCache = new Set<string>();
+
+// Función para limpiar cache (opcional)
+export const clearVoucherCache = () => {
+  voucherDataCache.clear();
+  loadingCache.clear();
+};
+
 // Importar estilos
 import { buttonStyles } from '../theme/buttonStyles';
 
@@ -69,6 +79,8 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
   const [useDirectRoute, setUseDirectRoute] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const [duplicateCheck, setDuplicateCheck] = useState<DuplicateCheckResult | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrlLoading, setImageUrlLoading] = useState(false);
 
   // Tamaños de imagen
   const imageSizes = {
@@ -81,30 +93,33 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
   const MAX_RETRIES = 3;
 
   // Cargar datos del voucher
-  const loadVoucherData = async () => {
+  const loadVoucherData = useCallback(async () => {
+    if (!depositId) return;
+    
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
+      console.log('[VoucherImage] Cargando datos para depositId:', depositId);
       
       const data = await depositService.getDepositInfo(depositId);
+      console.log('[VoucherImage] Datos recibidos:', data);
+      
       setVoucherData(data);
-      setImageError(false);
-      onLoad?.();
-
+      
       // Verificar duplicados si está habilitado
-      if (showDuplicateCheck && data.hasVoucherFile) {
+      if (showDuplicateCheck) {
         await checkForDuplicates();
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-      setError(errorMessage);
-      setImageError(true);
-      onError?.(errorMessage);
-      console.error('[VoucherImage] Error cargando voucher:', errorMessage);
+      
+      console.log('[VoucherImage] Voucher cargado exitosamente');
+    } catch (error) {
+      console.error('[VoucherImage] Error cargando voucher:', error);
+      setError(error instanceof Error ? error.message : 'Error cargando voucher');
     } finally {
       setLoading(false);
     }
-  };
+  }, [depositId, showDuplicateCheck]);
 
   // Verificar duplicados
   const checkForDuplicates = async () => {
@@ -120,12 +135,38 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
     }
   };
 
+  // Determinar si tiene voucher basándose en voucherFile
+  const hasVoucherFile = Boolean(voucherData?.voucherFile && voucherData.voucherFile.url);
+  
+  // Debug: mostrar el estado actual
+  console.log('[VoucherImage] Estado actual - voucherData:', voucherData);
+  console.log('[VoucherImage] Estado actual - hasVoucherFile:', hasVoucherFile);
+  console.log('[VoucherImage] Estado actual - imageUrl:', imageUrl);
+
   // Cargar datos al montar el componente
   useEffect(() => {
     if (depositId) {
       loadVoucherData();
     }
-  }, [depositId]);
+  }, [loadVoucherData]); // Se ejecuta cuando cambia loadVoucherData
+
+  // Efecto para manejar cambios en voucherData
+  useEffect(() => {
+    if (voucherData && voucherData.voucherFile && voucherData.voucherFile.url && !imageUrl) {
+      console.log('[VoucherImage] voucherData actualizado, cargando URL de imagen...');
+      // Solo cargar URL si no existe ya
+      if (!imageUrlLoading) {
+        setImageUrlLoading(true);
+        getImageUrl(voucherData).then(url => {
+          setImageUrl(url);
+          setImageUrlLoading(false);
+        }).catch(error => {
+          console.error('[VoucherImage] Error cargando URL después de actualización:', error);
+          setImageUrlLoading(false);
+        });
+      }
+    }
+  }, [voucherData, imageUrl, imageUrlLoading]);
 
   // Manejar error de imagen con reintentos
   const handleImageError = () => {
@@ -151,52 +192,98 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
 
   // Descargar imagen
   const handleDownload = async () => {
-    if (!voucherData?.hasVoucherFile) return;
+    if (!hasVoucherFile) return;
     
     try {
+      // Intentar usar URL firmada si está disponible
+      if (imageUrl && imageUrl.startsWith('http')) {
+        const response = await fetch(imageUrl);
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = voucherData?.voucherFile?.filename || `voucher-${depositId}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+      }
+      
+      // Fallback: usar el servicio de descarga
       const blob = await depositService.downloadVoucher(depositId);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = voucherData.voucherFile?.filename || `voucher-${depositId}.jpg`;
+      link.download = voucherData?.voucherFile?.filename || `voucher-${depositId}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error descargando voucher:', error);
-      // Fallback: usar URL directa
-      if (voucherData.voucherUrl) {
-        const link = document.createElement('a');
-        link.href = voucherData.voucherUrl;
-        link.download = voucherData.voucherFile?.filename || `voucher-${depositId}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      // Fallback: usar endpoint de fallback
+      const fallbackUrl = `/imgs/voucher/${depositId}`;
+      const link = document.createElement('a');
+      link.href = fallbackUrl;
+      link.download = voucherData?.voucherFile?.filename || `voucher-${depositId}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
   // Abrir en nueva pestaña
   const handleOpenInNewTab = () => {
-    if (voucherData?.voucherUrl) {
-      window.open(voucherData.voucherUrl, '_blank');
+    if (imageUrl) {
+      window.open(imageUrl, '_blank');
+    } else {
+      // Fallback: usar el endpoint de fallback
+      const fallbackUrl = `/imgs/voucher/${depositId}`;
+      window.open(fallbackUrl, '_blank');
     }
   };
 
   // Generar URL de imagen
-  const getImageUrl = () => {
-    if (!voucherData?.hasVoucherFile) return null;
+  const getImageUrl = async (data: VoucherImageData) => {
+    console.log('[VoucherImage] getImageUrl - voucherData:', data);
+    console.log('[VoucherImage] getImageUrl - hasVoucherFile:', Boolean(data.voucherFile && data.voucherFile.url));
+    console.log('[VoucherImage] getImageUrl - depositId:', data.id);
     
-    if (voucherData.voucherUrl) {
-      return voucherData.voucherUrl;
+    if (!Boolean(data.voucherFile && data.voucherFile.url)) {
+      console.log('[VoucherImage] getImageUrl - No tiene voucher file');
+      return null;
     }
     
-    const baseUrl = useDirectRoute 
-      ? `/admin/payments/voucher-image-direct/${depositId}`
-      : `/admin/payments/voucher-image/${depositId}`;
-    
-    return baseUrl;
+    try {
+      console.log('[VoucherImage] getImageUrl - Intentando obtener URL firmada...');
+      console.log('[VoucherImage] getImageUrl - Llamando a depositService.getVoucherPresignedUrl...');
+      
+      // Intentar obtener URL firmada
+      const presignedUrl = await depositService.getVoucherPresignedUrl(data.id);
+      
+      console.log('[VoucherImage] getImageUrl - Respuesta de getVoucherPresignedUrl:', presignedUrl);
+      
+      if (presignedUrl) {
+        console.log('[VoucherImage] getImageUrl - URL firmada obtenida exitosamente:', presignedUrl);
+        return presignedUrl;
+      }
+      
+      console.log('[VoucherImage] getImageUrl - URL firmada no disponible, usando fallback');
+      
+      // Fallback: usar el endpoint de fallback que funciona con S3
+      const fallbackUrl = `/imgs/voucher/${data.id}`;
+      console.log('[VoucherImage] getImageUrl - Usando endpoint de fallback:', fallbackUrl);
+      return fallbackUrl;
+    } catch (error) {
+      console.error('[VoucherImage] getImageUrl - Error obteniendo URL firmada:', error);
+      // Fallback: usar el endpoint de fallback
+      const fallbackUrl = `/imgs/voucher/${data.id}`;
+      console.log('[VoucherImage] getImageUrl - Usando endpoint de fallback por error:', fallbackUrl);
+      return fallbackUrl;
+    }
   };
 
   // Formatear tamaño de archivo
@@ -208,8 +295,8 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Renderizar estado de carga
-  if (loading) {
+  // Renderizar estado de carga o si no hay datos
+  if (loading || imageUrlLoading || !voucherData) {
     return (
       <Box 
         sx={{ 
@@ -227,14 +314,15 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
       >
         <CircularProgress size={24} />
         <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
-          Cargando voucher...
+          {loading ? 'Cargando voucher...' : 'Generando URL...'}
         </Typography>
       </Box>
     );
   }
 
   // Renderizar error
-  if (error || !voucherData?.hasVoucherFile || imageError) {
+  console.log('[VoucherImage] Renderizando error - error:', error, 'hasVoucherFile:', hasVoucherFile, 'imageError:', imageError);
+  if (error || !hasVoucherFile || imageError) {
     return (
       <Box 
         sx={{ 
@@ -265,8 +353,6 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
       </Box>
     );
   }
-
-  const imageUrl = getImageUrl();
 
   return (
     <>
@@ -315,10 +401,10 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
           }}
         >
           <Typography variant="caption" sx={{ display: 'block' }}>
-            {voucherData.currency} {voucherData.amount}
+            {voucherData?.currency} {voucherData?.amount}
           </Typography>
           <Typography variant="caption" sx={{ opacity: 0.8 }}>
-            {new Date(voucherData.voucherFile?.uploadedAt || '').toLocaleDateString()}
+            {new Date(voucherData?.voucherFile?.uploadedAt || '').toLocaleDateString()}
           </Typography>
         </Box>
 
@@ -414,19 +500,19 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
                   <ListItem>
                     <ListItemText
                       primary="ID de Depósito"
-                      secondary={voucherData.id}
+                      secondary={voucherData?.id}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText
                       primary="Usuario"
-                      secondary={voucherData.userId}
+                      secondary={voucherData?.userId}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText
                       primary="Monto"
-                      secondary={`${voucherData.currency} ${voucherData.amount}`}
+                      secondary={`${voucherData?.currency} ${voucherData?.amount}`}
                     />
                   </ListItem>
                   <ListItem>
@@ -434,8 +520,8 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
                       primary="Estado"
                       secondary={
                         <Chip
-                          label={voucherData.status}
-                          color={voucherData.status === 'pending' ? 'warning' : 'success'}
+                          label={voucherData?.status}
+                          color={voucherData?.status === 'pending' ? 'warning' : 'success'}
                           size="small"
                         />
                       }
@@ -452,28 +538,28 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
                   <ListItem>
                     <ListItemText
                       primary="Nombre del archivo"
-                      secondary={voucherData.voucherFile?.filename || 'N/A'}
+                      secondary={voucherData?.voucherFile?.filename || 'N/A'}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText
                       primary="Tamaño"
-                      secondary={voucherData.voucherFile?.fileSize ? 
-                        formatFileSize(voucherData.voucherFile.fileSize) : 'N/A'
+                      secondary={voucherData?.voucherFile?.fileSize ? 
+                        formatFileSize(voucherData.voucherFile?.fileSize) : 'N/A'
                       }
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText
                       primary="Tipo de archivo"
-                      secondary={voucherData.voucherFile?.mimeType || 'N/A'}
+                      secondary={voucherData?.voucherFile?.mimeType || 'N/A'}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText
                       primary="Fecha de subida"
-                      secondary={voucherData.voucherFile?.uploadedAt ? 
-                        new Date(voucherData.voucherFile.uploadedAt).toLocaleString() : 'N/A'
+                      secondary={voucherData?.voucherFile?.uploadedAt ? 
+                        new Date(voucherData.voucherFile?.uploadedAt).toLocaleString() : 'N/A'
                       }
                     />
                   </ListItem>
@@ -482,7 +568,7 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
                       primary="Hash del archivo"
                       secondary={
                         <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
-                          {voucherData.voucherFile?.hash || 'N/A'}
+                          {voucherData?.voucherFile?.hash || 'N/A'}
                         </Typography>
                       }
                     />

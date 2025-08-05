@@ -395,7 +395,7 @@ const Images: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {stats.totalImages}
+                    {stats?.totalImages || 0}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Total Imágenes
@@ -413,7 +413,7 @@ const Images: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {formatFileSize(stats.totalSize)}
+                    {formatFileSize(stats?.totalSize || 0)}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Tamaño Total
@@ -431,7 +431,7 @@ const Images: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {stats.publicImages}
+                    {stats?.publicImages || 0}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Públicas
@@ -449,7 +449,7 @@ const Images: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {Object.keys(stats.imagesByCategory).length}
+                    {Object.keys(stats?.imagesByCategory || {}).length}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Categorías

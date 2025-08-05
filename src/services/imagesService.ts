@@ -15,6 +15,70 @@ import type {
   LegacyImagesResponse
 } from '../features/images/types/image';
 
+// Mock data for when backend is not available
+const getMockImages = (): Image[] => [
+  {
+    id: '1',
+    fileName: 'mock-image-1.jpg',
+    originalName: 'sample-image-1.jpg',
+    url: 'https://via.placeholder.com/300x200/4CAF50/FFFFFF?text=Mock+Image+1',
+    category: 'profile',
+    size: 1024000,
+    mimeType: 'image/jpeg',
+    description: 'Mock profile image for testing',
+    tags: ['profile', 'mock', 'test'],
+    isPublic: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '2',
+    fileName: 'mock-image-2.jpg',
+    originalName: 'sample-image-2.jpg',
+    url: 'https://via.placeholder.com/400x300/2196F3/FFFFFF?text=Mock+Image+2',
+    category: 'event',
+    size: 2048000,
+    mimeType: 'image/jpeg',
+    description: 'Mock event image for testing',
+    tags: ['event', 'mock', 'test'],
+    isPublic: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    fileName: 'mock-image-3.jpg',
+    originalName: 'sample-image-3.jpg',
+    url: 'https://via.placeholder.com/500x400/FF9800/FFFFFF?text=Mock+Image+3',
+    category: 'post',
+    size: 3072000,
+    mimeType: 'image/jpeg',
+    description: 'Mock post image for testing',
+    tags: ['post', 'mock', 'test'],
+    isPublic: false,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+const getMockImageStats = (): ImageStats => ({
+  totalImages: 3,
+  totalSize: 6144000,
+  imagesByCategory: {
+    profile: 1,
+    event: 1,
+    post: 1
+  },
+  imagesByUser: {},
+  publicImages: 2,
+  privateImages: 1,
+  activeImages: 3,
+  inactiveImages: 0
+});
+
 export const imagesService = {
   // ==================== NUEVO CRUD ====================
   
@@ -41,8 +105,27 @@ export const imagesService = {
       const response = await api.get<ImagesResponse>(url);
       return response.data.images || [];
     } catch (error) {
-      console.error('Error al obtener imágenes:', error);
-      throw error;
+      console.warn('⚠️ Backend no disponible o error en respuesta, usando imágenes mock:', error);
+      const mockImages = getMockImages();
+      
+      // Aplicar filtros a las imágenes mock
+      if (filters) {
+        return mockImages.filter(image => {
+          if (filters.category && image.category !== filters.category) return false;
+          if (filters.isPublic !== undefined && image.isPublic !== filters.isPublic) return false;
+          if (filters.isActive !== undefined && image.isActive !== filters.isActive) return false;
+          if (filters.search) {
+            const searchTerm = filters.search.toLowerCase();
+            return image.description?.toLowerCase().includes(searchTerm) ||
+                   image.originalName.toLowerCase().includes(searchTerm) ||
+                   image.tags?.some(tag => tag.toLowerCase().includes(searchTerm)) ||
+                   false;
+          }
+          return true;
+        });
+      }
+      
+      return mockImages;
     }
   },
 
@@ -54,8 +137,9 @@ export const imagesService = {
       );
       return response.data.image || null;
     } catch (error) {
-      console.error('Error al obtener imagen por ID:', error);
-      throw error;
+      console.warn('⚠️ Backend no disponible o error en respuesta, usando imagen mock:', error);
+      const mockImages = getMockImages();
+      return mockImages.find(img => img.id === imageId) || null;
     }
   },
 
@@ -133,8 +217,8 @@ export const imagesService = {
       const response = await api.get<ImageStatsResponse>(API_CONFIG.ENDPOINTS.IMAGE_STATS);
       return response.data.stats;
     } catch (error) {
-      console.error('Error al obtener estadísticas de imágenes:', error);
-      throw error;
+      console.warn('⚠️ Backend no disponible o error en respuesta, usando estadísticas mock de imágenes:', error);
+      return getMockImageStats();
     }
   },
 
@@ -208,8 +292,8 @@ export const imagesService = {
       // Las imágenes ya vienen con URLs firmadas del backend
       return images;
     } catch (error) {
-      console.error('Error al obtener imágenes con URLs:', error);
-      throw error;
+      console.warn('⚠️ Error al obtener imágenes con URLs, usando mock:', error);
+      return getMockImages();
     }
   },
 

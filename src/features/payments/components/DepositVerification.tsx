@@ -847,14 +847,12 @@ const DepositVerification: React.FC<DepositVerificationProps> = ({
                 <ListItem>
                   <ListItemText
                     primary="Estado"
-                    secondary={
-                      <Chip
-                        label={depositStatus.label}
-                        color={depositStatus.color}
-                        size="small"
-                        sx={chipStyles[depositStatus.color as keyof typeof chipStyles]}
-                      />
-                    }
+                  />
+                  <Chip
+                    label={depositStatus.label}
+                    color={depositStatus.color}
+                    size="small"
+                    sx={chipStyles[depositStatus.color as keyof typeof chipStyles]}
                   />
                 </ListItem>
                 <ListItem>
