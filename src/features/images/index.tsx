@@ -93,7 +93,8 @@ const Images: React.FC = () => {
     searchImages,
     getImagesByCategory,
     getPublicImages,
-    cleanupExpiredImages
+    cleanupExpiredImages,
+    getImagePresignedUrl
   } = useImages();
 
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -576,6 +577,21 @@ const Images: React.FC = () => {
                         height: 200,
                         objectFit: 'cover'
                       }}
+                      onError={(e) => {
+                        console.error(`Error cargando imagen ${image.id}:`, e);
+                        // Intentar obtener URL firmada como fallback
+                        getImagePresignedUrl(image.id).then(url => {
+                          if (url) {
+                            (e.target as HTMLImageElement).src = url;
+                          } else {
+                            // Mostrar imagen placeholder
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Error+Cargando+Imagen';
+                          }
+                        }).catch(error => {
+                          console.error('Error obteniendo URL firmada:', error);
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Error+Cargando+Imagen';
+                        });
+                      }}
                     />
                     
                     {/* Overlay con acciones */}
@@ -666,13 +682,48 @@ const Images: React.FC = () => {
                     
                     <Box>
                       <Tooltip title="Copiar URL">
-                        <IconButton size="small">
+                        <IconButton 
+                          size="small"
+                          onClick={() => {
+                            navigator.clipboard.writeText(image.url);
+                            showSnackbar('URL copiada al portapapeles', 'success');
+                          }}
+                        >
                           <ShareIcon />
                         </IconButton>
                       </Tooltip>
                       
                       <Tooltip title="Descargar">
-                        <IconButton size="small">
+                        <IconButton 
+                          size="small"
+                          onClick={async () => {
+                            try {
+                              // Intentar obtener URL firmada para descarga
+                              const presignedUrl = await getImagePresignedUrl(image.id);
+                              if (presignedUrl) {
+                                const link = document.createElement('a');
+                                link.href = presignedUrl;
+                                link.download = image.originalName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                showSnackbar('Descarga iniciada', 'success');
+                              } else {
+                                // Fallback: usar la URL normal
+                                const link = document.createElement('a');
+                                link.href = image.url;
+                                link.download = image.originalName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                showSnackbar('Descarga iniciada', 'success');
+                              }
+                            } catch (error) {
+                              console.error('Error descargando imagen:', error);
+                              showSnackbar('Error al descargar la imagen', 'error');
+                            }
+                          }}
+                        >
                           <DownloadIcon />
                         </IconButton>
                       </Tooltip>

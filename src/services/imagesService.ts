@@ -80,7 +80,7 @@ const getMockImageStats = (): ImageStats => ({
 });
 
 export const imagesService = {
-  // ==================== NUEVO CRUD ====================
+  // ==================== NUEVO CRUD MEJORADO ====================
   
   // Obtener todas las imágenes con filtros
   async getAllImages(filters?: ImageFilters): Promise<Image[]> {
@@ -102,7 +102,11 @@ export const imagesService = {
       const queryString = params.toString();
       const url = queryString ? `${API_CONFIG.ENDPOINTS.ADMIN_IMAGES}?${queryString}` : API_CONFIG.ENDPOINTS.ADMIN_IMAGES;
       
+      console.log('[imagesService] getAllImages - URL:', url);
+      
       const response = await api.get<ImagesResponse>(url);
+      console.log('[imagesService] getAllImages - Response:', response);
+      
       return response.data.images || [];
     } catch (error) {
       console.warn('⚠️ Backend no disponible o error en respuesta, usando imágenes mock:', error);
@@ -155,8 +159,8 @@ export const imagesService = {
   ): Promise<Image> {
     try {
       const formData = new FormData();
-      formData.append('image', file);
-      formData.append('category', category);
+      formData.append('file', file);
+      formData.append('folder', category);
       
       if (metadata) {
         if (metadata.description) {
@@ -170,6 +174,8 @@ export const imagesService = {
         }
       }
 
+      console.log('[imagesService] uploadImage - Subiendo imagen:', file.name);
+      
       const response = await api.post<ImageUploadResponse>(
         API_CONFIG.ENDPOINTS.UPLOAD_IMAGE, 
         formData, 
@@ -179,6 +185,8 @@ export const imagesService = {
           },
         }
       );
+      
+      console.log('[imagesService] uploadImage - Respuesta:', response);
       
       return response.data.image;
     } catch (error) {
@@ -238,6 +246,67 @@ export const imagesService = {
     }
   },
 
+  // Validar archivo antes de subir
+  async validateFile(file: File): Promise<{ isValid: boolean; errors: string[]; warnings: string[] }> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await api.post<{ success: boolean; data: { isValid: boolean; errors: string[]; warnings: string[] } }>(
+        API_CONFIG.ENDPOINTS.IMAGE_VALIDATE,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      return response.data.data;
+    } catch (error) {
+      console.error('Error al validar archivo:', error);
+      // Fallback: validación básica
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        errors.push('Tipo de archivo no permitido');
+      }
+      
+      // Validar tamaño
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        errors.push('Archivo demasiado grande (máximo 10MB)');
+      }
+      
+      return {
+        isValid: errors.length === 0,
+        errors,
+        warnings
+      };
+    }
+  },
+
+  // Obtener URL firmada para una imagen
+  async getImagePresignedUrl(imageId: string, expiresIn: number = 3600): Promise<string | null> {
+    try {
+      const response = await api.get<{ success: boolean; data: { presignedUrl: string; expiresIn: number } }>(
+        `${API_CONFIG.ENDPOINTS.IMAGE_PRESIGNED_URL.replace(':id', imageId)}?expiresIn=${expiresIn}`
+      );
+      
+      if (response.data?.success && response.data?.data?.presignedUrl) {
+        return response.data.data.presignedUrl;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error al obtener URL firmada:', error);
+      return null;
+    }
+  },
+
   // ==================== ENDPOINTS ESPECÍFICOS ====================
 
   // Obtener imágenes de perfil
@@ -289,8 +358,28 @@ export const imagesService = {
   async getImagesWithUrls(filters?: ImageFilters): Promise<Image[]> {
     try {
       const images = await this.getAllImages(filters);
-      // Las imágenes ya vienen con URLs firmadas del backend
-      return images;
+      
+      // Procesar cada imagen para obtener URLs firmadas si es necesario
+      const processedImages = await Promise.all(
+        images.map(async (image) => {
+          try {
+            // Intentar obtener URL firmada
+            const presignedUrl = await this.getImagePresignedUrl(image.id);
+            if (presignedUrl) {
+              return {
+                ...image,
+                url: presignedUrl
+              };
+            }
+          } catch (error) {
+            console.warn(`Error obteniendo URL firmada para imagen ${image.id}:`, error);
+          }
+          
+          return image;
+        })
+      );
+      
+      return processedImages;
     } catch (error) {
       console.warn('⚠️ Error al obtener imágenes con URLs, usando mock:', error);
       return getMockImages();
@@ -407,6 +496,8 @@ export const {
   deleteImage,
   getImageStats,
   cleanupExpiredImages,
+  validateFile,
+  getImagePresignedUrl,
   getProfileImages,
   getPostImages,
   getEventImages,

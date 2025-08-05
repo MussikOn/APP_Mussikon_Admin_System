@@ -227,16 +227,15 @@ class DepositService {
   /**
    * Obtener URL de imagen de voucher con manejo de errores
    */
-  async getVoucherImageUrl(depositId: string, useDirectRoute: boolean = true): Promise<string | null> {
+  async getVoucherImageUrl(depositId: string): Promise<string | null> {
     try {
-      const baseUrl = useDirectRoute 
-        ? API_CONFIG.ENDPOINTS.VOUCHER_IMAGE_DIRECT.replace(':id', depositId)
-        : API_CONFIG.ENDPOINTS.VOUCHER_IMAGE.replace(':id', depositId);
+      // Usar el endpoint de fallback que funciona con el backend mejorado
+      const fallbackUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.VOUCHER_FALLBACK.replace(':id', depositId)}`;
       
-      // Verificar si la imagen existe usando GET en lugar de HEAD
-      const response = await apiService.get(baseUrl);
+      // Verificar si la imagen existe usando GET
+      const response = await apiService.get(API_CONFIG.ENDPOINTS.VOUCHER_FALLBACK.replace(':id', depositId));
       if (response.status === 200) {
-        return `${API_CONFIG.BASE_URL}${baseUrl}`;
+        return fallbackUrl;
       }
       return null;
     } catch (error) {
@@ -290,9 +289,9 @@ class DepositService {
         return await response.blob();
       }
       
-      // Fallback: usar el endpoint directo
+      // Fallback: usar el endpoint de fallback
       const response = await apiService.get(
-        API_CONFIG.ENDPOINTS.DOWNLOAD_VOUCHER.replace(':id', depositId),
+        API_CONFIG.ENDPOINTS.VOUCHER_FALLBACK.replace(':id', depositId),
         { responseType: 'blob' }
       );
       return response.data;

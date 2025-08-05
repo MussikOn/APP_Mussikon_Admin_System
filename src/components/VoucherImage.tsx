@@ -38,6 +38,7 @@ import {
 // Importar servicios
 import { depositService } from '../services/depositService';
 import type { VoucherImageData, DuplicateCheckResult } from '../services/depositService';
+import { API_CONFIG } from '../config/apiConfig';
 
 // Cache para evitar peticiones duplicadas
 const voucherDataCache = new Map<string, VoucherImageData>();
@@ -225,7 +226,7 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
     } catch (error) {
       console.error('Error descargando voucher:', error);
       // Fallback: usar endpoint de fallback
-      const fallbackUrl = `/imgs/voucher/${depositId}`;
+      const fallbackUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.VOUCHER_FALLBACK.replace(':id', depositId)}`;
       const link = document.createElement('a');
       link.href = fallbackUrl;
       link.download = voucherData?.voucherFile?.filename || `voucher-${depositId}.jpg`;
@@ -241,7 +242,7 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
       window.open(imageUrl, '_blank');
     } else {
       // Fallback: usar el endpoint de fallback
-      const fallbackUrl = `/imgs/voucher/${depositId}`;
+      const fallbackUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.VOUCHER_FALLBACK.replace(':id', depositId)}`;
       window.open(fallbackUrl, '_blank');
     }
   };
@@ -274,13 +275,13 @@ const VoucherImage: React.FC<VoucherImageProps> = ({
       console.log('[VoucherImage] getImageUrl - URL firmada no disponible, usando fallback');
       
       // Fallback: usar el endpoint de fallback que funciona con S3
-      const fallbackUrl = `/imgs/voucher/${data.id}`;
+      const fallbackUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.VOUCHER_FALLBACK.replace(':id', data.id)}`;
       console.log('[VoucherImage] getImageUrl - Usando endpoint de fallback:', fallbackUrl);
       return fallbackUrl;
     } catch (error) {
       console.error('[VoucherImage] getImageUrl - Error obteniendo URL firmada:', error);
       // Fallback: usar el endpoint de fallback
-      const fallbackUrl = `/imgs/voucher/${data.id}`;
+      const fallbackUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.VOUCHER_FALLBACK.replace(':id', data.id)}`;
       console.log('[VoucherImage] getImageUrl - Usando endpoint de fallback por error:', fallbackUrl);
       return fallbackUrl;
     }

@@ -23,6 +23,7 @@ import {
   Add as AddIcon,
   Clear as ClearIcon
 } from '@mui/icons-material';
+import { imagesService } from '../../../services/imagesService';
 
 interface ImageUploadProps {
   onUpload: (
@@ -46,30 +47,56 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUpload, uploading }) => {
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[]; warnings: string[] } | null>(null);
+  const [validating, setValidating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateFile = (file: File): boolean => {
-    // Validar tipo de archivo
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      setError('Solo se permiten archivos de imagen (JPEG, PNG, GIF, WebP)');
-      return false;
-    }
-
-    // Validar tamaño (máximo 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      setError('El archivo es demasiado grande. Máximo 10MB');
-      return false;
-    }
-
+  const validateFile = async (file: File): Promise<boolean> => {
+    setValidating(true);
     setError(null);
-    return true;
+    setValidationResult(null);
+    
+    try {
+      // Usar la nueva función de validación del backend
+      const result = await imagesService.validateFile(file);
+      setValidationResult(result);
+      
+      if (!result.isValid) {
+        setError(result.errors.join(', '));
+        return false;
+      }
+      
+      if (result.warnings.length > 0) {
+        console.warn('Advertencias de validación:', result.warnings);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error en validación:', error);
+      // Fallback: validación básica
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Solo se permiten archivos de imagen (JPEG, PNG, GIF, WebP)');
+        return false;
+      }
+
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        setError('El archivo es demasiado grande. Máximo 10MB');
+        return false;
+      }
+      
+      return true;
+    } finally {
+      setValidating(false);
+    }
   };
 
   const handleFileSelect = useCallback(async (file: File) => {
-    if (!validateFile(file)) return;
-    setSelectedFile(file);
+    const isValid = await validateFile(file);
+    if (isValid) {
+      setSelectedFile(file);
+    }
   }, []);
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +158,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUpload, uploading }) => {
       setNewTag('');
       setCategory('gallery');
       setIsPublic(true);
+      setValidationResult(null);
     } catch (error) {
       console.error('Error al subir archivo:', error);
       setError('Error al subir la imagen. Inténtalo de nuevo.');
@@ -194,10 +222,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUpload, uploading }) => {
               style={{ display: 'none' }}
             />
             
-            {uploading ? (
+            {uploading || validating ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                 <CircularProgress size={40} />
-                <Typography>Subiendo imagen...</Typography>
+                <Typography>{validating ? 'Validando archivo...' : 'Subiendo imagen...'}</Typography>
               </Box>
             ) : selectedFile ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
@@ -213,12 +241,30 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUpload, uploading }) => {
                 <Typography variant="body2" color="text.secondary">
                   {selectedFile.name} ({formatFileSize(selectedFile.size)})
                 </Typography>
+                
+                {/* Mostrar resultado de validación */}
+                {validationResult && (
+                  <Box sx={{ width: '100%' }}>
+                    {validationResult.warnings.length > 0 && (
+                      <Alert severity="warning" sx={{ mb: 1 }}>
+                        {validationResult.warnings.join(', ')}
+                      </Alert>
+                    )}
+                    {validationResult.isValid && (
+                      <Alert severity="success">
+                        Archivo válido ✓
+                      </Alert>
+                    )}
+                  </Box>
+                )}
+                
                 <Button
                   variant="outlined"
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedFile(null);
+                    setValidationResult(null);
                   }}
                   startIcon={<ClearIcon />}
                 >
@@ -328,7 +374,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUpload, uploading }) => {
             fullWidth
             size="large"
             onClick={handleUpload}
-            disabled={!selectedFile || uploading}
+            disabled={!selectedFile || uploading || validating || (validationResult ? !validationResult.isValid : false)}
             startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
           >
             {uploading ? 'Subiendo...' : 'Subir Imagen'}

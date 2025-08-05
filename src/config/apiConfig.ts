@@ -99,7 +99,7 @@ export const API_CONFIG = {
     VALIDATE_PAYMENT_METHOD: '/payments/validate',
     PAYMENT_GATEWAYS: '/payments/gateways',
     
-    // Sistema de Depósitos - Nuevo
+    // Sistema de Depósitos - ACTUALIZADO con nuevos endpoints
     PENDING_DEPOSITS: '/admin/payments/pending-deposits',
     VERIFY_DEPOSIT: '/admin/payments/verify-deposit/:id',
     PENDING_WITHDRAWALS: '/admin/payments/pending-withdrawals',
@@ -114,19 +114,24 @@ export const API_CONFIG = {
     DEPOSIT_STATS: '/admin/payments/deposit-stats',
     FLAG_SUSPICIOUS: '/admin/payments/flag-suspicious/:id',
     
-    // Imágenes (Admin) - Nuevo CRUD
-    ADMIN_IMAGES: '/imgs',
-    ADMIN_IMAGE_BY_ID: '/imgs/:id',
-    DELETE_ADMIN_IMAGE: '/imgs/:id',
-    UPLOAD_IMAGE: '/imgs/upload',
-    UPDATE_IMAGE: '/imgs/:id',
-    IMAGE_STATS: '/imgs/stats',
-    IMAGE_CLEANUP: '/imgs/cleanup',
+    // Imágenes (Admin) - ACTUALIZADO con endpoints del backend mejorado
+    ADMIN_IMAGES: '/images',
+    ADMIN_IMAGE_BY_ID: '/images/:id',
+    DELETE_ADMIN_IMAGE: '/images/:id',
+    UPLOAD_IMAGE: '/images/upload',
+    UPDATE_IMAGE: '/images/:id',
+    IMAGE_STATS: '/images/stats',
+    IMAGE_CLEANUP: '/images/cleanup',
+    IMAGE_VALIDATE: '/images/validate',
+    IMAGE_PRESIGNED_URL: '/images/:id/presigned',
     
     // Imágenes específicas
-    PROFILE_IMAGES: '/imgs/profile/:userId',
-    POST_IMAGES: '/imgs/posts',
-    EVENT_IMAGES: '/imgs/events',
+    PROFILE_IMAGES: '/images/profile/:userId',
+    POST_IMAGES: '/images/posts',
+    EVENT_IMAGES: '/images/events',
+    
+    // Endpoint de fallback para vouchers (NUEVO)
+    VOUCHER_FALLBACK: '/imgs/voucher/:id',
     
     // Imágenes (Legacy) - Para compatibilidad
     LEGACY_ADMIN_IMAGES: '/imgs/getAllImg',
