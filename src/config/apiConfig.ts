@@ -95,6 +95,52 @@ export const API_CONFIG = {
     PAYMENT_SYSTEM_DOWNLOAD_VOUCHER: '/payment-system/download-voucher/:id',
     PAYMENT_SYSTEM_FLAG_SUSPICIOUS: '/payment-system/flag-suspicious/:id',
     
+    // Sistema de Pagos Móviles - NUEVOS ENDPOINTS
+    MOBILE_DEPOSITS_MY_DEPOSITS: '/deposits/my-deposits',
+    MOBILE_DEPOSITS_CREATE: '/payment-system/deposit',
+    MOBILE_DEPOSITS_APPROVE: '/deposits/:id/approve',
+    MOBILE_DEPOSITS_REJECT: '/deposits/:id/reject',
+    MOBILE_DEPOSITS_REPORT: '/deposits/report',
+    MOBILE_DEPOSITS_PENDING: '/deposits/pending',
+    MOBILE_DEPOSITS_BY_ID: '/deposits/:id',
+    
+    MOBILE_WITHDRAWALS_MY_WITHDRAWALS: '/payment-system/my-withdrawals',
+    MOBILE_WITHDRAWALS_CREATE: '/payment-system/withdraw',
+    MOBILE_WITHDRAWALS_PROCESS: '/payment-system/process-withdrawal/:id',
+    
+    MOBILE_BANK_ACCOUNTS_MY_ACCOUNTS: '/payment-system/bank-accounts/my-accounts',
+    MOBILE_BANK_ACCOUNTS_REGISTER: '/bank-accounts/register',
+    MOBILE_BANK_ACCOUNTS_PENDING: '/deposits/bank-accounts',
+    
+    MOBILE_BALANCE_MY_BALANCE: '/payment-system/my-balance',
+    
+    MOBILE_VOUCHERS_IMAGE: '/images/voucher/:id',
+    MOBILE_VOUCHERS_PRESIGNED: '/payment-system/voucher/:id/presigned-url',
+    MOBILE_VOUCHERS_INTEGRITY: '/vouchers/:id/integrity',
+    MOBILE_VOUCHERS_DELETE: '/vouchers/:id',
+    
+    MOBILE_PAYMENT_METHODS: '/payments/methods',
+    MOBILE_PAYMENT_METHOD_BY_ID: '/payments/methods/:id',
+    MOBILE_PAYMENT_METHOD_CREATE: '/payments/methods',
+    MOBILE_PAYMENT_METHOD_UPDATE: '/payments/methods/:id',
+    MOBILE_PAYMENT_METHOD_SET_DEFAULT: '/payments/methods/:id/default',
+    MOBILE_PAYMENT_METHOD_DELETE: '/payments/methods/:id',
+    
+    MOBILE_PAYMENT_INTENTS: '/payments/intents',
+    MOBILE_PAYMENT_INTENT_CREATE: '/payments/intents',
+    MOBILE_PAYMENT_PROCESS: '/payments/process',
+    
+    MOBILE_PAYMENT_INVOICES: '/payments/invoices',
+    MOBILE_PAYMENT_INVOICE_CREATE: '/payments/invoices',
+    MOBILE_PAYMENT_INVOICE_BY_ID: '/payments/invoices/:id',
+    MOBILE_PAYMENT_INVOICE_MARK_PAID: '/payments/invoices/:id/pay',
+    
+    MOBILE_PAYMENT_REFUNDS: '/payments/refunds',
+    MOBILE_PAYMENT_REFUND_PROCESS: '/payments/refunds',
+    
+    MOBILE_PAYMENT_VALIDATE: '/payments/validate',
+    MOBILE_PAYMENT_GATEWAYS: '/payments/gateways',
+    
     // Rutas de compatibilidad para /admin/payments/* (redirigen a payment-system)
     PENDING_DEPOSITS: '/admin/payments/pending-deposits',
     VERIFY_DEPOSIT: '/admin/payments/verify-deposit/:id',

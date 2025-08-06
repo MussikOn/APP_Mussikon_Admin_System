@@ -1,60 +1,90 @@
-// Pantalla de Verificación de Depósitos - MussikOn Admin System
-// Permite a los administradores verificar depósitos realizados desde la app móvil
+// Componente Principal de Gestión de Pagos Móviles - MussikOn Admin System
+// Sistema completo de pagos móviles con todas las funcionalidades del backend
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
-  Grid,
-  Alert,
-  CircularProgress,
-  Tabs,
-  Tab,
-  Chip,
+  Card,
+  CardContent,
+  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Grid,
+  Chip,
+  Alert,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip,
+  Badge,
+  TextField,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Badge,
-  Avatar,
+  Pagination,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   List,
   ListItem,
-  ListItemAvatar,
-  ListItemText
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  Paper
 } from '@mui/material';
 import {
-  Smartphone as SmartphoneIcon,
+  AccountBalance as AccountBalanceIcon,
+  Receipt as ReceiptIcon,
+  TrendingUp as TrendingUpIcon,
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
-  Visibility as VisibilityIcon,
+  Security as SecurityIcon,
+  ExpandMore as ExpandMoreIcon,
   Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  TrendingUp as TrendingUpIcon,
+  Assessment as AssessmentIcon,
+  Info as InfoIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
   Warning as WarningIcon,
-  FilterList as FilterIcon,
-  AttachMoney as MoneyIcon,
-  AccountBalance as AccountBalanceIcon
+  VerifiedUser as VerifiedUserIcon,
+  AccountCircle as AccountCircleIcon,
+  Payment as PaymentIcon,
+  Withdraw as WithdrawIcon,
+  Bank as BankIcon,
+  AttachMoney as MoneyIcon
 } from '@mui/icons-material';
 
-// Importar servicios y hooks
-import { useMobilePayments } from '../../hooks/useMobilePayments';
-import type { MobilePayment } from '../../services/mobilePaymentsService';
+// Importar servicios
+import { mobilePaymentsService } from '../../services/mobilePaymentsService';
+import type { 
+  MobileDeposit, 
+  MobileWithdrawal, 
+  MobilePaymentStats,
+  BankAccount,
+  MobileUser
+} from '../../services/mobilePaymentsService';
 
-// Importar componentes modernos
-import ModernCard from '../../components/ui/ModernCard';
-import ModernButton from '../../components/ui/ModernButton';
-import ModernInput from '../../components/ui/ModernInput';
+// Importar componentes
+import VoucherImage from '../../components/VoucherImage';
 
 // Importar estilos
-import { ResponsiveLayout } from '../../components/ResponsiveLayout';
-import { designSystem } from '../../theme/designSystem';
-import PaymentCard from './components/PaymentCard';
+import { chipStyles } from '../../theme/buttonStyles';
 
-// Tipos para las pestañas
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -68,1248 +98,1172 @@ function TabPanel(props: TabPanelProps) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`mobile-payments-tabpanel-${index}`}
-      aria-labelledby={`mobile-payments-tab-${index}`}
+      id={`mobile-payment-tabpanel-${index}`}
+      aria-labelledby={`mobile-payment-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
 
-// Componente principal de Verificación de Depósitos
-const MobilePayments: React.FC = () => {
-  // Estado para pestañas
-  const [tabValue, setTabValue] = useState(0);
-  
-  // Estado para filtros
-  const [filters, setFilters] = useState({
-    status: 'all',
-    paymentMethod: 'all',
+const MobilePaymentsManagement: React.FC = () => {
+  // Estado principal
+  const [activeTab, setActiveTab] = useState(0);
+  const [deposits, setDeposits] = useState<MobileDeposit[]>([]);
+  const [withdrawals, setWithdrawals] = useState<MobileWithdrawal[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [stats, setStats] = useState<MobilePaymentStats>({
+    totalDeposits: 0,
+    totalWithdrawals: 0,
+    totalCommissions: 0,
+    pendingDepositsCount: 0,
+    pendingWithdrawalsCount: 0,
+    totalUsers: 0,
+    totalMusicians: 0,
+    totalEvents: 0,
+    fraudDetection: {
+      duplicatesDetected: 0,
+      suspiciousActivity: 0,
+      totalRejected: 0
+    },
+    dailyStats: [],
+    lastUpdated: new Date().toISOString()
+  });
+  const [userBalance, setUserBalance] = useState<{ balance: number; currency: string }>({
+    balance: 0,
+    currency: 'DOP'
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showDemoAlert, setShowDemoAlert] = useState(true);
+
+  // Estado para filtros y búsqueda
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // Estado para diálogos
+  const [selectedDeposit, setSelectedDeposit] = useState<MobileDeposit | null>(null);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<MobileWithdrawal | null>(null);
+  const [showDepositDetailsDialog, setShowDepositDetailsDialog] = useState(false);
+  const [showWithdrawalDetailsDialog, setShowWithdrawalDetailsDialog] = useState(false);
+  const [showNewDepositDialog, setShowNewDepositDialog] = useState(false);
+  const [showNewWithdrawalDialog, setShowNewWithdrawalDialog] = useState(false);
+  const [showBankAccountDialog, setShowBankAccountDialog] = useState(false);
+
+  // Estado para formularios
+  const [newDeposit, setNewDeposit] = useState({
+    amount: '',
+    currency: 'DOP',
+    description: '',
+    voucherFile: null as File | null
+  });
+  const [newWithdrawal, setNewWithdrawal] = useState({
+    bankAccountId: '',
+    amount: '',
+    currency: 'DOP'
+  });
+  const [newBankAccount, setNewBankAccount] = useState({
+    accountHolder: '',
+    bankName: '',
+    accountNumber: '',
+    accountType: 'savings' as 'savings' | 'checking',
+    routingNumber: ''
   });
 
-  // Estados para diálogos
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<MobilePayment | null>(null);
-  const [verificationNotes, setVerificationNotes] = useState('');
-
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [rejectionNotes, setRejectionNotes] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string>('');
-
-  // Hook para depósitos
-  const {
-    payments,
-    stats,
-    loading,
-    error,
-    verifyPayment,
-    rejectPayment,
-    refreshData
-  } = useMobilePayments();
-
-  // Manejar cambio de pestañas
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  // Manejar verificación de depósito
-  const handleVerifyPayment = (payment: MobilePayment) => {
-    setSelectedPayment(payment);
-    setVerificationNotes('');
-    setVerifyDialogOpen(true);
-  };
-
-  // Manejar rechazo de depósito
-  const handleRejectPayment = (payment: MobilePayment) => {
-    setSelectedPayment(payment);
-    setRejectionReason('');
-    setRejectionNotes('');
-    setRejectDialogOpen(true);
-  };
-
-  // Confirmar verificación
-  const confirmVerification = async () => {
-    if (!selectedPayment) return;
-
+  // Función para cargar datos
+  const loadData = useCallback(async () => {
     try {
-      await verifyPayment(selectedPayment.id, {
-        approved: true,
-        notes: verificationNotes,
-        verificationData: {
-          bankDepositDate: new Date().toISOString().split('T')[0],
-          bankDepositTime: new Date().toLocaleTimeString('es-ES', { hour12: false }),
-          referenceNumber: `REF-${Date.now()}`,
-          accountLastFourDigits: '****'
-        }
-      });
-      setVerifyDialogOpen(false);
-            setSelectedPayment(null);
-      setVerificationNotes('');
-    } catch (error) {
-      console.error('Error verificando depósito:', error);
+      setLoading(true);
+      setError(null);
+
+      // Cargar datos en paralelo
+      const [depositsData, withdrawalsData, bankAccountsData, statsData, balanceData] = await Promise.all([
+        mobilePaymentsService.getMyDeposits(),
+        mobilePaymentsService.getMyWithdrawals(),
+        mobilePaymentsService.getMyBankAccounts(),
+        mobilePaymentsService.getPaymentSystemStats(),
+        mobilePaymentsService.getMyBalance()
+      ]);
+
+      setDeposits(depositsData || []);
+      setWithdrawals(withdrawalsData || []);
+      setBankAccounts(bankAccountsData || []);
+      setStats(statsData);
+      setUserBalance(balanceData);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error cargando datos';
+      setError(errorMessage);
+      console.error('[MobilePaymentsManagement] Error cargando datos:', errorMessage);
+    } finally {
+      setLoading(false);
     }
+  }, []);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Manejar cambio de tab
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
-  // Confirmar rechazo
-  const confirmRejection = async () => {
-    if (!selectedPayment) return;
+  // Filtrar depósitos
+  const filteredDeposits = deposits.filter(deposit => {
+    const matchesSearch = 
+      deposit.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.user?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.user?.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.amount.toString().includes(searchTerm);
 
-    try {
-      await rejectPayment(selectedPayment.id, {
-        approved: false,
-        notes: rejectionNotes || rejectionReason
-      });
-      setRejectDialogOpen(false);
-      setSelectedPayment(null);
-      setRejectionReason('');
-      setRejectionNotes('');
-    } catch (error) {
-      console.error('Error rechazando depósito:', error);
-    }
-  };
+    const matchesStatus = statusFilter === 'all' || deposit.status === statusFilter;
 
-  // Manejar vista de imagen
-  const handleViewImage = (imageUrl: string) => {
-    setSelectedImage(imageUrl);
-    setImageDialogOpen(true);
-  };
+    return matchesSearch && matchesStatus;
+  });
 
-  const handleViewDetails = (payment: MobilePayment) => {
-    setSelectedPayment(payment);
-    setDetailsDialogOpen(true);
-  };
-
-  // Obtener color del estado
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'error';
-      default:
-        return 'info';
-    }
-  };
-
-  // Obtener texto del estado
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'Aprobado';
-      case 'pending':
-        return 'Pendiente';
-      case 'rejected':
-        return 'Rechazado';
-      default:
-        return status;
-    }
-  };
-
-  // Obtener texto del método de pago
-  const getPaymentMethodText = (method: string) => {
-    switch (method) {
-      case 'bank_transfer':
-        return 'Transferencia Bancaria';
-      case 'cash':
-        return 'Efectivo';
-      case 'mobile_payment':
-        return 'Pago Móvil';
-      case 'card':
-        return 'Tarjeta';
-      default:
-        return method;
-    }
-  };
+  // Paginación
+  const totalPages = Math.ceil(filteredDeposits.length / itemsPerPage);
+  const paginatedDeposits = filteredDeposits.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Formatear moneda
-  const formatCurrency = (amount: number, currency: string = 'EUR') => {
-    // Mapear códigos de moneda no válidos a códigos ISO válidos
-    const currencyMap: { [key: string]: string } = {
-      'RD$': 'DOP', // Peso Dominicano
+  const formatCurrency = (amount: number, currency: string = 'DOP') => {
+    const currencyMap: Record<string, string> = {
+      'RD$': 'DOP',
+      'DOP': 'DOP',
       'USD': 'USD',
-      'EUR': 'EUR',
-      'DOP': 'DOP'
+      'EUR': 'EUR'
     };
-
-    // Obtener el código de moneda válido
-    const validCurrency = currencyMap[currency] || 'EUR';
-
-    try {
-      return new Intl.NumberFormat('es-ES', {
-        style: 'currency',
-        currency: validCurrency
-      }).format(amount);
-    } catch (error) {
-      // Fallback si hay algún error con el formateo
-      return `${amount.toFixed(2)} ${validCurrency}`;
-    }
+    
+    const isoCurrency = currencyMap[currency] || 'DOP';
+    
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: isoCurrency
+    }).format(amount);
   };
 
   // Formatear fecha
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(date);
+    });
   };
 
-  // Filtrar depósitos
-  const filteredPayments = payments.filter(payment => {
-    if (filters.status !== 'all' && payment.status !== filters.status) return false;
-    if (filters.paymentMethod !== 'all' && 'bank_transfer' !== filters.paymentMethod) return false;
-    return true;
-  });
-
-  // Renderizar dashboard
-  const renderDashboard = () => {
-    if (loading) {
-      return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      );
+  // Obtener color de estado
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'warning';
+      case 'verified':
+      case 'completed':
+        return 'success';
+      case 'rejected':
+        return 'error';
+      case 'processing':
+        return 'info';
+      default:
+        return 'default';
     }
+  };
 
+  // Manejar creación de depósito
+  const handleCreateDeposit = async () => {
+    try {
+      const depositData = {
+        amount: parseFloat(newDeposit.amount),
+        currency: newDeposit.currency,
+        description: newDeposit.description,
+        voucherFile: newDeposit.voucherFile
+      };
+
+      await mobilePaymentsService.createDeposit(depositData);
+      setShowNewDepositDialog(false);
+      setNewDeposit({ amount: '', currency: 'DOP', description: '', voucherFile: null });
+      loadData(); // Recargar datos
+    } catch (error) {
+      console.error('Error creando depósito:', error);
+    }
+  };
+
+  // Manejar creación de retiro
+  const handleCreateWithdrawal = async () => {
+    try {
+      const withdrawalData = {
+        bankAccountId: newWithdrawal.bankAccountId,
+        amount: parseFloat(newWithdrawal.amount),
+        currency: newWithdrawal.currency
+      };
+
+      await mobilePaymentsService.createWithdrawal(withdrawalData);
+      setShowNewWithdrawalDialog(false);
+      setNewWithdrawal({ bankAccountId: '', amount: '', currency: 'DOP' });
+      loadData(); // Recargar datos
+    } catch (error) {
+      console.error('Error creando retiro:', error);
+    }
+  };
+
+  // Manejar registro de cuenta bancaria
+  const handleRegisterBankAccount = async () => {
+    try {
+      await mobilePaymentsService.registerBankAccount(newBankAccount);
+      setShowBankAccountDialog(false);
+      setNewBankAccount({
+        accountHolder: '',
+        bankName: '',
+        accountNumber: '',
+        accountType: 'savings',
+        routingNumber: ''
+      });
+      loadData(); // Recargar datos
+    } catch (error) {
+      console.error('Error registrando cuenta bancaria:', error);
+    }
+  };
+
+  // Renderizar estado de carga
+  if (loading) {
     return (
-      <Box>
-        {/* Tarjetas de estadísticas */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
-                    {formatCurrency(stats?.totalAmount || 0, 'DOP')}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Monto Total
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'primary.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.primary
-                }}>
-                  <MoneyIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main', mb: 1 }}>
-                                         {stats?.approved || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Verificados
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'success.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.success
-                }}>
-                  <CheckCircleIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.main', mb: 1 }}>
-                                         {stats?.pending || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Pendientes
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'warning.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.warning
-                }}>
-                  <WarningIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <ModernCard variant="elevated" sx={{ height: '100%' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'error.main', mb: 1 }}>
-                                         {stats?.rejected || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Rechazados
-                  </Typography>
-                </Box>
-                <Avatar sx={{ 
-                  bgcolor: 'error.main', 
-                  width: 56, 
-                  height: 56,
-                  background: designSystem.gradients.error
-                }}>
-                  <CancelIcon sx={{ fontSize: 28 }} />
-                </Avatar>
-              </Box>
-            </ModernCard>
-          </Grid>
-        </Grid>
-
-        {/* Gráficos y análisis */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} lg={8}>
-            <ModernCard variant="elevated" sx={{ height: 400 }}>
-              <Box sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                  Análisis de Depósitos
-                </Typography>
-                <Box sx={{ 
-                  height: 300, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                  borderRadius: 2
-                }}>
-                  <Typography variant="body1" color="text.secondary">
-                    Gráfico de análisis de depósitos (implementar con librería de gráficos)
-                  </Typography>
-                </Box>
-              </Box>
-            </ModernCard>
-          </Grid>
-
-          <Grid item xs={12} lg={4}>
-            <ModernCard variant="elevated" sx={{ height: 400 }}>
-              <Box sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                  Actividad Reciente
-                </Typography>
-                <List sx={{ p: 0 }}>
-                                     {payments.slice(0, 5).map((payment) => (
-                    <ListItem key={payment.id} sx={{ px: 0, py: 1 }}>
-                      <ListItemAvatar>
-                        <Avatar sx={{ 
-                          bgcolor: getStatusColor(payment.status) + '.main',
-                          width: 40,
-                          height: 40
-                        }}>
-                          <SmartphoneIcon fontSize="small" />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {formatCurrency(payment.amount, payment.currency)}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
-                            {getStatusText(payment.status)} • {formatDate(payment.createdAt?.toString() || new Date().toISOString())}
-                          </Typography>
-                        }
-                      />
-                      <Chip
-                        label={getStatusText(payment.status)}
-                        color={getStatusColor(payment.status) as any}
-                        size="small"
-                        sx={{ fontSize: '0.75rem' }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            </ModernCard>
-          </Grid>
-        </Grid>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ ml: 2 }}>
+          Cargando sistema de pagos móviles...
+        </Typography>
       </Box>
     );
-  };
+  }
 
-  // Renderizar lista de depósitos
-  const renderPaymentsList = () => {
-    if (loading) {
-      return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      );
-    }
-
-    if (error) {
-      return (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Error cargando depósitos: {error}
-        </Alert>
-      );
-    }
-
+  // Renderizar error
+  if (error) {
     return (
-      <Box>
-        {/* Filtros mejorados */}
-        <ModernCard variant="flat" sx={{ mb: 3 }}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-              <FilterIcon sx={{ mr: 1 }} />
-              Filtros de Búsqueda
-            </Typography>
-            <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} sm={6} md={4}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Estado</InputLabel>
-                  <Select
-                    value={filters.status}
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                    label="Estado"
-                  >
-                    <MenuItem value="all">Todos los Estados</MenuItem>
-                    <MenuItem value="pending">Pendientes</MenuItem>
-                    <MenuItem value="verified">Verificados</MenuItem>
-                    <MenuItem value="rejected">Rechazados</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Método de Pago</InputLabel>
-                  <Select
-                    value={filters.paymentMethod}
-                    onChange={(e) => setFilters({ ...filters, paymentMethod: e.target.value })}
-                    label="Método de Pago"
-                  >
-                    <MenuItem value="all">Todos los Métodos</MenuItem>
-                    <MenuItem value="bank_transfer">Transferencia Bancaria</MenuItem>
-                    <MenuItem value="cash">Efectivo</MenuItem>
-                    <MenuItem value="mobile_payment">Pago Móvil</MenuItem>
-                    <MenuItem value="card">Tarjeta</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ModernButton
-                  variant="outline"
-                  size="sm"
-                  startIcon={<RefreshIcon />}
-                                     onClick={refreshData}
-                  disabled={loading}
-                  sx={{ width: '100%' }}
-                >
-                  {loading ? 'Actualizando...' : 'Actualizar'}
-                </ModernButton>
-              </Grid>
-            </Grid>
-          </Box>
-        </ModernCard>
-
-        {/* Contador de resultados */}
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Depósitos ({filteredPayments.length})
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Error Cargando Datos
           </Typography>
-          <ModernButton
-            variant="primary"
-            size="sm"
-            startIcon={<DownloadIcon />}
-            sx={{ px: 3 }}
-          >
-            Exportar
-          </ModernButton>
-        </Box>
-
-        {/* Lista de depósitos */}
-        <Grid container spacing={2}>
-          {filteredPayments.map((payment) => (
-            <Grid item xs={12} md={6} lg={4} key={payment.id}>
-              <PaymentCard
-                payment={payment}
-                onVerify={handleVerifyPayment}
-                onReject={handleRejectPayment}
-                onViewImage={handleViewImage}
-                onViewDetails={handleViewDetails}
-                getStatusColor={getStatusColor}
-                getStatusText={getStatusText}
-                getPaymentMethodText={getPaymentMethodText}
-                formatDate={(dateString: string) => formatDate(dateString)}
-                formatCurrency={formatCurrency}
-              />
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Estado vacío */}
-        {filteredPayments.length === 0 && (
-          <ModernCard variant="flat" sx={{ textAlign: 'center', py: 6 }}>
-            <SmartphoneIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-              No se encontraron depósitos
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              No hay depósitos que coincidan con los filtros aplicados
-            </Typography>
-            <ModernButton
-              variant="outline"
-              onClick={() => setFilters({ status: 'all', paymentMethod: 'all' })}
-            >
-              Limpiar Filtros
-            </ModernButton>
-          </ModernCard>
-        )}
+          <Typography variant="body2">
+            {error}
+          </Typography>
+        </Alert>
+        <Button
+          variant="contained"
+          onClick={loadData}
+          startIcon={<RefreshIcon />}
+        >
+          Reintentar
+        </Button>
       </Box>
     );
-  };
+  }
 
   return (
-    <ResponsiveLayout>
+    <Box sx={{ p: 3 }}>
+      {/* Alerta de Demostración */}
+      {showDemoAlert && (
+        <Alert 
+          severity="info" 
+          sx={{ mb: 3 }}
+          onClose={() => setShowDemoAlert(false)}
+          icon={<InfoIcon />}
+        >
+          <Typography variant="h6" gutterBottom>
+            🎯 Sistema de Pagos Móviles - Modo Demostración
+          </Typography>
+          <Typography variant="body2">
+            El backend no está disponible en este momento. Estás viendo datos de demostración que te permiten explorar todas las funcionalidades del sistema de pagos móviles.
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            <strong>Funcionalidades disponibles:</strong> Depósitos, retiros, cuentas bancarias, balance, estadísticas y más.
+          </Typography>
+        </Alert>
+      )}
+
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ 
-          fontWeight: 'bold', 
-          mb: 1,
-          background: designSystem.gradients.primary,
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          Depósitos
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Sistema de Pagos Móviles
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Verifica y gestiona depósitos realizados desde la aplicación móvil
+          Gestión completa de pagos móviles para usuarios
         </Typography>
       </Box>
 
-      {/* Pestañas mejoradas */}
-      <Box sx={{ mb: 3 }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            '& .MuiTab-root': {
-              minHeight: 64,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              borderRadius: 2,
-              mx: 0.5,
-              '&.Mui-selected': {
-                background: 'rgba(127, 95, 255, 0.1)',
-                color: 'primary.main'
-              }
-            },
-            '& .MuiTabs-indicator': {
-              height: 3,
-              borderRadius: 1.5
-            }
-          }}
-        >
+      {/* Balance del Usuario */}
+      <Card sx={{ mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+        <CardContent>
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <AccountBalanceIcon sx={{ fontSize: 48, mr: 2 }} />
+                <Box>
+                  <Typography variant="h4" component="div" fontWeight="bold">
+                    {formatCurrency(userBalance.balance, userBalance.currency)}
+                  </Typography>
+                  <Typography variant="body1">
+                    Balance Disponible
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setShowNewDepositDialog(true)}
+                  sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}
+                >
+                  Nuevo Depósito
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<WithdrawIcon />}
+                  onClick={() => setShowNewWithdrawalDialog(true)}
+                  sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}
+                >
+                  Nuevo Retiro
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Estadísticas Rápidas */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <ReceiptIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {stats?.totalDeposits || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Depósitos
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <WithdrawIcon sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {stats?.totalWithdrawals || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Retiros
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <TrendingUpIcon sx={{ fontSize: 40, color: 'info.main', mr: 2 }} />
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {formatCurrency(stats?.totalCommissions || 0, 'DOP')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Comisiones
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <SecurityIcon sx={{ fontSize: 40, color: 'warning.main', mr: 2 }} />
+                <Box>
+                  <Typography variant="h4" component="div">
+                    {stats?.fraudDetection?.duplicatesDetected || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Duplicados Detectados
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Tabs de Navegación */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange} aria-label="mobile payment management tabs">
           <Tab 
-            label="Dashboard" 
-            icon={<TrendingUpIcon />} 
-            iconPosition="start"
-            sx={{ 
-              '& .MuiTab-iconWrapper': {
-                marginRight: 1,
-                fontSize: '1.2rem'
-              }
-            }}
+            label={
+              <Badge badgeContent={deposits.filter(d => d.status === 'pending').length} color="warning">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <ReceiptIcon sx={{ mr: 1 }} />
+                  Mis Depósitos
+                </Box>
+              </Badge>
+            } 
+          />
+          <Tab 
+            label={
+              <Badge badgeContent={withdrawals.filter(w => w.status === 'pending').length} color="info">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <WithdrawIcon sx={{ mr: 1 }} />
+                  Mis Retiros
+                </Box>
+              </Badge>
+            } 
           />
           <Tab 
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                Depósitos
-                {payments.filter(p => p.status === 'pending').length > 0 && (
-                  <Badge 
-                    badgeContent={payments.filter(p => p.status === 'pending').length} 
-                    color="warning" 
-                    sx={{ 
-                      ml: 1,
-                      '& .MuiBadge-badge': {
-                        fontSize: '0.75rem',
-                        height: 20,
-                        minWidth: 20
-                      }
-                    }}
-                  />
-                )}
+                <BankIcon sx={{ mr: 1 }} />
+                Cuentas Bancarias
               </Box>
             } 
-            icon={<SmartphoneIcon />} 
-            iconPosition="start"
-            sx={{ 
-              '& .MuiTab-iconWrapper': {
-                marginRight: 1,
-                fontSize: '1.2rem'
-              }
-            }}
+          />
+          <Tab 
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <AssessmentIcon sx={{ mr: 1 }} />
+                Estadísticas
+              </Box>
+            } 
           />
         </Tabs>
       </Box>
 
-      {/* Contenido de las pestañas */}
-      <TabPanel value={tabValue} index={0}>
-        {renderDashboard()}
+      {/* Tab Panel - Mis Depósitos */}
+      <TabPanel value={activeTab} index={0}>
+        <Box>
+          {/* Filtros y Búsqueda */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    placeholder="Buscar por ID, descripción..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Estado</InputLabel>
+                    <Select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      label="Estado"
+                    >
+                      <MenuItem value="all">Todos</MenuItem>
+                      <MenuItem value="pending">Pendientes</MenuItem>
+                      <MenuItem value="verified">Verificados</MenuItem>
+                      <MenuItem value="rejected">Rechazados</MenuItem>
+                      <MenuItem value="processing">Procesando</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Fecha</InputLabel>
+                    <Select
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      label="Fecha"
+                    >
+                      <MenuItem value="all">Todas las fechas</MenuItem>
+                      <MenuItem value="today">Hoy</MenuItem>
+                      <MenuItem value="week">Esta semana</MenuItem>
+                      <MenuItem value="month">Este mes</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={12} md={2}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={loadData}
+                    startIcon={<RefreshIcon />}
+                  >
+                    Actualizar
+                  </Button>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+
+          {/* Tabla de Depósitos */}
+          <Card>
+            <CardContent>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell>Monto</TableCell>
+                      <TableCell>Descripción</TableCell>
+                      <TableCell>Voucher</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedDeposits.map((deposit) => (
+                      <TableRow key={deposit.id}>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold">
+                            {deposit.id}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold" color="primary">
+                            {formatCurrency(deposit.amount, deposit.currency)}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2">
+                            {deposit.description || 'Sin descripción'}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          {deposit.hasVoucherFile && (
+                            <VoucherImage
+                              depositId={deposit.id}
+                              size="small"
+                              showPreview={false}
+                              showDuplicateCheck={false}
+                            />
+                          )}
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Chip
+                            label={deposit.status}
+                            color={getStatusColor(deposit.status) as any}
+                            size="small"
+                            sx={chipStyles[getStatusColor(deposit.status) as keyof typeof chipStyles]}
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2">
+                            {formatDate(deposit.createdAt)}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Ver detalles">
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setSelectedDeposit(deposit);
+                                  setShowDepositDetailsDialog(true);
+                                }}
+                              >
+                                <VisibilityIcon />
+                              </IconButton>
+                            </Tooltip>
+                            
+                            {deposit.duplicateCheck?.isDuplicate && (
+                              <Tooltip title="Voucher duplicado detectado">
+                                <IconButton size="small" color="warning">
+                                  <SecurityIcon />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={(_event, page) => setCurrentPage(page)}
+                    color="primary"
+                  />
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+      </TabPanel>
+
+      {/* Tab Panel - Mis Retiros */}
+      <TabPanel value={activeTab} index={1}>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Mis Solicitudes de Retiro
+          </Typography>
+          
+          <Card>
+            <CardContent>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell>Cuenta Bancaria</TableCell>
+                      <TableCell>Monto</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {withdrawals.map((withdrawal) => (
+                      <TableRow key={withdrawal.id}>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold">
+                            {withdrawal.id}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" fontWeight="bold">
+                              {withdrawal.bankAccount?.bankName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {withdrawal.bankAccount?.accountNumber}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold" color="primary">
+                            {formatCurrency(withdrawal.amount, withdrawal.currency)}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Chip
+                            label={withdrawal.status}
+                            color={getStatusColor(withdrawal.status) as any}
+                            size="small"
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Typography variant="body2">
+                            {formatDate(withdrawal.createdAt)}
+                          </Typography>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Ver detalles">
+                              <IconButton size="small">
+                                <VisibilityIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Box>
+      </TabPanel>
+
+      {/* Tab Panel - Cuentas Bancarias */}
+      <TabPanel value={activeTab} index={2}>
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6">
+              Mis Cuentas Bancarias
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setShowBankAccountDialog(true)}
+            >
+              Agregar Cuenta
+            </Button>
+          </Box>
+          
+          <Grid container spacing={3}>
+            {bankAccounts.map((account) => (
+              <Grid item xs={12} md={6} key={account.id}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <Box>
+                        <Typography variant="h6" gutterBottom>
+                          {account.bankName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {account.accountHolder}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {account.accountNumber}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {account.accountType === 'savings' ? 'Cuenta de Ahorros' : 'Cuenta Corriente'}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        {account.isDefault && (
+                          <Chip label="Principal" color="primary" size="small" />
+                        )}
+                        {account.isVerified ? (
+                          <Chip label="Verificada" color="success" size="small" icon={<VerifiedUserIcon />} />
+                        ) : (
+                          <Chip label="Pendiente" color="warning" size="small" icon={<WarningIcon />} />
+                        )}
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       </TabPanel>
       
-      <TabPanel value={tabValue} index={1}>
-        {renderPaymentsList()}
+      {/* Tab Panel - Estadísticas */}
+      <TabPanel value={activeTab} index={3}>
+        <Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Resumen de Actividad
+                  </Typography>
+                  
+                  <Accordion>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography>Estadísticas Generales</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            Total de Depósitos
+                          </Typography>
+                          <Typography variant="h6">
+                            {stats?.totalDeposits || 0}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            Total de Retiros
+                          </Typography>
+                          <Typography variant="h6">
+                            {stats?.totalWithdrawals || 0}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            Comisiones
+                          </Typography>
+                          <Typography variant="h6">
+                            {formatCurrency(stats?.totalCommissions || 0, 'DOP')}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            Usuarios Activos
+                          </Typography>
+                          <Typography variant="h6">
+                            {stats?.totalUsers || 0}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </AccordionDetails>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Detección de Fraude
+                  </Typography>
+                  
+                  <Accordion>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography>Actividad Sospechosa</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            Duplicados Detectados
+                          </Typography>
+                          <Typography variant="h6" color="warning.main">
+                            {stats?.fraudDetection?.duplicatesDetected || 0}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            Actividad Sospechosa
+                          </Typography>
+                          <Typography variant="h6" color="error.main">
+                            {stats?.fraudDetection?.suspiciousActivity || 0}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            Total Rechazados
+                          </Typography>
+                          <Typography variant="h6" color="error.main">
+                            {stats?.fraudDetection?.totalRejected || 0}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </AccordionDetails>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
       </TabPanel>
 
-      {/* Diálogo de verificación mejorado */}
-      <Dialog 
-        open={verifyDialogOpen} 
-        onClose={() => setVerifyDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: designSystem.shadows.xl
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          background: designSystem.gradients.success,
-          color: 'white',
-          borderRadius: '12px 12px 0 0'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CheckCircleIcon sx={{ mr: 1, fontSize: 28 }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Verificar Depósito
-            </Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          {selectedPayment && (
-            <Box>
-              <ModernCard variant="flat" sx={{ mb: 3 }}>
-                <Box sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                    Información del Pago
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        ID de Pago
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
-                        {selectedPayment.id}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Usuario
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {selectedPayment.user?.name} {selectedPayment.user?.lastName}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Monto
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                        {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Método
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {getPaymentMethodText('bank_transfer')}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Box>
-              </ModernCard>
-              
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Notas de Verificación
-              </Typography>
-              <ModernInput
-                fullWidth
-                multiline
-                rows={4}
-                label="Notas sobre la verificación del depósito"
-                value={verificationNotes}
-                onChange={(e) => setVerificationNotes(e.target.value)}
-                placeholder="Ej: Depósito verificado en cuenta bancaria, comprobante recibido, etc."
-                variant="outlined"
-              />
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 2 }}>
-          <ModernButton
-            variant="ghost"
-            onClick={() => setVerifyDialogOpen(false)}
-            sx={{ px: 3 }}
-          >
-            Cancelar
-          </ModernButton>
-          <ModernButton
-            variant="primary"
-            onClick={confirmVerification}
-            startIcon={<CheckCircleIcon />}
-            sx={{ px: 3 }}
-          >
-            Confirmar Verificación
-          </ModernButton>
-        </DialogActions>
-      </Dialog>
-
-      {/* Diálogo de rechazo mejorado */}
-      <Dialog 
-        open={rejectDialogOpen} 
-        onClose={() => setRejectDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: designSystem.shadows.xl
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          background: designSystem.gradients.error,
-          color: 'white',
-          borderRadius: '12px 12px 0 0'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CancelIcon sx={{ mr: 1, fontSize: 28 }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Rechazar Depósito
-            </Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          {selectedPayment && (
-            <Box>
-              <ModernCard variant="flat" sx={{ mb: 3 }}>
-                <Box sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                    Información del Pago
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        ID de Pago
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
-                        {selectedPayment.id}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Usuario
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {selectedPayment.user?.name} {selectedPayment.user?.lastName}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Monto
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                        {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">
-                        Método
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {getPaymentMethodText('bank_transfer')}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Box>
-              </ModernCard>
-              
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Motivo del Rechazo
-              </Typography>
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>Razón</InputLabel>
-                <Select
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  label="Razón"
-                >
-                  <MenuItem value="invalid_proof">Comprobante Inválido</MenuItem>
-                  <MenuItem value="wrong_amount">Monto Incorrecto</MenuItem>
-                  <MenuItem value="duplicate_payment">Depósito Duplicado</MenuItem>
-                  <MenuItem value="other">Otro</MenuItem>
-                </Select>
-              </FormControl>
-              
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Notas Adicionales
-              </Typography>
-              <ModernInput
-                fullWidth
-                multiline
-                rows={4}
-                label="Notas sobre el rechazo del depósito"
-                value={rejectionNotes}
-                onChange={(e) => setRejectionNotes(e.target.value)}
-                placeholder="Explica el motivo del rechazo..."
-                variant="outlined"
-              />
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 2 }}>
-          <ModernButton
-            variant="ghost"
-            onClick={() => setRejectDialogOpen(false)}
-            sx={{ px: 3 }}
-          >
-            Cancelar
-          </ModernButton>
-          <ModernButton
-            variant="danger"
-            onClick={confirmRejection}
-            startIcon={<CancelIcon />}
-            sx={{ px: 3 }}
-          >
-            Confirmar Rechazo
-          </ModernButton>
-        </DialogActions>
-      </Dialog>
-
-      {/* Diálogo de imagen */}
-      <Dialog 
-        open={imageDialogOpen} 
-        onClose={() => setImageDialogOpen(false)}
+      {/* Diálogo de Detalles de Depósito */}
+      <Dialog
+        open={showDepositDetailsDialog}
+        onClose={() => setShowDepositDetailsDialog(false)}
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: designSystem.shadows.xl
-          }
-        }}
       >
-        <DialogTitle sx={{ 
-          background: designSystem.gradients.primary,
-          color: 'white',
-          borderRadius: '12px 12px 0 0'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <VisibilityIcon sx={{ mr: 1, fontSize: 28 }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Comprobante de Depósito
-            </Typography>
-          </Box>
+        <DialogTitle>
+          Detalles del Depósito
         </DialogTitle>
-        <DialogContent sx={{ p: 3, textAlign: 'center' }}>
-          <img
-            src={selectedImage}
-            alt="Comprobante de depósito"
-            style={{
-              maxWidth: '100%',
-              maxHeight: '500px',
-              objectFit: 'contain',
-              borderRadius: 8
-            }}
-            onError={(e) => {
-              console.error('Error cargando imagen en diálogo:', selectedImage);
-              const target = e.target as HTMLImageElement;
-              target.src = 'https://via.placeholder.com/400x300?text=Error+al+cargar+comprobante';
-              target.style.filter = 'grayscale(100%) opacity(0.5)';
-            }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <ModernButton
-            variant="ghost"
-            onClick={() => setImageDialogOpen(false)}
-            sx={{ px: 3 }}
-          >
-            Cerrar
-          </ModernButton>
-        </DialogActions>
-      </Dialog>
-
-      {/* Diálogo de Detalles del Depósito */}
-      <Dialog 
-        open={detailsDialogOpen} 
-        onClose={() => setDetailsDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: designSystem.shadows.xl
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          background: designSystem.gradients.primary,
-          color: 'white',
-          borderRadius: '12px 12px 0 0'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <AccountBalanceIcon sx={{ mr: 1, fontSize: 28 }} />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Detalles del Depósito
-              </Typography>
-            </Box>
-            {selectedPayment && (
-              <Chip
-                label={getStatusText(selectedPayment.status)}
-                color={getStatusColor(selectedPayment.status) as any}
-                sx={{ fontWeight: 600 }}
-              />
-            )}
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          {selectedPayment && (
+        <DialogContent>
+          {selectedDeposit && (
             <Box>
-              {/* Información General */}
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                Información General
-              </Typography>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      ID del Depósito
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {selectedPayment.id}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Monto
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
-                      {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Fecha de Creación
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {formatDate(selectedPayment.createdAt?.toString() || new Date().toISOString())}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Última Actualización
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {formatDate(selectedPayment.updatedAt?.toString() || new Date().toISOString())}
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-
-              {/* Información del Usuario */}
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                Información del Usuario
-              </Typography>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      ID del Usuario
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {selectedPayment.userEmail}
-                    </Typography>
-                  </Box>
-                </Grid>
-                {selectedPayment.user && (
-                  <>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          Nombre Completo
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {selectedPayment.user.name} {selectedPayment.user.lastName}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          Email
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {selectedPayment.user.userEmail}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </>
-                )}
-              </Grid>
-
-              {/* Información Bancaria */}
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                Información Bancaria
-              </Typography>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Banco
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {selectedPayment.bankName || 'No especificado'}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Titular de la Cuenta
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {selectedPayment.userEmail || 'No especificado'}
-                    </Typography>
-                  </Box>
-                </Grid>
-                {selectedPayment.accountNumber && (
-                  <Grid item xs={12} md={6}>
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        Número de Cuenta
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedPayment.accountNumber}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-                {selectedPayment.reference && (
-                  <Grid item xs={12} md={6}>
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        Número de Referencia
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedPayment.reference}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-                {selectedPayment.depositDate && (
-                  <Grid item xs={12} md={6}>
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        Fecha del Depósito
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedPayment.depositDate?.toLocaleDateString() || 'No especificado'}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-                {selectedPayment.depositDate && (
-                  <Grid item xs={12} md={6}>
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        Hora del Depósito
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedPayment.depositDate?.toLocaleTimeString() || 'No especificado'}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-
-              {/* Comprobante */}
-              {selectedPayment.voucherUrl && (
-                <>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                    Comprobante de Depósito
+                  <Typography variant="h6" gutterBottom>
+                    Información del Depósito
                   </Typography>
-                  <Box sx={{ mb: 3 }}>
-                    <img
-                      src={selectedPayment.voucherUrl}
-                      alt="Comprobante de depósito"
-                      style={{
-                        width: '100%',
-                        maxHeight: '300px',
-                        objectFit: 'contain',
-                        borderRadius: 8,
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        setSelectedImage(selectedPayment.voucherUrl!);
-                        setImageDialogOpen(true);
-                        setDetailsDialogOpen(false);
-                      }}
-                      onError={(e) => {
-                                                  console.error('Error cargando imagen en detalles:', selectedPayment.voucherUrl);
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://via.placeholder.com/400x300?text=Error+al+cargar+comprobante';
-                        target.style.filter = 'grayscale(100%) opacity(0.5)';
-                      }}
+                  <Typography variant="body2">
+                    <strong>ID:</strong> {selectedDeposit.id}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Monto:</strong> {formatCurrency(selectedDeposit.amount, selectedDeposit.currency)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Estado:</strong> {selectedDeposit.status}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Fecha:</strong> {formatDate(selectedDeposit.createdAt)}
+                  </Typography>
+                  {selectedDeposit.description && (
+                    <Typography variant="body2">
+                      <strong>Descripción:</strong> {selectedDeposit.description}
+                    </Typography>
+                  )}
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Información del Usuario
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Nombre:</strong> {selectedDeposit.user?.name} {selectedDeposit.user?.lastName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Email:</strong> {selectedDeposit.user?.userEmail}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Teléfono:</strong> {selectedDeposit.user?.phone || 'No especificado'}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Balance:</strong> {formatCurrency(selectedDeposit.user?.balance || 0, selectedDeposit.user?.currency || 'DOP')}
+                  </Typography>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom>
+                    Voucher
+                  </Typography>
+                  {showDepositDetailsDialog && (
+                    <VoucherImage
+                      depositId={selectedDeposit.id}
+                      size="large"
+                      showPreview={true}
+                      showDuplicateCheck={true}
                     />
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
-                      Haz clic en la imagen para verla en tamaño completo
-                    </Typography>
-                  </Box>
-                </>
-              )}
-
-              {/* Notas y Comentarios */}
-              {selectedPayment.adminNotes && (
-                <>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                    Notas y Comentarios
-                  </Typography>
-                  <Box sx={{ mb: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 2 }}>
-                    {selectedPayment.notes && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          Notas del Sistema
-                        </Typography>
-                        <Typography variant="body1">
-                          {selectedPayment.notes}
-                        </Typography>
-                      </Box>
-                    )}
-                    {selectedPayment.adminNotes && (
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          Comentarios del Usuario
-                        </Typography>
-                        <Typography variant="body1">
-                          {selectedPayment.adminNotes}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </>
-              )}
-
-              {/* Información de Verificación */}
-              {selectedPayment.adminNotes && (
-                <>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                    Información de Verificación
-                  </Typography>
-                  <Grid container spacing={2} sx={{ mb: 3 }}>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          Verificado por
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          Admin
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    {selectedPayment.updatedAt && (
-                      <Grid item xs={12} md={6}>
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                            Fecha de Verificación
-                          </Typography>
-                          <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {formatDate(selectedPayment.updatedAt?.toString() || new Date().toISOString())}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    )}
-                    {selectedPayment.verificationNotes && (
-                      <Grid item xs={12}>
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                            Notas de Verificación
-                          </Typography>
-                          <Typography variant="body1">
-                            {selectedPayment.verificationNotes}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    )}
-                  </Grid>
-                </>
-              )}
+                  )}
+                </Grid>
+              </Grid>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 2 }}>
-          {selectedPayment?.status === 'pending' && (
-            <>
-              <ModernButton
-                variant="primary"
-                onClick={() => {
-                  setDetailsDialogOpen(false);
-                  handleVerifyPayment(selectedPayment);
-                }}
-                startIcon={<CheckCircleIcon />}
-                sx={{ px: 3 }}
-              >
-                Aprobar Depósito
-              </ModernButton>
-              <ModernButton
-                variant="danger"
-                onClick={() => {
-                  setDetailsDialogOpen(false);
-                  handleRejectPayment(selectedPayment);
-                }}
-                startIcon={<CancelIcon />}
-                sx={{ px: 3 }}
-              >
-                Rechazar Depósito
-              </ModernButton>
-            </>
-          )}
-          <ModernButton
-            variant="ghost"
-            onClick={() => setDetailsDialogOpen(false)}
-            sx={{ px: 3 }}
-          >
+        <DialogActions>
+          <Button onClick={() => setShowDepositDetailsDialog(false)}>
             Cerrar
-          </ModernButton>
+          </Button>
         </DialogActions>
       </Dialog>
-    </ResponsiveLayout>
+
+      {/* Diálogo de Nuevo Depósito */}
+      <Dialog
+        open={showNewDepositDialog}
+        onClose={() => setShowNewDepositDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Nuevo Depósito
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Monto"
+                  type="number"
+                  value={newDeposit.amount}
+                  onChange={(e) => setNewDeposit({ ...newDeposit, amount: e.target.value })}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">RD$</InputAdornment>,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Descripción (opcional)"
+                  value={newDeposit.description}
+                  onChange={(e) => setNewDeposit({ ...newDeposit, description: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  startIcon={<AddIcon />}
+                >
+                  Subir Voucher (opcional)
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setNewDeposit({ ...newDeposit, voucherFile: file });
+                      }
+                    }}
+                  />
+                </Button>
+                {newDeposit.voucherFile && (
+                  <Typography variant="caption" color="text.secondary">
+                    Archivo seleccionado: {newDeposit.voucherFile.name}
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowNewDepositDialog(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleCreateDeposit}
+            variant="contained"
+            disabled={!newDeposit.amount || parseFloat(newDeposit.amount) <= 0}
+          >
+            Crear Depósito
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de Nuevo Retiro */}
+      <Dialog
+        open={showNewWithdrawalDialog}
+        onClose={() => setShowNewWithdrawalDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Nuevo Retiro
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Cuenta Bancaria</InputLabel>
+                  <Select
+                    value={newWithdrawal.bankAccountId}
+                    onChange={(e) => setNewWithdrawal({ ...newWithdrawal, bankAccountId: e.target.value })}
+                    label="Cuenta Bancaria"
+                  >
+                    {bankAccounts.map((account) => (
+                      <MenuItem key={account.id} value={account.id}>
+                        {account.bankName} - {account.accountNumber}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Monto"
+                  type="number"
+                  value={newWithdrawal.amount}
+                  onChange={(e) => setNewWithdrawal({ ...newWithdrawal, amount: e.target.value })}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">RD$</InputAdornment>,
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowNewWithdrawalDialog(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleCreateWithdrawal}
+            variant="contained"
+            disabled={!newWithdrawal.bankAccountId || !newWithdrawal.amount || parseFloat(newWithdrawal.amount) <= 0}
+          >
+            Crear Retiro
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de Nueva Cuenta Bancaria */}
+      <Dialog
+        open={showBankAccountDialog}
+        onClose={() => setShowBankAccountDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Nueva Cuenta Bancaria
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Titular de la Cuenta"
+                  value={newBankAccount.accountHolder}
+                  onChange={(e) => setNewBankAccount({ ...newBankAccount, accountHolder: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Banco"
+                  value={newBankAccount.bankName}
+                  onChange={(e) => setNewBankAccount({ ...newBankAccount, bankName: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Número de Cuenta"
+                  value={newBankAccount.accountNumber}
+                  onChange={(e) => setNewBankAccount({ ...newBankAccount, accountNumber: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Tipo de Cuenta</InputLabel>
+                  <Select
+                    value={newBankAccount.accountType}
+                    onChange={(e) => setNewBankAccount({ ...newBankAccount, accountType: e.target.value as 'savings' | 'checking' })}
+                    label="Tipo de Cuenta"
+                  >
+                    <MenuItem value="savings">Cuenta de Ahorros</MenuItem>
+                    <MenuItem value="checking">Cuenta Corriente</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Número de Ruta (opcional)"
+                  value={newBankAccount.routingNumber}
+                  onChange={(e) => setNewBankAccount({ ...newBankAccount, routingNumber: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowBankAccountDialog(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleRegisterBankAccount}
+            variant="contained"
+            disabled={!newBankAccount.accountHolder || !newBankAccount.bankName || !newBankAccount.accountNumber}
+          >
+            Registrar Cuenta
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
-export default MobilePayments; 
+export default MobilePaymentsManagement; 
