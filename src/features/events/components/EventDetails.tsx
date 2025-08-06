@@ -12,7 +12,7 @@ import {
   Avatar
 } from '@mui/material';
 import { Close, Edit, Delete, LocationOn, Event as EventIcon, Person, AttachMoney, Group } from '@mui/icons-material';
-import type { Event } from '../types/event';
+import type { Event } from '../../../services/eventsService';
 
 interface EventDetailsProps {
   event: Event | null;
@@ -35,13 +35,14 @@ const EventDetails: React.FC<EventDetailsProps> = ({
 
   const getStatusColor = (status: Event['status']) => {
     switch (status) {
-      case 'publicado':
+      case 'musician_assigned':
         return 'success';
-      case 'borrador':
+      case 'pending_musician':
         return 'warning';
-      case 'cancelado':
+      case 'cancelled':
+      case 'musician_cancelled':
         return 'error';
-      case 'completado':
+      case 'completed':
         return 'info';
       default:
         return 'default';
@@ -50,13 +51,15 @@ const EventDetails: React.FC<EventDetailsProps> = ({
 
   const getStatusLabel = (status: Event['status']) => {
     switch (status) {
-      case 'publicado':
-        return 'Publicado';
-      case 'borrador':
-        return 'Borrador';
-      case 'cancelado':
+      case 'musician_assigned':
+        return 'Músico Asignado';
+      case 'pending_musician':
+        return 'Pendiente de Músico';
+      case 'cancelled':
         return 'Cancelado';
-      case 'completado':
+      case 'musician_cancelled':
+        return 'Cancelado por Músico';
+      case 'completed':
         return 'Completado';
       default:
         return status;
@@ -89,6 +92,30 @@ const EventDetails: React.FC<EventDetailsProps> = ({
     });
   };
 
+  // ✅ FUNCIÓN SEGURA: Manejar location como string u objeto
+  const formatLocation = (location: any): string => {
+    if (typeof location === 'string') {
+      return location;
+    }
+    if (typeof location === 'object' && location !== null) {
+      // Si es un objeto con address, usar address
+      if (location.address) {
+        return location.address;
+      }
+      // Si tiene city, usar city
+      if (location.city) {
+        return location.city;
+      }
+      // Si tiene coordenadas, formatear
+      if (location.latitude && location.longitude) {
+        return `${location.latitude}, ${location.longitude}`;
+      }
+      // Si no hay nada útil, devolver string vacío
+      return '';
+    }
+    return '';
+  };
+
   return (
     <Dialog
       open={open}
@@ -112,7 +139,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({
         fontWeight: 600
       }}>
         <Typography variant="h5" component="h2">
-          {event.title}
+          {event.eventName}
         </Typography>
         <Chip
           label={getStatusLabel(event.status)}
@@ -124,14 +151,14 @@ const EventDetails: React.FC<EventDetailsProps> = ({
       <DialogContent>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
           {/* Imagen del evento */}
-          {event.images && event.images.length > 0 && (
+          {event.flyerUrl && (
             <Box sx={{ gridColumn: '1 / -1' }}>
               <Box sx={{ 
                 width: '100%', 
                 height: 200, 
                 borderRadius: 2,
                 overflow: 'hidden',
-                backgroundImage: `url(${event.images[0]})`,
+                backgroundImage: `url(${event.flyerUrl})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -141,15 +168,15 @@ const EventDetails: React.FC<EventDetailsProps> = ({
 
           {/* Información principal */}
           <Box>
-            {event.title && (
+            {event.eventType && (
               <Typography variant="h6" sx={{ mb: 2, color: '#b0b8c1' }}>
-                {event.title}
+                {event.eventType}
               </Typography>
             )}
 
-            {event.description && (
+            {event.comment && (
               <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
-                {event.description}
+                {event.comment}
               </Typography>
             )}
 
@@ -166,36 +193,36 @@ const EventDetails: React.FC<EventDetailsProps> = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <LocationOn sx={{ color: '#00fff7' }} />
                   <Typography variant="body1">
-                    {event.location}
+                    {formatLocation(event.location)}
                   </Typography>
                 </Box>
               )}
 
-              {event.organizerName && (
+              {event.user && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Person sx={{ color: '#00fff7' }} />
                   <Typography variant="body1">
-                    Organizado por: {event.organizerName}
+                    Organizado por: {event.user}
                   </Typography>
                 </Box>
               )}
 
-              {event.category && (
+              {event.instrument && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Avatar sx={{ width: 24, height: 24, bgcolor: '#00fff7' }}>
                     🎵
                   </Avatar>
                   <Typography variant="body1">
-                    Categoría: {event.category}
+                    Instrumento: {event.instrument}
                   </Typography>
                 </Box>
               )}
 
-              {event.maxAttendees && (
+              {event.duration && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Group sx={{ color: '#00fff7' }} />
                   <Typography variant="body1">
-                    Capacidad: {event.maxAttendees} personas
+                    Duración: {event.duration}
                   </Typography>
                 </Box>
               )}
@@ -233,7 +260,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({
                 )}
                 
                 <Typography variant="body2" sx={{ color: '#b0b8c1' }}>
-                  <strong>ID:</strong> {event._id}
+                  <strong>ID:</strong> {event.id}
                 </Typography>
               </Box>
             </Box>
@@ -265,7 +292,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({
         </Button>
         
         <Button
-          onClick={() => onDelete(event._id!)}
+          onClick={() => onDelete(event.id)}
           startIcon={<Delete />}
           disabled={loading}
           color="error"

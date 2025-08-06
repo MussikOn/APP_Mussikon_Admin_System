@@ -8,19 +8,36 @@ export const ROLES = [
   'musico',
 ];
 
+// CORREGIDO: Estructura compatible con el backend
 export interface User {
-  _id?: string;
+  // ❌ ELIMINADO: _id - Backend usa userEmail como ID
   name: string;
   lastName: string;
-  userEmail: string;
+  userEmail: string; // ✅ Este es el ID en el backend
   roll: string;
   status: boolean;
   userPassword?: string;
   create_at?: string;
   update_at?: string;
   delete_at?: string;
+  // ✅ AGREGADOS: Campos adicionales del backend
+  phone?: string;
+  location?: string;
+  profileImage?: string;
+  bio?: string;
+  instruments?: string[];
+  experience?: string;
+  preferences?: {
+    notifications: boolean;
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    language: string;
+    theme: string;
+  };
+  lastLogin?: string;
 }
 
+// CORREGIDO: Estructura de respuesta compatible con el backend
 export interface UsersResponse {
   users: User[];
   total: number;
@@ -65,11 +82,11 @@ export async function createUser(form: User): Promise<any> {
   }
 }
 
-// Actualizar usuario
-export async function updateUser(id: string, form: Partial<User>): Promise<any> {
+// CORREGIDO: Usar userEmail como ID
+export async function updateUser(userEmail: string, form: Partial<User>): Promise<any> {
   try {
-    console.log('📝 Actualizando usuario:', { id, form });
-    const response = await put<any>(`/admin/users/${id}`, form);
+    console.log('📝 Actualizando usuario:', { userEmail, form });
+    const response = await put<any>(`/admin/users/${userEmail}`, form);
     console.log('✅ Usuario actualizado:', response);
     return response;
   } catch (error) {
@@ -78,11 +95,11 @@ export async function updateUser(id: string, form: Partial<User>): Promise<any> 
   }
 }
 
-// Eliminar usuario
-export async function deleteUserByEmail(id: string): Promise<any> {
+// CORREGIDO: Usar userEmail como ID
+export async function deleteUserByEmail(userEmail: string): Promise<any> {
   try {
-    console.log('🗑️ Eliminando usuario:', id);
-    const response = await del<any>(`/admin/users/${id}`);
+    console.log('🗑️ Eliminando usuario:', userEmail);
+    const response = await del<any>(`/admin/users/${userEmail}`);
     console.log('✅ Usuario eliminado:', response);
     return response;
   } catch (error) {
@@ -91,10 +108,10 @@ export async function deleteUserByEmail(id: string): Promise<any> {
   }
 }
 
-// Obtener usuario por ID
-export async function getUserById(id: string): Promise<User> {
+// CORREGIDO: Usar userEmail como ID
+export async function getUserById(userEmail: string): Promise<User> {
   try {
-    const response = await get<User>(`/admin/users/${id}`);
+    const response = await get<User>(`/admin/users/${userEmail}`);
     console.log('👤 Usuario obtenido:', response);
     return response;
   } catch (error) {
@@ -110,7 +127,7 @@ export async function getUsersStats(): Promise<any> {
     console.log('📊 Estadísticas de usuarios:', response);
     return response;
   } catch (error) {
-    console.error('❌ Error al obtener estadísticas:', error);
+    console.error('❌ Error al obtener estadísticas de usuarios:', error);
     throw error;
   }
 } 

@@ -266,7 +266,7 @@ const MobilePayments: React.FC = () => {
   // Filtrar depósitos
   const filteredPayments = payments.filter(payment => {
     if (filters.status !== 'all' && payment.status !== filters.status) return false;
-    if (filters.paymentMethod !== 'all' && payment.paymentMethod !== filters.paymentMethod) return false;
+    if (filters.paymentMethod !== 'all' && 'bank_transfer' !== filters.paymentMethod) return false;
     return true;
   });
 
@@ -427,7 +427,7 @@ const MobilePayments: React.FC = () => {
                         }
                         secondary={
                           <Typography variant="caption" color="text.secondary">
-                            {getStatusText(payment.status)} • {formatDate(payment.createdAt)}
+                            {getStatusText(payment.status)} • {formatDate(payment.createdAt?.toString() || new Date().toISOString())}
                           </Typography>
                         }
                       />
@@ -740,7 +740,7 @@ const MobilePayments: React.FC = () => {
                         Método
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {getPaymentMethodText(selectedPayment.paymentMethod)}
+                        {getPaymentMethodText('bank_transfer')}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -845,7 +845,7 @@ const MobilePayments: React.FC = () => {
                         Método
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {getPaymentMethodText(selectedPayment.paymentMethod)}
+                        {getPaymentMethodText('bank_transfer')}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -1026,7 +1026,7 @@ const MobilePayments: React.FC = () => {
                       Fecha de Creación
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {formatDate(selectedPayment.createdAt)}
+                      {formatDate(selectedPayment.createdAt?.toString() || new Date().toISOString())}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1036,7 +1036,7 @@ const MobilePayments: React.FC = () => {
                       Última Actualización
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {formatDate(selectedPayment.updatedAt)}
+                      {formatDate(selectedPayment.updatedAt?.toString() || new Date().toISOString())}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1053,7 +1053,7 @@ const MobilePayments: React.FC = () => {
                       ID del Usuario
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {selectedPayment.userId}
+                      {selectedPayment.userEmail}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1104,7 +1104,7 @@ const MobilePayments: React.FC = () => {
                       Titular de la Cuenta
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {selectedPayment.accountHolderName || 'No especificado'}
+                      {selectedPayment.userEmail || 'No especificado'}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1120,14 +1120,14 @@ const MobilePayments: React.FC = () => {
                     </Box>
                   </Grid>
                 )}
-                {selectedPayment.referenceNumber && (
+                {selectedPayment.reference && (
                   <Grid item xs={12} md={6}>
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                         Número de Referencia
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedPayment.referenceNumber}
+                        {selectedPayment.reference}
                       </Typography>
                     </Box>
                   </Grid>
@@ -1139,19 +1139,19 @@ const MobilePayments: React.FC = () => {
                         Fecha del Depósito
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedPayment.depositDate}
+                        {selectedPayment.depositDate?.toLocaleDateString() || 'No especificado'}
                       </Typography>
                     </Box>
                   </Grid>
                 )}
-                {selectedPayment.depositTime && (
+                {selectedPayment.depositDate && (
                   <Grid item xs={12} md={6}>
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                         Hora del Depósito
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedPayment.depositTime}
+                        {selectedPayment.depositDate?.toLocaleTimeString() || 'No especificado'}
                       </Typography>
                     </Box>
                   </Grid>
@@ -1159,14 +1159,14 @@ const MobilePayments: React.FC = () => {
               </Grid>
 
               {/* Comprobante */}
-              {selectedPayment.proofImage && (
+              {selectedPayment.voucherUrl && (
                 <>
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
                     Comprobante de Depósito
                   </Typography>
                   <Box sx={{ mb: 3 }}>
                     <img
-                      src={selectedPayment.proofImage}
+                      src={selectedPayment.voucherUrl}
                       alt="Comprobante de depósito"
                       style={{
                         width: '100%',
@@ -1176,12 +1176,12 @@ const MobilePayments: React.FC = () => {
                         cursor: 'pointer'
                       }}
                       onClick={() => {
-                        setSelectedImage(selectedPayment.proofImage!);
+                        setSelectedImage(selectedPayment.voucherUrl!);
                         setImageDialogOpen(true);
                         setDetailsDialogOpen(false);
                       }}
                       onError={(e) => {
-                        console.error('Error cargando imagen en detalles:', selectedPayment.proofImage);
+                                                  console.error('Error cargando imagen en detalles:', selectedPayment.voucherUrl);
                         const target = e.target as HTMLImageElement;
                         target.src = 'https://via.placeholder.com/400x300?text=Error+al+cargar+comprobante';
                         target.style.filter = 'grayscale(100%) opacity(0.5)';
@@ -1195,7 +1195,7 @@ const MobilePayments: React.FC = () => {
               )}
 
               {/* Notas y Comentarios */}
-              {(selectedPayment.notes || selectedPayment.comments) && (
+              {selectedPayment.adminNotes && (
                 <>
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
                     Notas y Comentarios
@@ -1211,13 +1211,13 @@ const MobilePayments: React.FC = () => {
                         </Typography>
                       </Box>
                     )}
-                    {selectedPayment.comments && (
+                    {selectedPayment.adminNotes && (
                       <Box>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           Comentarios del Usuario
                         </Typography>
                         <Typography variant="body1">
-                          {selectedPayment.comments}
+                          {selectedPayment.adminNotes}
                         </Typography>
                       </Box>
                     )}
@@ -1226,7 +1226,7 @@ const MobilePayments: React.FC = () => {
               )}
 
               {/* Información de Verificación */}
-              {selectedPayment.verifiedBy && (
+              {selectedPayment.adminNotes && (
                 <>
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
                     Información de Verificación
@@ -1238,18 +1238,18 @@ const MobilePayments: React.FC = () => {
                           Verificado por
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {selectedPayment.verifiedBy}
+                          Admin
                         </Typography>
                       </Box>
                     </Grid>
-                    {selectedPayment.verifiedAt && (
+                    {selectedPayment.updatedAt && (
                       <Grid item xs={12} md={6}>
                         <Box sx={{ mb: 2 }}>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                             Fecha de Verificación
                           </Typography>
                           <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {formatDate(selectedPayment.verifiedAt)}
+                            {formatDate(selectedPayment.updatedAt?.toString() || new Date().toISOString())}
                           </Typography>
                         </Box>
                       </Grid>

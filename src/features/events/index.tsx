@@ -1,76 +1,128 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Button,
-  Alert,
-  CircularProgress,
-  Fab,
-  Snackbar
+  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Snackbar,
+  Alert
 } from '@mui/material';
-import { Add, Refresh, Event as EventIcon } from '@mui/icons-material';
-import { useEvents } from './hooks/useEvents';
+import {
+  Add as AddIcon,
+  FilterList as FilterIcon
+} from '@mui/icons-material';
+
+// Importar componentes
 import EventCard from './components/EventCard';
 import EventForm from './components/EventForm';
 import EventDetails from './components/EventDetails';
 import EventFilters from './components/EventFilters';
-import type { Event as EventType, CreateEventData } from './types/event';
-import ResponsiveLayout from '../../components/ResponsiveLayout';
-import ResponsiveGrid from '../../components/ResponsiveGrid';
-import { responsiveTypography } from '../../theme/breakpoints';
-import { buttonStyles } from '../../theme/buttonStyles';
 
-const Events = () => {
+// Importar hook
+import { useEvents } from './hooks/useEvents';
+
+// Importar tipos del servicio
+import type { Event } from '../../services/eventsService';
+
+// Importar componentes UI
+import ModernButton from '../../components/ui/ModernButton';
+import ModernCard from '../../components/ui/ModernCard';
+import { ResponsiveLayout } from '../../components/ResponsiveLayout';
+import { responsiveTypography } from '../../theme/breakpoints';
+
+
+
+const Events: React.FC = () => {
   const {
     events,
-    loading,
-    error,
     selectedEvent,
     fetchEvents,
+    fetchEventById,
     createEvent,
     updateEvent,
     deleteEvent,
-    clearError,
-    setSelectedEvent,
-    clearSelectedEvent
+    searchEvents,
+
+    setSelectedEvent
   } = useEvents();
 
+  // Estados locales
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<EventType | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
-    severity: 'success' | 'error' | 'info';
-  }>({ open: false, message: '', severity: 'info' });
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
+  // Cargar eventos al montar el componente
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
-  const handleCreateEvent = async (eventData: CreateEventData) => {
+  const handleCreateEvent = async (eventData: any) => {
     try {
-      await createEvent(eventData);
-      setSnackbar({
-        open: true,
-        message: 'Evento creado exitosamente',
-        severity: 'success'
+      // CORREGIDO: Mapear los datos del formulario a la estructura del backend
+      const backendEventData = {
+        eventName: eventData.title,
+        eventType: eventData.category,
+        date: eventData.date,
+        time: eventData.time,
+        location: eventData.location,
+        duration: '2 horas', // Valor por defecto
+        instrument: 'Guitarra', // Valor por defecto
+        bringInstrument: false,
+        comment: eventData.description,
+        budget: eventData.budget?.toString() || '0',
+        songs: [],
+        recommendations: [],
+        mapsLink: '',
+        status: 'pending_musician' as const
+      };
+      
+      await createEvent({
+        ...backendEventData,
+        user: 'admin@mussikon.com' // Usuario por defecto para eventos creados desde admin
       });
       setShowForm(false);
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Error al crear evento',
-        severity: 'error'
-      });
+      setEditingEvent(null);
+    } catch (error) {
+      console.error('Error creating event:', error);
     }
   };
 
-  const handleUpdateEvent = async (eventData: CreateEventData) => {
-    if (!editingEvent?._id) return;
+  const handleUpdateEvent = async (eventData: any) => {
+    if (!editingEvent) return;
     
     try {
-      await updateEvent(editingEvent._id, eventData);
+      // CORREGIDO: Mapear los datos del formulario a la estructura del backend
+      const backendEventData = {
+        eventName: eventData.title,
+        eventType: eventData.category,
+        date: eventData.date,
+        time: eventData.time,
+        location: eventData.location,
+        duration: '2 horas', // Valor por defecto
+        instrument: 'Guitarra', // Valor por defecto
+        bringInstrument: false,
+        comment: eventData.description,
+        budget: eventData.budget?.toString() || '0',
+        songs: [],
+        recommendations: [],
+        mapsLink: '',
+        status: 'pending_musician' as const
+      };
+      
+      await updateEvent(editingEvent.id, backendEventData);
       setSnackbar({
         open: true,
         message: 'Evento actualizado exitosamente',
@@ -78,28 +130,20 @@ const Events = () => {
       });
       setShowForm(false);
       setEditingEvent(null);
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Error al actualizar evento',
-        severity: 'error'
-      });
+    } catch (error) {
+      console.error('Error updating event:', error);
     }
   };
 
-  const handleDeleteEvent = async (id: string) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-      return;
-    }
-
+  const handleDeleteEvent = async (eventId: string) => {
     try {
-      await deleteEvent(id);
+      await deleteEvent(eventId);
       setSnackbar({
         open: true,
         message: 'Evento eliminado exitosamente',
         severity: 'success'
       });
-    } catch {
+    } catch (error) {
       setSnackbar({
         open: true,
         message: 'Error al eliminar evento',
@@ -108,379 +152,244 @@ const Events = () => {
     }
   };
 
-  const handleEditEvent = (event: EventType) => {
+  const handleEditEvent = (event: Event) => {
     setEditingEvent(event);
     setShowForm(true);
   };
 
-  const handleViewEvent = (event: EventType) => {
-    setSelectedEvent(event);
-    setShowDetails(true);
+  const handleViewEvent = async (eventId: string) => {
+    try {
+      const event = await fetchEventById(eventId);
+      if (event) {
+        setSelectedEvent(event);
+        setShowDetails(true);
+      }
+    } catch (error) {
+      console.error('Error fetching event details:', error);
+    }
   };
 
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingEvent(null);
+  const handleFilterEvents = (filters: any) => {
+    searchEvents(filters);
+    setShowFilters(false);
   };
 
-  const handleCloseDetails = () => {
-    setShowDetails(false);
-    clearSelectedEvent();
-  };
 
-  const handleFilterChange = (filters: Record<string, unknown>) => {
-    // Implementar lógica de filtrado
-    console.log('Filtros aplicados:', filters);
-  };
-
-  const handleClearFilters = () => {
-    // Limpiar filtros
-    console.log('Filtros limpiados');
-  };
-
-  const handleRefresh = () => {
-    fetchEvents();
-  };
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  const filteredEvents = events.filter(() => {
-    // Aquí se pueden aplicar filtros adicionales si es necesario
-    return true;
-  });
-
   return (
-    <ResponsiveLayout
-      spacing="lg"
-      sx={{
-        background: 'linear-gradient(135deg, rgba(0, 255, 247, 0.05) 0%, rgba(0, 0, 0, 0.9) 100%)',
-        borderRadius: '24px',
-        padding: '32px',
-        border: '1px solid rgba(0, 255, 247, 0.2)',
-        backdropFilter: 'blur(20px)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Header futurista */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', md: 'row' },
-        justifyContent: 'space-between', 
-        alignItems: { xs: 'flex-start', md: 'center' }, 
-        gap: { xs: 2, md: 0 },
-        mb: 4,
-        position: 'relative'
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={{
-            width: 48,
-            height: 48,
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #00fff7, #00ff88)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(0, 255, 247, 0.4)',
-            animation: 'pulse 2s infinite'
-          }}>
-            <EventIcon sx={{ color: '#000', fontSize: 28 }} />
-          </Box>
+    <ResponsiveLayout spacing="md">
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          gap: 2,
+          mb: 3 
+        }}>
           <Box>
             <Typography 
               variant="h3" 
               sx={{ 
-                color: '#00fff7', 
-                fontWeight: 800,
-                textShadow: '0 0 20px rgba(0, 255, 247, 0.5)',
-                fontSize: responsiveTypography.h3,
-                letterSpacing: '2px'
+                fontWeight: 800, 
+                mb: 1,
+                background: 'linear-gradient(135deg, #7f5fff 0%, #00e0ff 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: responsiveTypography.h3
               }}
             >
-              GESTIÓN DE EVENTOS
+              Eventos
             </Typography>
             <Typography 
-              variant="subtitle1" 
-              sx={{ 
-                color: '#b0b8c1',
-                fontSize: '0.9rem',
-                letterSpacing: '1px',
-                mt: 0.5
-              }}
+              variant="h6" 
+              color="text.secondary"
+              sx={{ fontWeight: 400, opacity: 0.8 }}
             >
-              Sistema de Control y Administración
+              Gestiona todos los eventos de la plataforma
             </Typography>
           </Box>
-        </Box>
-        
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button
-            variant="outlined"
-            startIcon={<Refresh />}
-            onClick={handleRefresh}
-            disabled={loading}
-            sx={{ 
-              ...buttonStyles.secondary,
-              borderColor: '#00fff7',
-              color: '#00fff7',
-              borderRadius: '12px',
-              px: 3,
-              py: 1.5,
-              fontWeight: 600,
-              textTransform: 'none',
-              fontSize: '0.9rem',
-              '&:hover': {
-                borderColor: '#00ff88',
-                backgroundColor: 'rgba(0, 255, 247, 0.1)',
-                boxShadow: '0 0 15px rgba(0, 255, 247, 0.3)'
-              }
-            }}
-          >
-            ACTUALIZAR
-          </Button>
           
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setShowForm(true)}
-            sx={{ 
-              ...buttonStyles.primary,
-              background: 'linear-gradient(135deg, #00fff7, #00ff88)',
-              color: '#000',
-              borderRadius: '12px',
-              px: 4,
-              py: 1.5,
-              fontWeight: 700,
-              textTransform: 'none',
-              fontSize: '0.9rem',
-              boxShadow: '0 0 20px rgba(0, 255, 247, 0.4)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #00ff88, #00fff7)',
-                boxShadow: '0 0 25px rgba(0, 255, 247, 0.6)',
-                transform: 'translateY(-2px)'
-              }
-            }}
-          >
-            NUEVO EVENTO
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <ModernButton
+              variant="outline"
+              startIcon={<FilterIcon />}
+              onClick={() => setShowFilters(true)}
+            >
+              Filtros
+            </ModernButton>
+            
+            <ModernButton
+              variant="primary"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditingEvent(null);
+
+                setShowForm(true);
+              }}
+            >
+              Nuevo Evento
+            </ModernButton>
+          </Box>
         </Box>
       </Box>
 
-      {/* Filtros */}
-      <EventFilters
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-      />
-
-      {/* Mensajes de error */}
-      {error && (
-        <Alert 
-          severity="error" 
-          onClose={clearError}
-          sx={{ 
-            mb: 3,
-            borderRadius: '12px',
-            background: 'rgba(255, 68, 68, 0.1)',
-            border: '1px solid rgba(255, 68, 68, 0.3)',
-            '& .MuiAlert-icon': {
-              color: '#ff4444'
-            }
-          }}
-        >
-          {error}
-        </Alert>
-      )}
-
-      {/* Loading futurista */}
-      {loading && (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          py: 8,
-          flexDirection: 'column',
-          gap: 2
-        }}>
-          <Box sx={{
-            position: 'relative',
-            width: 80,
-            height: 80
-          }}>
-            <CircularProgress 
-              size={80}
-              thickness={4}
-              sx={{ 
-                color: '#00fff7',
-                '& .MuiCircularProgress-circle': {
-                  strokeLinecap: 'round',
-                }
-              }} 
-            />
-            <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #00fff7, #00ff88)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(0, 255, 247, 0.5)'
-            }}>
-              <EventIcon sx={{ color: '#000', fontSize: 20 }} />
+      {/* Estadísticas rápidas */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <ModernCard variant="flat">
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                {events.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total de Eventos
+              </Typography>
             </Box>
-          </Box>
-          <Typography sx={{ color: '#00fff7', fontWeight: 600, letterSpacing: '1px' }}>
-            CARGANDO EVENTOS...
-          </Typography>
-        </Box>
-      )}
+          </ModernCard>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <ModernCard variant="flat">
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
+                {events.filter(e => e.status === 'completed').length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Completados
+              </Typography>
+            </Box>
+          </ModernCard>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <ModernCard variant="flat">
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+                {events.filter(e => e.status === 'pending_musician').length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Pendientes
+              </Typography>
+            </Box>
+          </ModernCard>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <ModernCard variant="flat">
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main' }}>
+                {events.filter(e => e.status === 'cancelled').length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Cancelados
+              </Typography>
+            </Box>
+          </ModernCard>
+        </Grid>
+      </Grid>
 
       {/* Lista de eventos */}
-      {!loading && !error && (
-        <>
-          {filteredEvents.length === 0 ? (
-            <Box sx={{ 
-              textAlign: 'center', 
-              py: 12,
-              color: '#b0b8c1'
+      <Grid container spacing={3}>
+        {events.map((event) => (
+          <Grid item xs={12} md={6} lg={4} key={event.id}>
+            <Box sx={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 3,
+              p: 2,
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+              }
             }}>
-              <Box sx={{
-                width: 120,
-                height: 120,
-                margin: '0 auto 24px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, rgba(0, 255, 247, 0.1), rgba(0, 255, 136, 0.1))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid rgba(0, 255, 247, 0.3)'
-              }}>
-                <EventIcon sx={{ fontSize: 48, color: '#00fff7' }} />
-              </Box>
-              <Typography variant="h5" sx={{ mb: 2, color: '#00fff7', fontWeight: 600 }}>
-                No hay eventos para mostrar
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#b0b8c1', maxWidth: 400, mx: 'auto' }}>
-                {events.length === 0 
-                  ? 'No se han creado eventos aún. ¡Crea el primero para comenzar!'
-                  : 'No se encontraron eventos con los filtros aplicados.'
-                }
-              </Typography>
+              <EventCard
+                event={event}
+                onEdit={() => handleEditEvent(event)}
+                onDelete={() => handleDeleteEvent(event.id)}
+                onView={() => handleViewEvent(event.id)}
+              />
             </Box>
-          ) : (
-            <ResponsiveGrid
-              columns={{ xs: 1, sm: 2, md: 3, lg: 4 }}
-              gap={3}
-              sx={{
-                animation: 'fadeIn 0.6s ease-out'
-              }}
-            >
-              {filteredEvents.map((event, index) => (
-                <Box key={event._id} sx={{
-                  animation: 'slideIn 0.4s ease-out',
-                  animationDelay: `${index * 0.1}s`
-                }}>
-                  <EventCard
-                    event={event}
-                    onEdit={handleEditEvent}
-                    onDelete={handleDeleteEvent}
-                    onView={handleViewEvent}
-                    loading={loading}
-                  />
-                </Box>
-              ))}
-            </ResponsiveGrid>
-          )}
-        </>
-      )}
+          </Grid>
+        ))}
+      </Grid>
 
       {/* Formulario de evento */}
-      <EventForm
-        open={showForm}
-        onClose={handleCloseForm}
-        onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
-        event={editingEvent}
-        loading={loading}
-      />
+      <Dialog 
+        open={showForm} 
+        onClose={() => setShowForm(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingEvent ? 'Editar Evento' : 'Nuevo Evento'}
+        </DialogTitle>
+        <DialogContent>
+          <EventForm
+            open={showForm}
+            onClose={() => setShowForm(false)}
+            onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
+            event={editingEvent}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Detalles del evento */}
-      <EventDetails
-        event={selectedEvent}
-        open={showDetails}
-        onClose={handleCloseDetails}
-        onEdit={handleEditEvent}
-        onDelete={handleDeleteEvent}
-        loading={loading}
-      />
+      <Dialog 
+        open={showDetails} 
+        onClose={() => setShowDetails(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Detalles del Evento</DialogTitle>
+        <DialogContent>
+          <EventDetails
+            event={selectedEvent}
+            open={showDetails}
+            onClose={() => setShowDetails(false)}
+            onEdit={() => handleEditEvent(selectedEvent!)}
+            onDelete={() => handleDeleteEvent(selectedEvent!.id)}
+          />
+        </DialogContent>
+      </Dialog>
 
-      {/* Snackbar para notificaciones */}
+      {/* Filtros */}
+      <Dialog 
+        open={showFilters} 
+        onClose={() => setShowFilters(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Filtros de Eventos</DialogTitle>
+        <DialogContent>
+          <EventFilters
+            onApply={handleFilterEvents}
+            onCancel={() => setShowFilters(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert 
           onClose={handleCloseSnackbar} 
           severity={snackbar.severity}
-          sx={{ 
-            width: '100%',
-            borderRadius: '12px',
-            fontWeight: 600
-          }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>
       </Snackbar>
-
-      {/* FAB futurista */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        onClick={() => setShowForm(true)}
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          background: 'linear-gradient(135deg, #00fff7, #00ff88)',
-          color: '#000',
-          width: 64,
-          height: 64,
-          boxShadow: '0 0 25px rgba(0, 255, 247, 0.5)',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #00ff88, #00fff7)',
-            boxShadow: '0 0 35px rgba(0, 255, 247, 0.7)',
-            transform: 'scale(1.1)'
-          },
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-        }}
-      >
-        <Add sx={{ fontSize: 28 }} />
-      </Fab>
-
-      {/* Estilos CSS para animaciones */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
     </ResponsiveLayout>
   );
 };

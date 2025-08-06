@@ -11,7 +11,8 @@ const getBaseUrl = (): string => {
   }
   
   // URL por defecto (puede ser cambiada aquí)
-  const defaultUrl = 'http://192.168.54.17:3001';
+  // const defaultUrl = 'http://192.168.54.17:3001';
+  const defaultUrl = 'http://192.168.54.11:3001';
   console.log('🌐 Usando URL del backend por defecto:', defaultUrl);
   return defaultUrl;
 };
@@ -22,15 +23,16 @@ export const API_CONFIG = {
   
   // Endpoints de la API
   ENDPOINTS: {
-    // Autenticación
+    // Autenticación - ACTUALIZADO para coincidir con el backend
     LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
+    ADMIN_LOGIN: '/admin-auth/login',
+    REGISTER: '/auth/Register',
     REFRESH_TOKEN: '/auth/refresh',
     FORGOT_PASSWORD: '/auth/forgot-password',
     VERIFY_CODE: '/auth/verify-code',
     RESET_PASSWORD: '/auth/reset-password',
     
-    // Usuarios Móviles (Admin)
+    // Usuarios Móviles (Admin) - ACTUALIZADO para coincidir con el backend
     MOBILE_USERS: '/admin/users',
     MOBILE_USER_BY_ID: '/admin/users/:id',
     CREATE_MOBILE_USER: '/admin/users',
@@ -40,20 +42,20 @@ export const API_CONFIG = {
     UNBLOCK_MOBILE_USER: '/admin/users/:id/unblock',
     MOBILE_USERS_STATS: '/admin/users/stats',
     
-    // Eventos (Admin)
+    // Eventos (Admin) - ACTUALIZADO para coincidir con el backend
     ADMIN_EVENTS: '/admin/events',
     ADMIN_EVENT_BY_ID: '/admin/events/:id',
     CREATE_ADMIN_EVENT: '/admin/events',
     UPDATE_ADMIN_EVENT: '/admin/events/:id',
     DELETE_ADMIN_EVENT: '/admin/events/:id',
     
-    // Músicos (Admin)
+    // Músicos (Admin) - ACTUALIZADO para coincidir con el backend
     ADMIN_MUSICIANS: '/admin/musicians',
     ADMIN_MUSICIAN_BY_ID: '/admin/musicians/:id',
     UPDATE_ADMIN_MUSICIAN: '/admin/musicians/:id',
     DELETE_ADMIN_MUSICIAN: '/admin/musicians/:id',
     
-    // Solicitudes de Músicos (Admin)
+    // Solicitudes de Músicos (Admin) - ACTUALIZADO para coincidir con el backend
     ADMIN_MUSICIAN_REQUESTS: '/admin/musician-requests',
     ADMIN_MUSICIAN_REQUEST_BY_ID: '/admin/musician-requests/:id',
     CREATE_ADMIN_MUSICIAN_REQUEST: '/admin/musician-requests',
@@ -61,14 +63,14 @@ export const API_CONFIG = {
     DELETE_ADMIN_MUSICIAN_REQUEST: '/admin/musician-requests/:id',
     ADMIN_MUSICIAN_REQUESTS_STATS: '/admin/musician-requests/stats',
     
-    // Búsqueda Avanzada (Admin)
+    // Búsqueda Avanzada (Admin) - ACTUALIZADO para coincidir con el backend
     ADMIN_SEARCH_GLOBAL: '/search/global',
     SEARCH_EVENTS: '/search/events',
     SEARCH_USERS: '/search/users',
     SEARCH_MUSICIAN_REQUESTS: '/search/musician-requests',
     SEARCH_LOCATION: '/search/location',
     
-    // Analytics (Admin) - CORREGIDO: Usar rutas exactas del backend
+    // Analytics (Admin) - ACTUALIZADO para coincidir con el backend
     ADMIN_ANALYTICS_DASHBOARD: '/analytics/dashboard',
     ADMIN_ANALYTICS_USERS: '/analytics/users',
     ADMIN_ANALYTICS_EVENTS: '/analytics/events',
@@ -79,7 +81,35 @@ export const API_CONFIG = {
     ADMIN_ANALYTICS_TOP_USERS: '/analytics/top-users',
     ADMIN_ANALYTICS_EXPORT: '/analytics/export',
     
-    // Pagos - CORREGIDO: Usar rutas exactas del backend
+    // Sistema de Pagos - ACTUALIZADO para coincidir con el backend
+    PAYMENT_SYSTEM_STATS: '/payment-system/statistics',
+    PAYMENT_SYSTEM_DEPOSIT_STATS: '/payment-system/deposit-stats',
+    PAYMENT_SYSTEM_PENDING_DEPOSITS: '/payment-system/pending-deposits',
+    PAYMENT_SYSTEM_PENDING_WITHDRAWALS: '/payment-system/pending-withdrawals',
+    PAYMENT_SYSTEM_VERIFY_DEPOSIT: '/payment-system/verify-deposit/:id',
+    PAYMENT_SYSTEM_PROCESS_WITHDRAWAL: '/payment-system/process-withdrawal/:id',
+    PAYMENT_SYSTEM_DEPOSIT_INFO: '/payment-system/deposit-info/:id',
+    PAYMENT_SYSTEM_CHECK_DUPLICATE: '/payment-system/check-duplicate/:id',
+    PAYMENT_SYSTEM_VOUCHER_IMAGE: '/payment-system/voucher-image/:id',
+    PAYMENT_SYSTEM_VOUCHER_IMAGE_DIRECT: '/payment-system/voucher-image-direct/:id',
+    PAYMENT_SYSTEM_DOWNLOAD_VOUCHER: '/payment-system/download-voucher/:id',
+    PAYMENT_SYSTEM_FLAG_SUSPICIOUS: '/payment-system/flag-suspicious/:id',
+    
+    // Rutas de compatibilidad para /admin/payments/* (redirigen a payment-system)
+    PENDING_DEPOSITS: '/admin/payments/pending-deposits',
+    VERIFY_DEPOSIT: '/admin/payments/verify-deposit/:id',
+    PENDING_WITHDRAWALS: '/admin/payments/pending-withdrawals',
+    PROCESS_WITHDRAWAL: '/admin/payments/process-withdrawal/:id',
+    PAYMENT_SYSTEM_STATS_COMPAT: '/admin/payments/statistics',
+    DEPOSIT_INFO: '/admin/payments/deposit-info/:id',
+    CHECK_DUPLICATE: '/admin/payments/check-duplicate/:id',
+    VOUCHER_IMAGE: '/admin/payments/voucher-image/:id',
+    VOUCHER_IMAGE_DIRECT: '/admin/payments/voucher-image-direct/:id',
+    DOWNLOAD_VOUCHER: '/admin/payments/download-voucher/:id',
+    DEPOSIT_STATS: '/admin/payments/deposit-stats',
+    FLAG_SUSPICIOUS: '/admin/payments/flag-suspicious/:id',
+    
+    // Rutas legacy de pagos (para compatibilidad)
     PAYMENT_METHODS: '/payments/methods',
     PAYMENT_METHOD_BY_ID: '/payments/methods/:id',
     CREATE_PAYMENT_METHOD: '/payments/methods',
@@ -98,37 +128,23 @@ export const API_CONFIG = {
     PAYMENT_STATS: '/payments/stats',
     VALIDATE_PAYMENT_METHOD: '/payments/validate',
     PAYMENT_GATEWAYS: '/payments/gateways',
-    
-    // Sistema de Depósitos - ACTUALIZADO con nuevos endpoints
-    PENDING_DEPOSITS: '/admin/payments/pending-deposits',
-    VERIFY_DEPOSIT: '/admin/payments/verify-deposit/:id',
-    PENDING_WITHDRAWALS: '/admin/payments/pending-withdrawals',
-    PROCESS_WITHDRAWAL: '/admin/payments/process-withdrawal/:id',
-    PAYMENT_SYSTEM_STATS: '/admin/payments/statistics',
-    DEPOSIT_INFO: '/admin/payments/deposit-info/:id',
-    CHECK_DUPLICATE: '/admin/payments/check-duplicate/:id',
-    VOUCHER_IMAGE: '/admin/payments/voucher-image/:id',
-    VOUCHER_IMAGE_DIRECT: '/admin/payments/voucher-image-direct/:id',
-    DOWNLOAD_VOUCHER: '/admin/payments/download-voucher/:id',
     VOUCHER_PRESIGNED_URL: '/payments/voucher/:id/presigned-url',
-    DEPOSIT_STATS: '/admin/payments/deposit-stats',
-    FLAG_SUSPICIOUS: '/admin/payments/flag-suspicious/:id',
     
-    // Imágenes (Admin) - ACTUALIZADO con endpoints del backend mejorado
-    ADMIN_IMAGES: '/images',
-    ADMIN_IMAGE_BY_ID: '/images/:id',
-    DELETE_ADMIN_IMAGE: '/images/:id',
-    UPLOAD_IMAGE: '/images/upload',
-    UPDATE_IMAGE: '/images/:id',
-    IMAGE_STATS: '/images/stats',
-    IMAGE_CLEANUP: '/images/cleanup',
-    IMAGE_VALIDATE: '/images/validate',
-    IMAGE_PRESIGNED_URL: '/images/:id/presigned',
+    // Imágenes (Admin) - ACTUALIZADO para coincidir con el backend
+    ADMIN_IMAGES: '/imgs/getAllImg',
+    ADMIN_IMAGE_BY_ID: '/imgs/getUrl/:key',
+    DELETE_ADMIN_IMAGE: '/imgs/delete/:key',
+    UPLOAD_IMAGE: '/imgs/upload',
+    UPDATE_IMAGE: '/imgs/update-metadata/:key',
+    IMAGE_STATS: '/imgs/stats',
+    IMAGE_CLEANUP: '/imgs/cleanup',
+    IMAGE_VALIDATE: '/imgs/validate',
+    IMAGE_PRESIGNED_URL: '/imgs/presigned/:key',
     
     // Imágenes específicas
-    PROFILE_IMAGES: '/images/profile/:userId',
-    POST_IMAGES: '/images/posts',
-    EVENT_IMAGES: '/images/events',
+    PROFILE_IMAGES: '/imgs/profile/:userId',
+    POST_IMAGES: '/imgs/posts',
+    EVENT_IMAGES: '/imgs/events',
     
     // Endpoint de fallback para vouchers (NUEVO)
     VOUCHER_FALLBACK: '/imgs/voucher/:id',
@@ -193,8 +209,8 @@ export const API_CONFIG = {
 
 // Configuración de Socket.IO
 export const SOCKET_CONFIG = {
-  // URL del servidor Socket.IO (misma que la API)
-  SOCKET_URL: 'http://192.168.54.26:3001',
+  // URL del servidor Socket.IO (actualizada para el backend en puerto 10000)
+  SOCKET_URL: 'http://localhost:10000',
   
   // Configuración de conexión
   CONNECTION_OPTIONS: {

@@ -1,121 +1,115 @@
 import { useState, useCallback } from 'react';
-import { 
-  eventsService,
-  type CreateEventData,
-  type UpdateEventData,
-  type EventFilters
-} from '../../../services/eventsService';
-import type { Event } from '../types/event';
+import { eventsService } from '../../../services/eventsService';
+import type { Event, CreateEventData, UpdateEventData } from '../../../services/eventsService';
 
-export function useEvents() {
+// CORREGIDO: Usar los tipos del servicio en lugar de los tipos del feature
+export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-  const fetchEvents = useCallback(async (filters?: EventFilters) => {
-    setLoading(true);
-    setError(null);
+  const fetchEvents = useCallback(async () => {
     try {
-      const response = await eventsService.getAllEvents(filters);
-      setEvents(response.events);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar eventos');
+      setLoading(true);
+      setError(null);
+      const response = await eventsService.getAllEvents();
+      setEvents(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar eventos');
     } finally {
       setLoading(false);
     }
   }, []);
 
   const fetchEventById = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      setError(null);
       const data = await eventsService.getEventById(id);
       setSelectedEvent(data);
       return data;
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar evento');
-      throw err;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar evento');
+      return null;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const createEventHandler = useCallback(async (eventData: CreateEventData) => {
-    setLoading(true);
-    setError(null);
+  const createEvent = useCallback(async (eventData: CreateEventData) => {
     try {
+      setLoading(true);
+      setError(null);
       const newEvent = await eventsService.createEvent(eventData);
       setEvents(prev => [...prev, newEvent]);
       return newEvent;
-    } catch (err: any) {
-      setError(err.message || 'Error al crear evento');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear evento');
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const updateEventHandler = useCallback(async (id: string, eventData: UpdateEventData) => {
-    setLoading(true);
-    setError(null);
+  const updateEvent = useCallback(async (id: string, eventData: UpdateEventData) => {
     try {
+      setLoading(true);
+      setError(null);
       const updatedEvent = await eventsService.updateEvent(id, eventData);
-      setEvents(prev => prev.map(event => 
-        event._id === id ? updatedEvent : event
+      setEvents(prev => prev.map(event =>
+        event.id === id ? updatedEvent : event
       ));
-      if (selectedEvent?._id === id) {
+      if (selectedEvent?.id === id) {
         setSelectedEvent(updatedEvent);
       }
       return updatedEvent;
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar evento');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar evento');
       throw err;
     } finally {
       setLoading(false);
     }
   }, [selectedEvent]);
 
-  const deleteEventHandler = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
+  const deleteEvent = useCallback(async (id: string) => {
     try {
+      setLoading(true);
+      setError(null);
       await eventsService.deleteEvent(id);
-      setEvents(prev => prev.filter(event => event._id !== id));
-      if (selectedEvent?._id === id) {
+      setEvents(prev => prev.filter(event => event.id !== id));
+      if (selectedEvent?.id === id) {
         setSelectedEvent(null);
       }
-    } catch (err: any) {
-      setError(err.message || 'Error al eliminar evento');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar evento');
       throw err;
     } finally {
       setLoading(false);
     }
   }, [selectedEvent]);
 
-  const filterEventsByStatus = useCallback(async (status: Event['status']) => {
-    setLoading(true);
-    setError(null);
+  const searchEvents = useCallback(async (filters: any) => {
     try {
-      const response = await eventsService.getAllEvents({ status });
-      setEvents(response.events);
-    } catch (err: any) {
-      setError(err.message || 'Error al filtrar eventos');
+      setLoading(true);
+      setError(null);
+      const response = await eventsService.getAllEvents(filters);
+      setEvents(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al buscar eventos');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const filterEventsByDateRange = useCallback(async (startDate: string, endDate: string) => {
-    setLoading(true);
-    setError(null);
+  const getEventsByStatus = useCallback(async (status: string) => {
     try {
-      const response = await eventsService.getAllEvents({ 
-        dateRange: { start: startDate, end: endDate } 
-      });
-      setEvents(response.events);
-    } catch (err: any) {
-      setError(err.message || 'Error al filtrar eventos por fecha');
+      setLoading(true);
+      setError(null);
+      const response = await eventsService.getAllEvents({ status });
+      setEvents(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar eventos por estado');
     } finally {
       setLoading(false);
     }
@@ -131,18 +125,18 @@ export function useEvents() {
 
   return {
     events,
+    selectedEvent,
     loading,
     error,
-    selectedEvent,
     fetchEvents,
     fetchEventById,
-    createEvent: createEventHandler,
-    updateEvent: updateEventHandler,
-    deleteEvent: deleteEventHandler,
-    filterEventsByStatus,
-    filterEventsByDateRange,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    searchEvents,
+    getEventsByStatus,
     clearError,
     clearSelectedEvent,
     setSelectedEvent,
   };
-} 
+}; 

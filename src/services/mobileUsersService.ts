@@ -387,24 +387,19 @@ export const mobileUsersService = {
     }
   },
 
-  // Obtener conteo de usuarios
-  async getUsersCount(filters?: UserFilters): Promise<number> {
+  // ✅ FUNCIÓN CORREGIDA: Usar endpoint correcto
+  async getUsersCount(): Promise<number> {
     try {
-      const params = new URLSearchParams();
+      const response = await apiService.get<any[]>('/admin/users');
+      console.log('📊 Conteo de usuarios obtenido:', response);
       
-      if (filters) {
-        if (filters.status) params.append('status', filters.status);
-        if (filters.roll) params.append('roll', filters.roll);
-        if (filters.location) params.append('location', filters.location);
+      if (response.data) {
+        return response.data.length;
       }
-      
-      const url = `${API_CONFIG.ENDPOINTS.MOBILE_USERS}/count?${params.toString()}`;
-      const response = await apiService.get<{ count: number }>(url);
-      
-      return response.data?.count || 0;
+      return 0;
     } catch (error) {
-      console.error('Error al obtener conteo de usuarios:', error);
-      throw error;
+      console.error('❌ Error al obtener conteo de usuarios:', error);
+      return 0;
     }
   }
 };

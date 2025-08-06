@@ -3,56 +3,39 @@
 
 import { apiService } from './api';
 
-// Tipos adaptados al backend de MussikOn Express
+// CORREGIDO: Tipos adaptados al backend de MussikOn Express (DataTypes.ts)
 export interface MobilePayment {
   id: string;
-  userId: string;
+  userEmail: string; // ✅ Campo correcto del backend
+  amount: number;
+  currency: string;
+  depositDate: Date; // ✅ Campo correcto del backend
+  bankName: string; // ✅ Campo correcto del backend
+  accountNumber: string; // ✅ Campo correcto del backend
+  reference: string; // ✅ Campo correcto del backend
+  purpose: string; // ✅ Campo correcto del backend
+  voucherUrl: string; // ✅ Campo correcto del backend
+  status: 'pending' | 'approved' | 'rejected'; // ✅ Estados del backend
+  rejectionReason?: string;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  isDuplicate?: boolean;
+  duplicateOf?: string;
+  
+  // Campos adicionales para la UI
   user?: {
-    id: string;
     name: string;
     lastName: string;
     userEmail: string;
   };
-  amount: number;
-  currency: string;
-  status: 'pending' | 'approved' | 'rejected';
-  paymentMethod: string;
-  description: string;
   eventId?: string;
   eventName?: string;
-  proofImage?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
-  verifiedBy?: string;
-  verifiedAt?: string;
   verificationNotes?: string;
   verificationMethod?: string;
-  rejectedBy?: string;
-  rejectedAt?: string;
-  rejectionReason?: string;
-  rejectionNotes?: string;
-  
-  // Campos específicos del backend para depósitos
-  voucherFile?: {
-    url: string;
-    filename: string;
-    uploadedAt: string;
-  };
-  accountHolderName?: string;
-  accountNumber?: string;
-  bankName?: string;
-  depositDate?: string;
-  depositTime?: string;
-  referenceNumber?: string;
-  comments?: string;
-  verificationData?: {
-    bankDepositDate: string;
-    bankDepositTime: string;
-    referenceNumber: string;
-    accountLastFourDigits: string;
-    verifiedBy: string;
-  };
+  adminNotes?: string;
 }
 
 export interface MobilePaymentStats {
@@ -97,325 +80,216 @@ export interface RejectPaymentRequest {
 }
 
 class MobilePaymentsService {
-  private readonly baseUrl = '/admin/payments';
+  // CORREGIDO: Usar rutas exactas del backend
+  private readonly baseUrl = '/payment-system'; // ✅ Ruta principal del backend
 
-  /**
-   * Obtener todos los depósitos pendientes (conectado al backend real)
-   */
-  async getMobilePayments(_params?: {
+  // CORREGIDO: Obtener depósitos pendientes
+  async getMobilePayments(params?: {
     status?: string;
     limit?: number;
     offset?: number;
   }): Promise<MobilePayment[]> {
     try {
-      // Usar el endpoint real del backend para depósitos pendientes
-      const response = await apiService.get(`${this.baseUrl}/pending-deposits`);
+      const queryParams = new URLSearchParams();
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+      console.log('💰 Obteniendo depósitos móviles...');
       
-      if (response.data.success && response.data.data) {
-        // Transformar los datos del backend al formato esperado por el frontend
-        return response.data.data.map((deposit: any) => this.transformDepositToMobilePayment(deposit));
-      }
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.get<MobilePayment[]>(`${this.baseUrl}/pending-deposits?${queryParams.toString()}`);
+      console.log('✅ Depósitos móviles obtenidos:', response);
       
-      return [];
+      return response.data!;
     } catch (error) {
-      console.error('Error obteniendo depósitos pendientes:', error);
-      // Retornar datos mock para desarrollo
-      return this.getMockMobilePayments();
+      console.error('❌ Error al obtener depósitos móviles:', error);
+      throw error;
     }
   }
 
-  /**
-   * Verificar un depósito (conectado al backend real)
-   */
+  // CORREGIDO: Verificar depósito
   async verifyMobilePayment(
     paymentId: string,
     data: VerifyPaymentRequest
   ): Promise<{ paymentId: string; status: string; transactionId: string }> {
     try {
-      // Usar el endpoint real del backend para verificar depósitos
-      const response = await apiService.post(`${this.baseUrl}/pending-deposits/${paymentId}/verify`, data);
+      console.log('✅ Verificando depósito:', { paymentId, data });
       
-      if (response.data.success) {
-        return {
-          paymentId,
-          status: data.approved ? 'approved' : 'rejected',
-          transactionId: response.data.data?.depositId || paymentId
-        };
-      }
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.post<any>(`${this.baseUrl}/verify-deposit/${paymentId}`, data);
+      console.log('✅ Depósito verificado:', response);
       
-      throw new Error(response.data.error || 'Error verificando depósito');
+      return {
+        paymentId,
+        status: 'approved',
+        transactionId: response.data?.transactionId || paymentId
+      };
     } catch (error) {
-      console.error('Error verificando depósito:', error);
+      console.error('❌ Error al verificar depósito:', error);
       throw error;
     }
   }
 
-  /**
-   * Rechazar un depósito (conectado al backend real)
-   */
+  // CORREGIDO: Rechazar depósito
   async rejectMobilePayment(
     paymentId: string,
     data: RejectPaymentRequest
   ): Promise<{ paymentId: string; status: string; reason: string }> {
     try {
-      // Usar el mismo endpoint de verificación pero con approved: false
-      const response = await apiService.post(`${this.baseUrl}/pending-deposits/${paymentId}/verify`, data);
+      console.log('❌ Rechazando depósito:', { paymentId, data });
       
-      if (response.data.success) {
-        return {
-          paymentId,
-          status: 'rejected',
-          reason: data.notes
-        };
-      }
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.post<any>(`${this.baseUrl}/verify-deposit/${paymentId}`, data);
+      console.log('✅ Depósito rechazado:', response);
       
-      throw new Error(response.data.error || 'Error rechazando depósito');
+      return {
+        paymentId,
+        status: 'rejected',
+        reason: data.notes || 'Rechazado por administrador'
+      };
     } catch (error) {
-      console.error('Error rechazando depósito:', error);
+      console.error('❌ Error al rechazar depósito:', error);
       throw error;
     }
   }
 
-  /**
-   * Obtener estadísticas de depósitos (conectado al backend real)
-   */
-  async getMobilePaymentStats(_params?: {
+  // CORREGIDO: Obtener estadísticas
+  async getMobilePaymentStats(params?: {
     period?: '7d' | '30d' | '90d';
   }): Promise<MobilePaymentStats> {
     try {
-      // Usar el endpoint real del backend para estadísticas
-      const response = await apiService.get(`${this.baseUrl}/statistics`);
+      const queryParams = new URLSearchParams();
+      if (params?.period) queryParams.append('period', params.period);
+
+      console.log('📊 Obteniendo estadísticas de depósitos...');
       
-      if (response.data.success && response.data.data) {
-        return this.transformStatsToMobilePaymentStats(response.data.data);
-      }
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.get<MobilePaymentStats>(`${this.baseUrl}/statistics?${queryParams.toString()}`);
+      console.log('✅ Estadísticas de depósitos obtenidas:', response);
       
-      return this.getMockMobilePaymentStats();
+      return response.data!;
     } catch (error) {
-      console.error('Error obteniendo estadísticas:', error);
-      return this.getMockMobilePaymentStats();
+      console.error('❌ Error al obtener estadísticas de depósitos:', error);
+      throw error;
     }
   }
 
-  /**
-   * Transformar depósito del backend al formato del frontend
-   */
-  private transformDepositToMobilePayment(deposit: any): MobilePayment {
-    console.log('🔍 Transformando depósito del backend:', deposit);
-    console.log('🔍 URL del voucher:', deposit.voucherFile?.url);
-    
-    // Usar el endpoint seguro del backend para las imágenes
-    const secureImageUrl = deposit.voucherFile?.url ? 
-      `/admin/payments/voucher-image/${deposit.id}` : 
-      undefined;
-    
-    return {
-      id: deposit.id,
-      userId: deposit.userId,
-      amount: deposit.amount,
-      currency: deposit.currency || 'RD$',
-      status: deposit.status,
-      paymentMethod: 'bank_deposit',
-      description: `Depósito bancario - ${deposit.bankName || 'Banco'}`,
-      proofImage: secureImageUrl,
-      notes: deposit.comments,
-      createdAt: deposit.createdAt,
-      updatedAt: deposit.updatedAt,
-      verifiedBy: deposit.verifiedBy,
-      verifiedAt: deposit.verifiedAt,
-      verificationNotes: deposit.notes,
-      rejectedBy: deposit.status === 'rejected' ? deposit.verifiedBy : undefined,
-      rejectedAt: deposit.status === 'rejected' ? deposit.verifiedAt : undefined,
-      rejectionReason: deposit.status === 'rejected' ? deposit.notes : undefined,
+  // CORREGIDO: Obtener información de depósito
+  async getDepositInfo(depositId: string): Promise<MobilePayment> {
+    try {
+      console.log('📋 Obteniendo información de depósito:', depositId);
       
-      // Campos específicos del backend
-      voucherFile: deposit.voucherFile,
-      accountHolderName: deposit.accountHolderName,
-      accountNumber: deposit.accountNumber,
-      bankName: deposit.bankName,
-      depositDate: deposit.depositDate,
-      depositTime: deposit.depositTime,
-      referenceNumber: deposit.referenceNumber,
-      comments: deposit.comments,
-      verificationData: deposit.verificationData
-    };
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.get<MobilePayment>(`${this.baseUrl}/deposit-info/${depositId}`);
+      console.log('✅ Información de depósito obtenida:', response);
+      
+      return response.data!;
+    } catch (error) {
+      console.error('❌ Error al obtener información de depósito:', error);
+      throw error;
+    }
   }
 
-  /**
-   * Transformar estadísticas del backend al formato del frontend
-   */
-  private transformStatsToMobilePaymentStats(stats: any): MobilePaymentStats {
-    return {
-      total: stats.pendingDepositsCount || 0,
-      pending: stats.pendingDepositsCount || 0,
-      approved: 0, // No disponible en el backend actual
-      rejected: 0, // No disponible en el backend actual
-      totalAmount: stats.totalDeposits || 0,
-      approvedAmount: 0, // No disponible en el backend actual
-      averageAmount: stats.totalDeposits && stats.pendingDepositsCount ? 
-        stats.totalDeposits / stats.pendingDepositsCount : 0,
-      approvalRate: '0%', // No disponible en el backend actual
-      rejectionRate: '0%', // No disponible en el backend actual
-      dailyStats: [], // No disponible en el backend actual
-      topPaymentMethods: [], // No disponible en el backend actual
-      topEvents: [] // No disponible en el backend actual
-    };
+  // CORREGIDO: Verificar duplicado
+  async checkDuplicate(depositId: string): Promise<{ isDuplicate: boolean; duplicateOf?: string }> {
+    try {
+      console.log('🔍 Verificando duplicado:', depositId);
+      
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.get<any>(`${this.baseUrl}/check-duplicate/${depositId}`);
+      console.log('✅ Verificación de duplicado completada:', response);
+      
+      return response.data!;
+    } catch (error) {
+      console.error('❌ Error al verificar duplicado:', error);
+      throw error;
+    }
   }
 
-  // Datos mock para desarrollo
-  private getMockMobilePayments(): MobilePayment[] {
-    return [
-      {
-        id: 'mp_001',
-        userId: 'user_001',
-        user: {
-          id: 'user_001',
-          name: 'Juan',
-          lastName: 'Pérez',
-          userEmail: 'juan.perez@email.com',
-        },
-        amount: 150.00,
-        currency: 'EUR',
-        status: 'pending',
-        paymentMethod: 'bank_transfer',
-        description: 'Pago por evento de música en vivo',
-        eventId: 'event_001',
-        eventName: 'Concierto de Jazz',
-        proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+1',
-        notes: 'Transferencia bancaria realizada',
-        createdAt: new Date('2024-01-15T10:30:00Z').toISOString(),
-        updatedAt: new Date('2024-01-15T10:30:00Z').toISOString(),
-      },
-      {
-        id: 'mp_002',
-        userId: 'user_002',
-        user: {
-          id: 'user_002',
-          name: 'María',
-          lastName: 'García',
-          userEmail: 'maria.garcia@email.com',
-        },
-        amount: 75.50,
-        currency: 'EUR',
-        status: 'approved',
-        paymentMethod: 'paypal',
-        description: 'Reserva para taller de guitarra',
-        eventId: 'event_002',
-        eventName: 'Taller de Guitarra',
-        proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+2',
-        notes: 'Pago realizado a través de PayPal',
-        createdAt: new Date('2024-01-14T15:45:00Z').toISOString(),
-        updatedAt: new Date('2024-01-15T09:20:00Z').toISOString(),
-        verifiedBy: 'admin_001',
-        verifiedAt: new Date('2024-01-15T09:20:00Z').toISOString(),
-        verificationNotes: 'Depósito verificado correctamente',
-      },
-      {
-        id: 'mp_003',
-        userId: 'user_003',
-        user: {
-          id: 'user_003',
-          name: 'Carlos',
-          lastName: 'López',
-          userEmail: 'carlos.lopez@email.com',
-        },
-        amount: 200.00,
-        currency: 'EUR',
-        status: 'rejected',
-        paymentMethod: 'bank_transfer',
-        description: 'Pago por festival de música',
-        eventId: 'event_003',
-        eventName: 'Festival de Música',
-        proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+3',
-        notes: 'Comprobante no legible',
-        createdAt: new Date('2024-01-13T12:15:00Z').toISOString(),
-        updatedAt: new Date('2024-01-14T16:30:00Z').toISOString(),
-        rejectedBy: 'admin_001',
-        rejectedAt: new Date('2024-01-14T16:30:00Z').toISOString(),
-        rejectionReason: 'Comprobante no legible',
-        rejectionNotes: 'La imagen del comprobante no es clara',
-      },
-      {
-        id: 'mp_004',
-        userId: 'user_004',
-        user: {
-          id: 'user_004',
-          name: 'Ana',
-          lastName: 'Martínez',
-          userEmail: 'ana.martinez@email.com',
-        },
-        amount: 120.00,
-        currency: 'EUR',
-        status: 'pending',
-        paymentMethod: 'stripe',
-        description: 'Pago por clase de piano',
-        eventId: 'event_004',
-        eventName: 'Clase de Piano',
-        proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+4',
-        notes: 'Pago con tarjeta de crédito',
-        createdAt: new Date('2024-01-15T08:20:00Z').toISOString(),
-        updatedAt: new Date('2024-01-15T08:20:00Z').toISOString(),
-      },
-      {
-        id: 'mp_005',
-        userId: 'user_005',
-        user: {
-          id: 'user_005',
-          name: 'Luis',
-          lastName: 'Rodríguez',
-          userEmail: 'luis.rodriguez@email.com',
-        },
-        amount: 90.00,
-        currency: 'EUR',
-        status: 'approved',
-        paymentMethod: 'bank_transfer',
-        description: 'Pago por concierto de violín',
-        eventId: 'event_005',
-        eventName: 'Concierto de Violín',
-        proofImage: 'https://via.placeholder.com/300x200?text=Comprobante+5',
-        notes: 'Transferencia confirmada',
-        createdAt: new Date('2024-01-12T14:10:00Z').toISOString(),
-        updatedAt: new Date('2024-01-13T11:45:00Z').toISOString(),
-        verifiedBy: 'admin_002',
-        verifiedAt: new Date('2024-01-13T11:45:00Z').toISOString(),
-        verificationNotes: 'Transferencia verificada en cuenta bancaria',
-      },
-    ];
+  // CORREGIDO: Obtener imagen del voucher
+  async getVoucherImage(depositId: string): Promise<string> {
+    try {
+      console.log('🖼️ Obteniendo imagen del voucher:', depositId);
+      
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.get<string>(`${this.baseUrl}/voucher-image/${depositId}`);
+      console.log('✅ Imagen del voucher obtenida');
+      
+      return response.data!;
+    } catch (error) {
+      console.error('❌ Error al obtener imagen del voucher:', error);
+      throw error;
+    }
   }
 
-  private getMockMobilePaymentStats(): MobilePaymentStats {
-    return {
-      total: 25,
-      pending: 8,
-      approved: 15,
-      rejected: 2,
-      totalAmount: 3250.50,
-      approvedAmount: 1950.75,
-      averageAmount: 130.02,
-      approvalRate: '60.0%',
-      rejectionRate: '8.0%',
-      dailyStats: [
-        { date: '2024-01-15', count: 5, amount: 650.00 },
-        { date: '2024-01-14', count: 8, amount: 1200.50 },
-        { date: '2024-01-13', count: 6, amount: 900.00 },
-        { date: '2024-01-12', count: 4, amount: 400.00 },
-        { date: '2024-01-11', count: 2, amount: 100.00 },
-      ],
-      topPaymentMethods: [
-        { method: 'bank_transfer', count: 12 },
-        { method: 'paypal', count: 8 },
-        { method: 'stripe', count: 5 },
-      ],
-      topEvents: [
-        { eventId: 'event_001', count: 8 },
-        { eventId: 'event_002', count: 6 },
-        { eventId: 'event_003', count: 4 },
-        { eventId: 'event_004', count: 3 },
-        { eventId: 'event_005', count: 2 },
-      ],
-    };
+  // CORREGIDO: Descargar voucher
+  async downloadVoucher(depositId: string): Promise<Blob> {
+    try {
+      console.log('📥 Descargando voucher:', depositId);
+      
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.get(`${this.baseUrl}/download-voucher/${depositId}`, {
+        responseType: 'blob'
+      });
+      console.log('✅ Voucher descargado');
+      
+      return response.data!;
+    } catch (error) {
+      console.error('❌ Error al descargar voucher:', error);
+      throw error;
+    }
+  }
+
+  // CORREGIDO: Marcar como sospechoso
+  async flagSuspicious(depositId: string, reason: string): Promise<void> {
+    try {
+      console.log('🚩 Marcando como sospechoso:', { depositId, reason });
+      
+      // ✅ Usar ruta correcta del backend
+      await apiService.post(`${this.baseUrl}/flag-suspicious/${depositId}`, { reason });
+      console.log('✅ Depósito marcado como sospechoso');
+    } catch (error) {
+      console.error('❌ Error al marcar como sospechoso:', error);
+      throw error;
+    }
+  }
+
+  // CORREGIDO: Obtener retiros pendientes
+  async getPendingWithdrawals(): Promise<MobilePayment[]> {
+    try {
+      console.log('💰 Obteniendo retiros pendientes...');
+      
+      // ✅ Usar ruta correcta del backend
+      const response = await apiService.get<MobilePayment[]>(`${this.baseUrl}/pending-withdrawals`);
+      console.log('✅ Retiros pendientes obtenidos:', response);
+      
+      return response.data!;
+    } catch (error) {
+      console.error('❌ Error al obtener retiros pendientes:', error);
+      throw error;
+    }
+  }
+
+  // CORREGIDO: Procesar retiro
+  async processWithdrawal(withdrawalId: string, approved: boolean, notes?: string): Promise<void> {
+    try {
+      console.log('💳 Procesando retiro:', { withdrawalId, approved, notes });
+      
+      // ✅ Usar ruta correcta del backend
+      await apiService.post(`${this.baseUrl}/process-withdrawal/${withdrawalId}`, {
+        approved,
+        notes
+      });
+      console.log('✅ Retiro procesado');
+    } catch (error) {
+      console.error('❌ Error al procesar retiro:', error);
+      throw error;
+    }
   }
 }
 
-export const mobilePaymentsService = new MobilePaymentsService(); 
+// Exportar instancia única
+export const mobilePaymentsService = new MobilePaymentsService();
+export default mobilePaymentsService; 
 

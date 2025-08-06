@@ -29,7 +29,7 @@ interface Notification {
   type: 'info' | 'warning' | 'error' | 'success';
   title: string;
   message: string;
-  timestamp: Date;
+  timestamp: string; // ✅ CORREGIDO: Backend envía string ISO
   read: boolean;
 }
 
@@ -73,9 +73,17 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
     }
   };
 
-  const formatTimestamp = (date: Date) => {
+  const formatTimestamp = (date: Date | string) => {
+    // ✅ CORREGIDO: Manejar tanto Date como string
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Verificar que la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+      return 'Fecha inválida';
+    }
+    
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - dateObj.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);

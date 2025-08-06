@@ -260,7 +260,7 @@ const Users: React.FC = () => {
   const handleEditUser = (user: User) => {
     setModalOpen(true);
     setEditMode(true);
-    setEditUserId(user._id || '');
+    setEditUserId(user.userEmail || '');
     setForm({
       name: user.name,
       lastName: user.lastName,
@@ -275,7 +275,7 @@ const Users: React.FC = () => {
   // Confirmar eliminación
   const handleConfirmDelete = (user: User) => {
     setConfirmDelete({
-      id: user._id || '',
+      id: user.userEmail || '',
       name: user.name + " " + user.lastName,
     });
   };

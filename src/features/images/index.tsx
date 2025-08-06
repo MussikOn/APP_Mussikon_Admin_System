@@ -109,7 +109,7 @@ const Images: React.FC = () => {
 
 
   // Filtrar y ordenar imágenes
-  const filteredImages = images
+  const filteredImages = (Array.isArray(images) ? images : [])
     .filter(image => 
       image.originalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       image.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -296,6 +296,40 @@ const Images: React.FC = () => {
         <Typography variant="h6" color="text.secondary">
           Cargando galería de imágenes...
         </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', maxWidth: 400 }}>
+          Conectando con el backend para obtener las imágenes disponibles
+        </Typography>
+      </Box>
+    );
+  }
+
+  // ✅ NUEVO: Mostrar error si existe
+  if (error) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '70vh',
+        gap: 2,
+        p: 3
+      }}>
+        <Alert severity="error" sx={{ maxWidth: 600, width: '100%' }}>
+          <Typography variant="h6" gutterBottom>
+            Error al cargar imágenes
+          </Typography>
+          <Typography variant="body2" gutterBottom>
+            {error}
+          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={() => loadImages()}
+            sx={{ mt: 2 }}
+          >
+            Reintentar
+          </Button>
+        </Alert>
       </Box>
     );
   }
@@ -579,18 +613,8 @@ const Images: React.FC = () => {
                       }}
                       onError={(e) => {
                         console.error(`Error cargando imagen ${image.id}:`, e);
-                        // Intentar obtener URL firmada como fallback
-                        getImagePresignedUrl(image.id).then(url => {
-                          if (url) {
-                            (e.target as HTMLImageElement).src = url;
-                          } else {
-                            // Mostrar imagen placeholder
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Error+Cargando+Imagen';
-                          }
-                        }).catch(error => {
-                          console.error('Error obteniendo URL firmada:', error);
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Error+Cargando+Imagen';
-                        });
+                        // ✅ CORREGIDO: Usar placeholder local en lugar de hacer consultas al backend
+                        (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==';
                       }}
                     />
                     
@@ -698,25 +722,31 @@ const Images: React.FC = () => {
                           size="small"
                           onClick={async () => {
                             try {
-                              // Intentar obtener URL firmada para descarga
-                              const presignedUrl = await getImagePresignedUrl(image.id);
-                              if (presignedUrl) {
+                              // ✅ CORREGIDO: Usar URL existente si está disponible
+                              if (image.url && image.url.startsWith('http')) {
                                 const link = document.createElement('a');
-                                link.href = presignedUrl;
+                                link.href = image.url;
                                 link.download = image.originalName;
+                                link.target = '_blank';
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);
                                 showSnackbar('Descarga iniciada', 'success');
                               } else {
-                                // Fallback: usar la URL normal
-                                const link = document.createElement('a');
-                                link.href = image.url;
-                                link.download = image.originalName;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                showSnackbar('Descarga iniciada', 'success');
+                                // Solo intentar URL firmada si no hay URL válida
+                                const presignedUrl = await getImagePresignedUrl(image.id);
+                                if (presignedUrl) {
+                                  const link = document.createElement('a');
+                                  link.href = presignedUrl;
+                                  link.download = image.originalName;
+                                  link.target = '_blank';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  showSnackbar('Descarga iniciada', 'success');
+                                } else {
+                                  showSnackbar('No se pudo obtener la URL de descarga', 'error');
+                                }
                               }
                             } catch (error) {
                               console.error('Error descargando imagen:', error);

@@ -206,13 +206,13 @@ export const useMobileUsers = (): UseMobileUsersReturn => {
   }, []);
 
   // Función para obtener conteo de usuarios
-  const getUsersCount = useCallback(async (filters?: UserFilters): Promise<number> => {
+  const getUsersCount = useCallback(async (): Promise<number> => {
     try {
-      return await mobileUsersService.getUsersCount(filters);
+      return await mobileUsersService.getUsersCount();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al obtener conteo de usuarios';
-      setError(errorMessage);
-      throw err;
+      console.error('Error al obtener conteo de usuarios:', errorMessage);
+      throw new Error(errorMessage);
     }
   }, []);
 

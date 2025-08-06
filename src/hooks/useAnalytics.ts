@@ -20,6 +20,10 @@ interface UseAnalyticsReturn {
   loading: boolean;
   error: string | null;
   
+  // Estado de conexión
+  hasConnectionErrors: boolean;
+  hasAnyData: boolean;
+  
   // Estado de datos mock
   usingMockData: {
     dashboard: boolean;
@@ -27,9 +31,6 @@ interface UseAnalyticsReturn {
     requests: boolean;
     users: boolean;
     platform: boolean;
-    trends: boolean;
-    location: boolean;
-    topUsers: boolean;
   };
   
   // Datos de analytics
@@ -75,17 +76,9 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Estado de datos mock
-  const [usingMockData, setUsingMockData] = useState({
-    dashboard: false,
-    events: false,
-    requests: false,
-    users: false,
-    platform: false,
-    trends: false,
-    location: false,
-    topUsers: false
-  });
+  // CORREGIDO: Estados para manejar conexión y datos
+  const [hasConnectionErrors, setHasConnectionErrors] = useState(false);
+  const [hasAnyData, setHasAnyData] = useState(false);
   
   // Estado de datos
   const [dashboard, setDashboard] = useState<DashboardAnalytics | null>(null);
@@ -100,181 +93,238 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
   // Filtros
   const [filters, setFilters] = useState<AnalyticsFilters>(initialFilters);
   
+  // Estado de datos mock (por defecto false ya que no usamos mock data)
+  const [usingMockData] = useState({
+    dashboard: false,
+    events: false,
+    requests: false,
+    users: false,
+    platform: false
+  });
+  
   // Función helper para manejar errores
   const handleError = useCallback((error: any, operation: string) => {
     console.error(`Error in ${operation}:`, error);
     const errorMessage = error.response?.data?.message || error.message || `Error en ${operation}`;
     setError(errorMessage);
+    setHasConnectionErrors(true);
     setLoading(false);
   }, []);
   
   // Función helper para limpiar errores
   const clearError = useCallback(() => {
     setError(null);
+    setHasConnectionErrors(false);
   }, []);
   
-  // Dashboard completo
+  // CORREGIDO: Verificar si tenemos algún dato real
+  const checkHasAnyData = useCallback(() => {
+    const hasData = dashboard || eventAnalytics || requestAnalytics || userAnalytics || 
+                   platformAnalytics || trends || locationPerformance || topUsers;
+    setHasAnyData(!!hasData);
+  }, [dashboard, eventAnalytics, requestAnalytics, userAnalytics, platformAnalytics, trends, locationPerformance, topUsers]);
+
+  // CORREGIDO: Dashboard completo - solo datos reales
   const refreshDashboard = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
       
-      // Intentar obtener datos reales
+      console.log('📊 Obteniendo dashboard analytics...');
       const data = await analyticsService.getDashboard(filters);
-      setDashboard(data);
       
-      // Verificar si son datos mock (basado en el log del servicio)
-      const isMockData = data && data.events && data.events.totalEvents === 156; // Valor específico de mock
-      setUsingMockData(prev => ({ ...prev, dashboard: isMockData }));
+      if (data && data.events && data.events.totalEvents > 0) {
+        setDashboard(data);
+        console.log('✅ Dashboard analytics obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales para el dashboard');
+        setDashboard(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar dashboard');
+      setDashboard(null);
     } finally {
       setLoading(false);
     }
   }, [filters, clearError, handleError]);
 
-  // Analytics de eventos
+  // CORREGIDO: Analytics de eventos - solo datos reales
   const refreshEventAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
       
+      console.log('📊 Obteniendo analytics de eventos...');
       const data = await analyticsService.getEventAnalytics(filters);
-      setEventAnalytics(data);
       
-      // Verificar si son datos mock
-      const isMockData = data && data.totalEvents === 156;
-      setUsingMockData(prev => ({ ...prev, events: isMockData }));
+      if (data && data.totalEvents > 0) {
+        setEventAnalytics(data);
+        console.log('✅ Analytics de eventos obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales de eventos');
+        setEventAnalytics(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar analytics de eventos');
+      setEventAnalytics(null);
     } finally {
       setLoading(false);
     }
   }, [filters, clearError, handleError]);
 
-  // Analytics de solicitudes
+  // CORREGIDO: Analytics de solicitudes - solo datos reales
   const refreshRequestAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
       
+      console.log('📊 Obteniendo analytics de solicitudes...');
       const data = await analyticsService.getRequestAnalytics(filters);
-      setRequestAnalytics(data);
       
-      // Verificar si son datos mock
-      const isMockData = data && data.totalRequests === 234;
-      setUsingMockData(prev => ({ ...prev, requests: isMockData }));
+      if (data && data.totalRequests > 0) {
+        setRequestAnalytics(data);
+        console.log('✅ Analytics de solicitudes obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales de solicitudes');
+        setRequestAnalytics(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar analytics de solicitudes');
+      setRequestAnalytics(null);
     } finally {
       setLoading(false);
     }
   }, [filters, clearError, handleError]);
 
-  // Analytics de usuarios
+  // CORREGIDO: Analytics de usuarios - solo datos reales
   const refreshUserAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
       
+      console.log('📊 Obteniendo analytics de usuarios...');
       const data = await analyticsService.getUserAnalytics(filters);
-      setUserAnalytics(data);
       
-      // Verificar si son datos mock
-      const isMockData = data && data.totalUsers === 892;
-      setUsingMockData(prev => ({ ...prev, users: isMockData }));
+      if (data && data.totalUsers > 0) {
+        setUserAnalytics(data);
+        console.log('✅ Analytics de usuarios obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales de usuarios');
+        setUserAnalytics(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar analytics de usuarios');
+      setUserAnalytics(null);
     } finally {
       setLoading(false);
     }
   }, [filters, clearError, handleError]);
 
-  // Analytics de plataforma
+  // CORREGIDO: Analytics de plataforma - solo datos reales
   const refreshPlatformAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
       
+      console.log('📊 Obteniendo analytics de plataforma...');
       const data = await analyticsService.getPlatformAnalytics(filters);
-      setPlatformAnalytics(data);
       
-      // Verificar si son datos mock
-      const isMockData = data && data.totalRevenue === 1250000;
-      setUsingMockData(prev => ({ ...prev, platform: isMockData }));
+      if (data && data.totalRevenue > 0) {
+        setPlatformAnalytics(data);
+        console.log('✅ Analytics de plataforma obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales de plataforma');
+        setPlatformAnalytics(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar analytics de plataforma');
+      setPlatformAnalytics(null);
     } finally {
       setLoading(false);
     }
   }, [filters, clearError, handleError]);
 
-  // Reportes de tendencias
+  // CORREGIDO: Reportes de tendencias - solo datos reales
   const refreshTrends = useCallback(async (months: number = 6) => {
     try {
       setLoading(true);
       clearError();
       
+      console.log('📊 Obteniendo reportes de tendencias...');
       const data = await analyticsService.getTrendsReport(months);
-      setTrends(data);
       
-      // Verificar si son datos mock
-      const isMockData = data && data.eventTrends && data.eventTrends.length === 6;
-      setUsingMockData(prev => ({ ...prev, trends: isMockData }));
+      if (data && data.eventTrends && data.eventTrends.length > 0) {
+        setTrends(data);
+        console.log('✅ Reportes de tendencias obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales de tendencias');
+        setTrends(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar reportes de tendencias');
+      setTrends(null);
     } finally {
       setLoading(false);
     }
   }, [clearError, handleError]);
 
-  // Reportes de rendimiento por ubicación
+  // CORREGIDO: Reportes de rendimiento por ubicación - solo datos reales
   const refreshLocationPerformance = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
       
+      console.log('📊 Obteniendo rendimiento por ubicación...');
       const data = await analyticsService.getLocationPerformance();
-      setLocationPerformance(data);
       
-      // Verificar si son datos mock
-      const isMockData = data && data.length === 5;
-      setUsingMockData(prev => ({ ...prev, location: isMockData }));
+      if (data && data.length > 0) {
+        setLocationPerformance(data);
+        console.log('✅ Rendimiento por ubicación obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales de rendimiento por ubicación');
+        setLocationPerformance(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar rendimiento por ubicación');
+      setLocationPerformance(null);
     } finally {
       setLoading(false);
     }
   }, [clearError, handleError]);
 
-  // Reportes de usuarios más activos
+  // CORREGIDO: Reportes de usuarios más activos - solo datos reales
   const refreshTopUsers = useCallback(async (limit: number = 10) => {
     try {
       setLoading(true);
       clearError();
       
+      console.log('📊 Obteniendo usuarios más activos...');
       const data = await analyticsService.getTopUsers(limit);
-      setTopUsers(data);
       
-      // Verificar si son datos mock
-      const isMockData = data && data.length === 5;
-      setUsingMockData(prev => ({ ...prev, topUsers: isMockData }));
+      if (data && data.length > 0) {
+        setTopUsers(data);
+        console.log('✅ Usuarios más activos obtenido:', data);
+      } else {
+        console.log('⚠️ No hay datos reales de usuarios activos');
+        setTopUsers(null);
+      }
       
     } catch (error) {
       handleError(error, 'cargar usuarios más activos');
+      setTopUsers(null);
     } finally {
       setLoading(false);
     }
   }, [clearError, handleError]);
   
-  // Exportación de reportes
+  // CORREGIDO: Exportación de reportes
   const exportReport = useCallback(async (
     type: 'events' | 'requests' | 'users' | 'platform' | 'trends' | 'location',
     format: 'csv' | 'json' = 'csv'
@@ -282,6 +332,8 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     try {
       setLoading(true);
       clearError();
+      
+      console.log(`📊 Exportando reporte ${type}...`);
       const blob = await analyticsService.exportReport(type, format, filters);
       
       // Crear y descargar el archivo
@@ -293,6 +345,8 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      console.log('✅ Reporte exportado exitosamente');
     } catch (error) {
       handleError(error, 'exportar reporte');
     } finally {
@@ -300,7 +354,7 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     }
   }, [filters, handleError, clearError]);
   
-  // Exportación de reportes de admin
+  // CORREGIDO: Exportación de reportes de admin
   const exportAdminReport = useCallback(async (
     type: 'users' | 'events' | 'requests',
     format: 'csv' | 'json' = 'csv'
@@ -308,6 +362,8 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     try {
       setLoading(true);
       clearError();
+      
+      console.log(`📊 Exportando reporte admin ${type}...`);
       const blob = await analyticsService.exportAdminReport(type, format, filters);
       
       // Crear y descargar el archivo
@@ -319,6 +375,8 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      console.log('✅ Reporte admin exportado exitosamente');
     } catch (error) {
       handleError(error, 'exportar reporte de admin');
     } finally {
@@ -326,11 +384,14 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     }
   }, [filters, handleError, clearError]);
   
-  // Funciones de admin
+  // CORREGIDO: Funciones de admin
   const getAdminUserAnalytics = useCallback(async (period: string, groupBy: string) => {
     try {
       clearError();
-      return await analyticsService.getAdminUserAnalytics(period, groupBy);
+      console.log('📊 Obteniendo analytics de usuarios admin...');
+      const data = await analyticsService.getAdminUserAnalytics(period, groupBy);
+      console.log('✅ Analytics de usuarios admin obtenido:', data);
+      return data;
     } catch (error) {
       handleError(error, 'cargar analytics de usuarios admin');
       throw error;
@@ -340,7 +401,10 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
   const getAdminEventAnalytics = useCallback(async (period: string, groupBy: string) => {
     try {
       clearError();
-      return await analyticsService.getAdminEventAnalytics(period, groupBy);
+      console.log('📊 Obteniendo analytics de eventos admin...');
+      const data = await analyticsService.getAdminEventAnalytics(period, groupBy);
+      console.log('✅ Analytics de eventos admin obtenido:', data);
+      return data;
     } catch (error) {
       handleError(error, 'cargar analytics de eventos admin');
       throw error;
@@ -350,7 +414,10 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
   const getAdminRequestAnalytics = useCallback(async (period: string, groupBy: string) => {
     try {
       clearError();
-      return await analyticsService.getAdminRequestAnalytics(period, groupBy);
+      console.log('📊 Obteniendo analytics de solicitudes admin...');
+      const data = await analyticsService.getAdminRequestAnalytics(period, groupBy);
+      console.log('✅ Analytics de solicitudes admin obtenido:', data);
+      return data;
     } catch (error) {
       handleError(error, 'cargar analytics de solicitudes admin');
       throw error;
@@ -362,6 +429,11 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     setFilters(prev => ({ ...prev, ...newFilters }));
   }, []);
   
+  // CORREGIDO: Verificar datos cuando cambian
+  useEffect(() => {
+    checkHasAnyData();
+  }, [checkHasAnyData]);
+  
   // Cargar datos iniciales
   useEffect(() => {
     refreshDashboard();
@@ -371,6 +443,10 @@ export const useAnalytics = (initialFilters: AnalyticsFilters = {}): UseAnalytic
     // Estado
     loading,
     error,
+    
+    // CORREGIDO: Estados de conexión
+    hasConnectionErrors,
+    hasAnyData,
     
     // Estado de datos mock
     usingMockData,

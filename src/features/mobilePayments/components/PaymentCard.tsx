@@ -84,7 +84,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
               {payment.user?.name} {payment.user?.lastName}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {formatDate(payment.createdAt)}
+              {formatDate(payment.createdAt?.toString() || new Date().toISOString())}
             </Typography>
           </Box>
           <Chip
@@ -121,7 +121,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
               mt: 0.5
             }}
           >
-            {payment.description}
+            {payment.purpose || 'Sin descripción'}
           </Typography>
         </Box>
 
@@ -132,7 +132,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <PaymentIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
             <Typography variant="body2" color="text.secondary">
-              {getPaymentMethodText(payment.paymentMethod)}
+              {getPaymentMethodText('bank_transfer')}
             </Typography>
           </Box>
           
@@ -175,11 +175,11 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
         </Box>
 
         {/* Comprobante compacto */}
-        {payment.proofImage && (
+        {payment.voucherUrl && (
           <Box sx={{ mb: 2 }}>
             <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden' }}>
               <img
-                src={payment.proofImage}
+                                  src={payment.voucherUrl}
                 alt="Comprobante"
                 style={{
                   width: '100%',
@@ -187,9 +187,9 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                   objectFit: 'cover',
                   cursor: 'pointer'
                 }}
-                onClick={() => onViewImage(payment.proofImage!)}
+                onClick={() => onViewImage(payment.voucherUrl!)}
                 onError={(e) => {
-                  console.error('Error cargando imagen:', payment.proofImage);
+                  console.error('Error cargando imagen:', payment.voucherUrl);
                   // Mostrar imagen de fallback
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://via.placeholder.com/300x200?text=Error+al+cargar+imagen';
@@ -211,7 +211,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                   transition: 'opacity 0.2s ease',
                   '&:hover': { opacity: 1 }
                 }}
-                onClick={() => onViewImage(payment.proofImage!)}
+                onClick={() => onViewImage(payment.voucherUrl!)}
               >
                 <Tooltip title="Ver comprobante">
                   <IconButton

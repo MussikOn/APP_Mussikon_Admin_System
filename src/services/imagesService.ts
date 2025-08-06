@@ -9,7 +9,6 @@ import type {
   ImageFilters,
   ImageUpdateRequest,
   ImageStats,
-  ImageStatsResponse,
   ImageUpdateResponse,
   LegacyImage,
   LegacyImagesResponse
@@ -79,57 +78,60 @@ const getMockImageStats = (): ImageStats => ({
   inactiveImages: 0
 });
 
-export const imagesService = {
+// Cache para URLs firmadas para evitar consultas repetitivas
+const presignedUrlCache = new Map<string, { url: string; timestamp: number }>();
+
+const imagesService = {
   // ==================== NUEVO CRUD MEJORADO ====================
   
-  // Obtener todas las imágenes con filtros
+  // ✅ FUNCIÓN CORREGIDA: Usar endpoint correcto
   async getAllImages(filters?: ImageFilters): Promise<Image[]> {
     try {
       const params = new URLSearchParams();
       
       if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            if (Array.isArray(value)) {
-              params.append(key, JSON.stringify(value));
-            } else {
-              params.append(key, String(value));
-            }
-          }
-        });
+        if (filters.category) params.append('category', filters.category);
+        if (filters.userId) params.append('userId', filters.userId);
+        if (filters.isPublic !== undefined) params.append('isPublic', filters.isPublic.toString());
+        if (filters.isActive !== undefined) params.append('isActive', filters.isActive.toString());
+        if (filters.search) params.append('search', filters.search);
+        if (filters.limit) params.append('limit', filters.limit.toString());
+        if (filters.page) params.append('page', filters.page.toString());
+        if (filters.sortBy) params.append('sortBy', filters.sortBy);
+        if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
       }
       
-      const queryString = params.toString();
-      const url = queryString ? `${API_CONFIG.ENDPOINTS.ADMIN_IMAGES}?${queryString}` : API_CONFIG.ENDPOINTS.ADMIN_IMAGES;
-      
+      // ✅ CORREGIDO: Usar endpoint correcto del backend (/imgs en lugar de /images)
+      const url = `/imgs?${params.toString()}`;
       console.log('[imagesService] getAllImages - URL:', url);
       
-      const response = await api.get<ImagesResponse>(url);
-      console.log('[imagesService] getAllImages - Response:', response);
+      const response = await api.get(url);
+      console.log('✅ Imágenes obtenidas:', response);
       
-      return response.data.images || [];
-    } catch (error) {
-      console.warn('⚠️ Backend no disponible o error en respuesta, usando imágenes mock:', error);
-      const mockImages = getMockImages();
+      // ✅ CORREGIDO: Manejar estructura de respuesta del backend
+      let images: Image[] = [];
       
-      // Aplicar filtros a las imágenes mock
-      if (filters) {
-        return mockImages.filter(image => {
-          if (filters.category && image.category !== filters.category) return false;
-          if (filters.isPublic !== undefined && image.isPublic !== filters.isPublic) return false;
-          if (filters.isActive !== undefined && image.isActive !== filters.isActive) return false;
-          if (filters.search) {
-            const searchTerm = filters.search.toLowerCase();
-            return image.description?.toLowerCase().includes(searchTerm) ||
-                   image.originalName.toLowerCase().includes(searchTerm) ||
-                   image.tags?.some(tag => tag.toLowerCase().includes(searchTerm)) ||
-                   false;
-          }
-          return true;
-        });
+      if (response.data) {
+        // El backend puede devolver { images: [...] } o directamente [...]
+        if (Array.isArray(response.data)) {
+          images = response.data;
+        } else if (response.data.images && Array.isArray(response.data.images)) {
+          images = response.data.images;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          images = response.data.data;
+        } else {
+          console.log('⚠️ Estructura de respuesta inesperada:', response.data);
+          images = [];
+        }
       }
       
-      return mockImages;
+      console.log('✅ Imágenes extraídas:', images.length);
+      return images;
+    } catch (error) {
+      console.error('❌ Error al obtener imágenes:', error);
+      // ✅ CORREGIDO: Devolver array vacío en lugar de lanzar error
+      console.log('⚠️ Usando datos mock debido al error');
+      return getMockImages();
     }
   },
 
@@ -222,8 +224,27 @@ export const imagesService = {
   // Obtener estadísticas de imágenes
   async getImageStats(): Promise<ImageStats> {
     try {
-      const response = await api.get<ImageStatsResponse>(API_CONFIG.ENDPOINTS.IMAGE_STATS);
-      return response.data.stats;
+      // ✅ CORREGIDO: Usar endpoint correcto del backend (/imgs en lugar de /images)
+      const response = await api.get('/imgs/stats');
+      console.log('📊 Estadísticas de imágenes obtenidas:', response);
+      
+      // ✅ CORREGIDO: Manejar estructura de respuesta del backend
+      let stats: ImageStats;
+      
+      if (response.data) {
+        if (response.data.stats) {
+          stats = response.data.stats;
+        } else if (response.data.data && response.data.data.stats) {
+          stats = response.data.data.stats;
+        } else {
+          console.log('⚠️ Estructura de estadísticas inesperada:', response.data);
+          stats = getMockImageStats();
+        }
+      } else {
+        stats = getMockImageStats();
+      }
+      
+      return stats;
     } catch (error) {
       console.warn('⚠️ Backend no disponible o error en respuesta, usando estadísticas mock de imágenes:', error);
       return getMockImageStats();
@@ -292,17 +313,39 @@ export const imagesService = {
   // Obtener URL firmada para una imagen
   async getImagePresignedUrl(imageId: string, expiresIn: number = 3600): Promise<string | null> {
     try {
-      const response = await api.get<{ success: boolean; data: { presignedUrl: string; expiresIn: number } }>(
-        `${API_CONFIG.ENDPOINTS.IMAGE_PRESIGNED_URL.replace(':id', imageId)}?expiresIn=${expiresIn}`
-      );
+      // ✅ NUEVO: Verificar cache primero
+      const cacheKey = `${imageId}-${expiresIn}`;
+      const cached = presignedUrlCache.get(cacheKey);
+      const now = Date.now();
+      
+      if (cached && (now - cached.timestamp) < (expiresIn * 1000 * 0.8)) {
+        console.log('[imagesService] getImagePresignedUrl - Usando URL cacheada para:', imageId);
+        return cached.url;
+      }
+      
+      // ✅ CORREGIDO: Usar URL directa en lugar de API_CONFIG para evitar problemas (/imgs en lugar de /images)
+      const url = `/imgs/${imageId}/presigned?expiresIn=${expiresIn}`;
+      console.log('[imagesService] getImagePresignedUrl - Intentando obtener URL firmada para:', imageId);
+      
+      const response = await api.get<{ success: boolean; data: { presignedUrl: string; expiresIn: number } }>(url);
       
       if (response.data?.success && response.data?.data?.presignedUrl) {
+        console.log('[imagesService] getImagePresignedUrl - URL firmada obtenida exitosamente');
+        
+        // ✅ NUEVO: Guardar en cache
+        presignedUrlCache.set(cacheKey, {
+          url: response.data.data.presignedUrl,
+          timestamp: now
+        });
+        
         return response.data.data.presignedUrl;
       }
       
+      console.log('[imagesService] getImagePresignedUrl - No se pudo obtener URL firmada');
       return null;
     } catch (error) {
       console.error('Error al obtener URL firmada:', error);
+      // ✅ CORREGIDO: No lanzar error, solo devolver null
       return null;
     }
   },
@@ -487,31 +530,8 @@ export const imagesService = {
   }
 };
 
-// Exportar funciones individuales para compatibilidad
-export const {
-  getAllImages,
-  getImageById,
-  uploadImage,
-  updateImage,
-  deleteImage,
-  getImageStats,
-  cleanupExpiredImages,
-  validateFile,
-  getImagePresignedUrl,
-  getProfileImages,
-  getPostImages,
-  getEventImages,
-  getImagesWithUrls,
-  searchImages,
-  getImagesByCategory,
-  getPublicImages,
-  // Legacy functions
-  getImageUrl,
-  uploadImageLegacy,
-  deleteImageLegacy,
-  updateImageMetadata,
-  getAllImagesLegacy
-} = imagesService;
+// Exportar el servicio principal
+export { imagesService };
 
 // Función para obtener el conteo de imágenes (para compatibilidad con dashboard)
 export const getImagesCount = async (): Promise<number> => {

@@ -13,23 +13,32 @@ import {
   Collapse
 } from '@mui/material';
 import { FilterList, Clear, ExpandMore, ExpandLess } from '@mui/icons-material';
-import type { Event } from '../types/event';
-import { EVENT_TYPES, EVENT_STATUSES } from '../types/event';
+import type { Event } from '../../../services/eventsService';
+
+// Constantes para los filtros
+const EVENT_STATUSES = [
+  'pending_musician',
+  'musician_assigned', 
+  'completed',
+  'cancelled',
+  'musician_cancelled'
+];
+
+const EVENT_TYPES = [
+  'Boda',
+  'Cumpleaños',
+  'Evento Corporativo',
+  'Fiesta Privada',
+  'Concierto',
+  'Otro'
+];
 
 interface EventFiltersProps {
-  onFilterChange: (filters: {
-    search: string;
-    status: Event['status'] | 'all';
-    type: string;
-    dateRange: { start: string; end: string };
-  }) => void;
-  onClearFilters: () => void;
+  onApply: (filters: any) => void;
+  onCancel: () => void;
 }
 
-const EventFilters: React.FC<EventFiltersProps> = ({
-  onFilterChange,
-  onClearFilters
-}) => {
+const EventFilters: React.FC<EventFiltersProps> = () => {
   const [expanded, setExpanded] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
@@ -44,15 +53,15 @@ const EventFilters: React.FC<EventFiltersProps> = ({
   const handleFilterChange = (field: string, value: any) => {
     const newFilters = { ...filters, [field]: value };
     setFilters(newFilters);
-    onFilterChange(newFilters);
   };
 
   const handleDateRangeChange = (field: 'start' | 'end', value: string) => {
     const newDateRange = { ...filters.dateRange, [field]: value };
     const newFilters = { ...filters, dateRange: newDateRange };
     setFilters(newFilters);
-    onFilterChange(newFilters);
   };
+
+
 
   const handleClearFilters = () => {
     const clearedFilters = {
@@ -62,7 +71,6 @@ const EventFilters: React.FC<EventFiltersProps> = ({
       dateRange: { start: '', end: '' }
     };
     setFilters(clearedFilters);
-    onClearFilters();
   };
 
   const hasActiveFilters = () => {
@@ -134,11 +142,11 @@ const EventFilters: React.FC<EventFiltersProps> = ({
               label="Estado"
             >
               <MenuItem value="all">Todos los estados</MenuItem>
-              {EVENT_STATUSES.map((status) => (
-                <MenuItem key={status.value} value={status.value}>
-                  {status.label}
-                </MenuItem>
-              ))}
+                              {EVENT_STATUSES.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
 

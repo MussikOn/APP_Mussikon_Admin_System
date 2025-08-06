@@ -12,8 +12,19 @@ import {
   MenuItem,
   Box
 } from '@mui/material';
-import type { Event, CreateEventData } from '../types/event';
-import { EVENT_TYPES, EVENT_STATUSES } from '../types/event';
+import type { Event, CreateEventData } from '../../../services/eventsService';
+
+// Constantes para el formulario
+const EVENT_TYPES = [
+  'Boda',
+  'Cumpleaños',
+  'Evento Corporativo',
+  'Fiesta Privada',
+  'Concierto',
+  'Otro'
+];
+
+
 
 interface EventFormProps {
   open: boolean;
@@ -31,20 +42,21 @@ const EventForm: React.FC<EventFormProps> = ({
   loading = false
 }) => {
   const [formData, setFormData] = useState<CreateEventData>({
-    title: '',
-    description: '',
+    user: '',
+    eventName: '',
+    eventType: '',
     date: '',
     time: '',
     location: '',
-    category: '',
-    status: 'borrador',
-    organizerId: '',
-    organizerName: '',
-    budget: 0,
-    attendees: 0,
-    maxAttendees: 0,
-    images: [],
-    tags: []
+    duration: '',
+    instrument: '',
+    bringInstrument: false,
+    comment: '',
+    budget: '',
+    flyerUrl: '',
+    songs: [],
+    recommendations: [],
+    mapsLink: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -52,37 +64,39 @@ const EventForm: React.FC<EventFormProps> = ({
   useEffect(() => {
     if (event) {
       setFormData({
-        title: event.title || '',
-        description: event.description || '',
+        user: event.user || '',
+        eventName: event.eventName || '',
+        eventType: event.eventType || '',
         date: event.date || '',
         time: event.time || '',
         location: event.location || '',
-        category: event.category || '',
-        status: event.status || 'borrador',
-        organizerId: event.organizerId || '',
-        organizerName: event.organizerName || '',
-        budget: event.budget || 0,
-        attendees: event.attendees || 0,
-        maxAttendees: event.maxAttendees || 0,
-        images: event.images || [],
-        tags: event.tags || []
+        duration: event.duration || '',
+        instrument: event.instrument || '',
+        bringInstrument: event.bringInstrument || false,
+        comment: event.comment || '',
+        budget: event.budget || '',
+        flyerUrl: event.flyerUrl || '',
+        songs: event.songs || [],
+        recommendations: event.recommendations || [],
+        mapsLink: event.mapsLink || ''
       });
     } else {
       setFormData({
-        title: '',
-        description: '',
+        user: '',
+        eventName: '',
+        eventType: '',
         date: '',
         time: '',
         location: '',
-        category: '',
-        status: 'borrador',
-        organizerId: '',
-        organizerName: '',
-        budget: 0,
-        attendees: 0,
-        maxAttendees: 0,
-        images: [],
-        tags: []
+        duration: '',
+        instrument: '',
+        bringInstrument: false,
+        comment: '',
+        budget: '',
+        flyerUrl: '',
+        songs: [],
+        recommendations: [],
+        mapsLink: ''
       });
     }
     setErrors({});
@@ -91,8 +105,8 @@ const EventForm: React.FC<EventFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = 'El título del evento es requerido';
+    if (!formData.eventName.trim()) {
+      newErrors.eventName = 'El nombre del evento es requerido';
     }
 
     if (!formData.date) {
@@ -105,11 +119,7 @@ const EventForm: React.FC<EventFormProps> = ({
       }
     }
 
-    if (formData.maxAttendees && formData.maxAttendees < 1) {
-      newErrors.maxAttendees = 'La capacidad debe ser mayor a 0';
-    }
-
-    if (formData.budget && formData.budget < 0) {
+    if (formData.budget && parseFloat(formData.budget) < 0) {
       newErrors.budget = 'El presupuesto no puede ser negativo';
     }
 
@@ -216,29 +226,29 @@ const EventForm: React.FC<EventFormProps> = ({
             }
           }}>
             <TextField
-              label="Título del Evento"
-              value={formData.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-              error={!!errors.title}
-              helperText={errors.title}
+              label="Nombre del Evento"
+              value={formData.eventName}
+              onChange={(e) => handleChange('eventName', e.target.value)}
+              error={!!errors.eventName}
+              helperText={errors.eventName}
               fullWidth
               required
               sx={{ gridColumn: 'span 2' }}
             />
 
             <TextField
-              label="Descripción"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
+              label="Comentario"
+              value={formData.comment}
+              onChange={(e) => handleChange('comment', e.target.value)}
               multiline
               rows={3}
               fullWidth
             />
 
             <TextField
-              label="Nombre del Organizador"
-              value={formData.organizerName}
-              onChange={(e) => handleChange('organizerName', e.target.value)}
+              label="Email del Organizador"
+              value={formData.user}
+              onChange={(e) => handleChange('user', e.target.value)}
               fullWidth
             />
 
@@ -262,11 +272,11 @@ const EventForm: React.FC<EventFormProps> = ({
             />
 
             <FormControl fullWidth>
-              <InputLabel>Categoría del Evento</InputLabel>
+              <InputLabel>Tipo de Evento</InputLabel>
               <Select
-                value={formData.category}
-                onChange={(e) => handleChange('category', e.target.value)}
-                label="Categoría del Evento"
+                value={formData.eventType}
+                onChange={(e) => handleChange('eventType', e.target.value)}
+                label="Tipo de Evento"
                 sx={{
                   '& .MuiSelect-icon': {
                     color: '#00fff7'
@@ -282,44 +292,22 @@ const EventForm: React.FC<EventFormProps> = ({
             </FormControl>
 
             <TextField
-              label="Capacidad Máxima"
-              type="number"
-              value={formData.maxAttendees}
-              onChange={(e) => handleChange('maxAttendees', parseInt(e.target.value) || 0)}
-              error={!!errors.maxAttendees}
-              helperText={errors.maxAttendees}
+              label="Duración"
+              value={formData.duration}
+              onChange={(e) => handleChange('duration', e.target.value)}
               fullWidth
             />
 
             <TextField
               label="Presupuesto"
-              type="number"
               value={formData.budget}
-              onChange={(e) => handleChange('budget', parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleChange('budget', e.target.value)}
               error={!!errors.budget}
               helperText={errors.budget}
               fullWidth
             />
 
-            <FormControl fullWidth>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={formData.status}
-                onChange={(e) => handleChange('status', e.target.value)}
-                label="Estado"
-                sx={{
-                  '& .MuiSelect-icon': {
-                    color: '#00fff7'
-                  }
-                }}
-              >
-                {EVENT_STATUSES.map((status) => (
-                  <MenuItem key={status.value} value={status.value} sx={{ color: '#fff' }}>
-                    {status.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+
 
             <TextField
               label="Hora del Evento"
@@ -330,15 +318,7 @@ const EventForm: React.FC<EventFormProps> = ({
               InputLabelProps={{ shrink: true }}
             />
 
-            <TextField
-              label="Descripción"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              multiline
-              rows={4}
-              fullWidth
-              sx={{ gridColumn: 'span 2' }}
-            />
+
           </Box>
         </DialogContent>
 

@@ -14,18 +14,54 @@ export const useImages = () => {
   const loadImages = useCallback(async (filters?: ImageFilters) => {
     setLoading(true);
     setError(null);
+    
+    // ✅ NUEVO: Timeout para evitar carga infinita
+    const timeoutId = setTimeout(() => {
+      console.warn('[useImages] Timeout alcanzado, cancelando carga');
+      setLoading(false);
+      setError('Tiempo de espera agotado. Verifique la conexión al backend.');
+      setImages([]);
+    }, 10000); // 10 segundos de timeout
+    
     try {
       console.log('[useImages] loadImages - Iniciando carga de imágenes');
-      const imagesWithUrls = await imagesService.getImagesWithUrls(filters);
-      console.log('[useImages] loadImages - Imágenes cargadas:', imagesWithUrls.length);
-      setImages(imagesWithUrls);
+      // ✅ CORREGIDO: Usar getAllImages directamente para evitar problemas con URLs firmadas
+      const images = await imagesService.getAllImages(filters);
+      console.log('[useImages] loadImages - Imágenes cargadas:', images?.length || 0);
+      
+      clearTimeout(timeoutId);
+      // ✅ CORREGIDO: Asegurar que siempre sea un array
+      setImages(Array.isArray(images) ? images : []);
     } catch (err: any) {
+      clearTimeout(timeoutId);
       setError(err.message || 'Error al cargar las imágenes');
       console.error('Error al cargar imágenes:', err);
+      // ✅ CORREGIDO: Establecer array vacío en caso de error
+      setImages([]);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // ✅ NUEVO: Cargar imágenes con URLs firmadas (para uso específico)
+  const loadImagesWithUrls = useCallback(async (filters?: ImageFilters) => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('[useImages] loadImagesWithUrls - Iniciando carga con URLs firmadas');
+      const imagesWithUrls = await imagesService.getImagesWithUrls(filters);
+      console.log('[useImages] loadImagesWithUrls - Imágenes con URLs cargadas:', imagesWithUrls?.length || 0);
+      // ✅ CORREGIDO: Asegurar que siempre sea un array
+      setImages(Array.isArray(imagesWithUrls) ? imagesWithUrls : []);
+    } catch (err: any) {
+      setError(err.message || 'Error al cargar las imágenes con URLs');
+      console.error('Error al cargar imágenes con URLs:', err);
+      // Fallback a carga normal
+      await loadImages(filters);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadImages]);
 
   // Cargar estadísticas
   const loadStats = useCallback(async () => {
@@ -241,6 +277,7 @@ export const useImages = () => {
     stats,
     statsLoading,
     loadImages,
+    loadImagesWithUrls,
     uploadImage,
     updateImage,
     deleteImage,

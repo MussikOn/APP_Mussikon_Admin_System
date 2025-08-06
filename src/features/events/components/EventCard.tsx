@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardActions, Typography, Button, Chip, Box } from '@mui/material';
 import { Edit, Delete, Visibility } from '@mui/icons-material';
-import type { Event } from '../types/event';
+import type { Event } from '../../../services/eventsService';
 
 interface EventCardProps {
   event: Event;
@@ -20,13 +20,14 @@ const EventCard: React.FC<EventCardProps> = ({
 }) => {
   const getStatusColor = (status: Event['status']) => {
     switch (status) {
-      case 'publicado':
+      case 'musician_assigned':
         return '#00ff88';
-      case 'borrador':
+      case 'pending_musician':
         return '#ffaa00';
-      case 'cancelado':
+      case 'cancelled':
+      case 'musician_cancelled':
         return '#ff4444';
-      case 'completado':
+      case 'completed':
         return '#00fff7';
       default:
         return '#888888';
@@ -35,13 +36,15 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const getStatusLabel = (status: Event['status']) => {
     switch (status) {
-      case 'publicado':
-        return 'PUBLICADO';
-      case 'borrador':
-        return 'BORRADOR';
-      case 'cancelado':
+      case 'musician_assigned':
+        return 'MÚSICO ASIGNADO';
+      case 'pending_musician':
+        return 'PENDIENTE';
+      case 'cancelled':
         return 'CANCELADO';
-      case 'completado':
+      case 'musician_cancelled':
+        return 'CANCELADO POR MÚSICO';
+      case 'completed':
         return 'COMPLETADO';
       default:
         return status;
@@ -57,6 +60,30 @@ const EventCard: React.FC<EventCardProps> = ({
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // ✅ FUNCIÓN SEGURA: Manejar location como string u objeto
+  const formatLocation = (location: any): string => {
+    if (typeof location === 'string') {
+      return location;
+    }
+    if (typeof location === 'object' && location !== null) {
+      // Si es un objeto con address, usar address
+      if (location.address) {
+        return location.address;
+      }
+      // Si tiene city, usar city
+      if (location.city) {
+        return location.city;
+      }
+      // Si tiene coordenadas, formatear
+      if (location.latitude && location.longitude) {
+        return `${location.latitude}, ${location.longitude}`;
+      }
+      // Si no hay nada útil, devolver string vacío
+      return '';
+    }
+    return '';
   };
 
 
@@ -100,7 +127,7 @@ const EventCard: React.FC<EventCardProps> = ({
       }}
     >
       {/* Imagen de fondo con overlay */}
-      {event.images && event.images.length > 0 && (
+      {event.flyerUrl && (
         <Box
           className="event-image"
           sx={{
@@ -109,7 +136,7 @@ const EventCard: React.FC<EventCardProps> = ({
             left: 0,
             right: 0,
             height: '120px',
-            backgroundImage: `url(${event.images[0]})`,
+            backgroundImage: `url(${event.flyerUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             transition: 'transform 0.4s ease',
@@ -126,7 +153,7 @@ const EventCard: React.FC<EventCardProps> = ({
         />
       )}
 
-              <CardContent sx={{ flexGrow: 1, position: 'relative', zIndex: 1, pt: event.images && event.images.length > 0 ? 8 : 2 }}>
+              <CardContent sx={{ flexGrow: 1, position: 'relative', zIndex: 1, pt: event.flyerUrl ? 8 : 2 }}>
         {/* Header con título y estado */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
           <Typography 
@@ -142,7 +169,7 @@ const EventCard: React.FC<EventCardProps> = ({
               mr: 1
             }}
           >
-            {event.title}
+            {event.eventName}
           </Typography>
           <Chip 
             label={getStatusLabel(event.status)} 
@@ -161,8 +188,8 @@ const EventCard: React.FC<EventCardProps> = ({
           />
         </Box>
 
-        {/* Título secundario */}
-        {event.title && (
+        {/* Tipo de evento */}
+        {event.eventType && (
           <Typography 
             variant="subtitle2" 
             sx={{ 
@@ -172,12 +199,12 @@ const EventCard: React.FC<EventCardProps> = ({
               fontSize: '0.85rem'
             }}
           >
-            {event.title}
+            {event.eventType}
           </Typography>
         )}
 
-        {/* Descripción */}
-        {event.description && (
+        {/* Comentario */}
+        {event.comment && (
           <Typography 
             variant="body2" 
             sx={{ 
@@ -188,9 +215,9 @@ const EventCard: React.FC<EventCardProps> = ({
               opacity: 0.8
             }}
           >
-            {event.description.length > 80 
-              ? `${event.description.substring(0, 80)}...` 
-              : event.description
+            {event.comment.length > 80 
+              ? `${event.comment.substring(0, 80)}...` 
+              : event.comment
             }
           </Typography>
         )}
@@ -220,12 +247,12 @@ const EventCard: React.FC<EventCardProps> = ({
                 boxShadow: '0 0 6px #888'
               }} />
               <Typography variant="body2" sx={{ color: '#b0b8c1', fontSize: '0.75rem' }}>
-                {event.location}
+                {formatLocation(event.location)}
               </Typography>
             </Box>
           )}
           
-          {event.category && (
+          {event.instrument && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ 
                 width: 6, 
@@ -235,12 +262,12 @@ const EventCard: React.FC<EventCardProps> = ({
                 boxShadow: '0 0 6px #ffaa00'
               }} />
               <Typography variant="body2" sx={{ color: '#b0b8c1', fontSize: '0.75rem' }}>
-                {event.category}
+                {event.instrument}
               </Typography>
             </Box>
           )}
           
-          {event.maxAttendees && (
+          {event.duration && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ 
                 width: 6, 
@@ -250,7 +277,7 @@ const EventCard: React.FC<EventCardProps> = ({
                 boxShadow: '0 0 6px #00ff88'
               }} />
               <Typography variant="body2" sx={{ color: '#b0b8c1', fontSize: '0.75rem' }}>
-                {event.maxAttendees} personas
+                Duración: {event.duration}
               </Typography>
             </Box>
           )}
@@ -317,7 +344,7 @@ const EventCard: React.FC<EventCardProps> = ({
         <Button
           size="small"
           startIcon={<Delete />}
-          onClick={() => onDelete(event._id!)}
+          onClick={() => onDelete(event.id)}
           disabled={loading}
           sx={{ 
             color: '#ff4444',

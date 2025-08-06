@@ -306,26 +306,19 @@ export const musicianRequestsService = {
     }
   },
 
-  // Obtener conteo de solicitudes
-  async getRequestsCount(filters?: RequestFilters): Promise<number> {
+  // ✅ FUNCIÓN CORREGIDA: Usar endpoint correcto
+  async getRequestsCount(): Promise<number> {
     try {
-      const params = new URLSearchParams();
+      const response = await apiService.get<any[]>('/admin/musician-requests');
+      console.log('📊 Conteo de solicitudes obtenido:', response);
       
-      if (filters) {
-        if (filters.status) params.append('status', filters.status);
-        if (filters.instrument) params.append('instrument', filters.instrument);
-        if (filters.location) params.append('location', filters.location);
-        if (filters.eventId) params.append('eventId', filters.eventId);
-        if (filters.musicianId) params.append('musicianId', filters.musicianId);
+      if (response.data) {
+        return response.data.length;
       }
-      
-      const url = `${API_CONFIG.ENDPOINTS.ADMIN_MUSICIAN_REQUESTS}/count?${params.toString()}`;
-      const response = await apiService.get<{ count: number }>(url);
-      
-      return response.data?.count || 0;
+      return 0;
     } catch (error) {
-      console.error('Error al obtener conteo de solicitudes:', error);
-      throw error;
+      console.error('❌ Error al obtener conteo de solicitudes:', error);
+      return 0;
     }
   }
 };
