@@ -16,18 +16,18 @@ import {
   Cancel as CancelIcon,
   ZoomIn as ZoomInIcon,
   Person as PersonIcon,
-  Event as EventIcon,
+
   Payment as PaymentIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material';
-import type { MobilePayment } from '../../../services/mobilePaymentsService';
+import type { MobileDeposit } from '../../../services/mobilePaymentsService';
 
 interface PaymentCardProps {
-  payment: MobilePayment;
-  onVerify: (payment: MobilePayment) => void;
-  onReject: (payment: MobilePayment) => void;
+  payment: MobileDeposit;
+  onVerify: (payment: MobileDeposit) => void;
+  onReject: (payment: MobileDeposit) => void;
   onViewImage: (imageUrl: string) => void;
-  onViewDetails: (payment: MobilePayment) => void;
+  onViewDetails: (payment: MobileDeposit) => void;
   getStatusColor: (status: string) => string;
   getStatusText: (status: string) => string;
   getPaymentMethodText: (method: string) => string;
@@ -121,7 +121,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
               mt: 0.5
             }}
           >
-            {payment.purpose || 'Sin descripción'}
+            {payment.description || 'Sin descripción'}
           </Typography>
         </Box>
 
@@ -136,24 +136,9 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
             </Typography>
           </Box>
           
-          {payment.eventName && (
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <EventIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {payment.eventName}
-              </Typography>
-            </Box>
-          )}
 
-          {payment.notes && (
+
+          {payment.adminNotes && (
             <Box sx={{ mt: 1 }}>
               <Typography
                 variant="body2"
@@ -168,7 +153,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                   WebkitBoxOrient: 'vertical'
                 }}
               >
-                "{payment.notes}"
+                "{payment.adminNotes}"
               </Typography>
             </Box>
           )}
@@ -301,10 +286,10 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
         </Box>
 
         {/* Estado de verificación/rechazo */}
-        {payment.status === 'approved' && payment.verificationNotes && (
+        {payment.status === 'verified' && payment.adminNotes && (
           <Box sx={{ mt: 1.5, p: 1, backgroundColor: 'success.light', borderRadius: 1 }}>
             <Typography variant="caption" color="success.dark" sx={{ fontWeight: 600 }}>
-              ✓ Aprobado: {payment.verificationNotes}
+              ✓ Verificado: {payment.adminNotes}
             </Typography>
           </Box>
         )}

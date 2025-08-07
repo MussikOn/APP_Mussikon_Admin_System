@@ -12,8 +12,10 @@ import MobileUsers from '../features/mobileUsers';
 import Search from '../features/search';
 import Analytics from '../features/analytics';
 import Chat from '../features/chat';
-import Payments from '../features/payments';
-import MobilePayments from '../features/mobilePayments';
+import Payments from '../features/payments/Payments';
+import MobilePaymentsManagement from '../features/mobilePayments';
+import BackendConnectionTester from '../components/BackendConnectionTester';
+import EndpointDiscovery from '../components/EndpointDiscovery';
 import { useAuth } from '../hooks/useAuth';
 import PrivateLayout from '../components/PrivateLayout';
 import LoadingScreen from '../components/LoadingScreen';
@@ -75,7 +77,9 @@ const AppRoutes = () => (
       <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
       <Route path="/payments" element={<PrivateRoute allowedRoles={['admin']}><Payments /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute allowedRoles={['admin']}><AdminTools /></PrivateRoute>} />
-      <Route path="/mobile-payments" element={<PrivateRoute allowedRoles={['admin']}><MobilePayments /></PrivateRoute>} />
+      <Route path="/mobile-payments" element={<PrivateRoute><MobilePaymentsManagement /></PrivateRoute>} />
+      <Route path="/backend-test" element={<PrivateRoute><BackendConnectionTester /></PrivateRoute>} />
+      <Route path="/endpoint-discovery" element={<PrivateRoute><EndpointDiscovery /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   </Router>

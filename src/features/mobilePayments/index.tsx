@@ -37,12 +37,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  Paper
+
 } from '@mui/material';
 import {
   AccountBalance as AccountBalanceIcon,
@@ -50,23 +45,18 @@ import {
   TrendingUp as TrendingUpIcon,
   Search as SearchIcon,
   Visibility as VisibilityIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
+
   Security as SecurityIcon,
   ExpandMore as ExpandMoreIcon,
   Refresh as RefreshIcon,
   Assessment as AssessmentIcon,
   Info as InfoIcon,
   Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
+
   Warning as WarningIcon,
   VerifiedUser as VerifiedUserIcon,
-  AccountCircle as AccountCircleIcon,
-  Payment as PaymentIcon,
-  Withdraw as WithdrawIcon,
-  Bank as BankIcon,
-  AttachMoney as MoneyIcon
+  AccountBalance as WithdrawIcon,
+  AccountBalance as BankIcon
 } from '@mui/icons-material';
 
 // Importar servicios
@@ -75,8 +65,7 @@ import type {
   MobileDeposit, 
   MobileWithdrawal, 
   MobilePaymentStats,
-  BankAccount,
-  MobileUser
+  BankAccount
 } from '../../services/mobilePaymentsService';
 
 // Importar componentes
@@ -147,9 +136,9 @@ const MobilePaymentsManagement: React.FC = () => {
 
   // Estado para diálogos
   const [selectedDeposit, setSelectedDeposit] = useState<MobileDeposit | null>(null);
-  const [selectedWithdrawal, setSelectedWithdrawal] = useState<MobileWithdrawal | null>(null);
+
   const [showDepositDetailsDialog, setShowDepositDetailsDialog] = useState(false);
-  const [showWithdrawalDetailsDialog, setShowWithdrawalDetailsDialog] = useState(false);
+
   const [showNewDepositDialog, setShowNewDepositDialog] = useState(false);
   const [showNewWithdrawalDialog, setShowNewWithdrawalDialog] = useState(false);
   const [showBankAccountDialog, setShowBankAccountDialog] = useState(false);
@@ -286,7 +275,7 @@ const MobilePaymentsManagement: React.FC = () => {
         amount: parseFloat(newDeposit.amount),
         currency: newDeposit.currency,
         description: newDeposit.description,
-        voucherFile: newDeposit.voucherFile
+        voucherFile: newDeposit.voucherFile || undefined
       };
 
       await mobilePaymentsService.createDeposit(depositData);

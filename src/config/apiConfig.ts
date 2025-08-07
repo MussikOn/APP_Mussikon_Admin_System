@@ -12,7 +12,8 @@ const getBaseUrl = (): string => {
   
   // URL por defecto (puede ser cambiada aquí)
   // const defaultUrl = 'http://192.168.54.17:3001';
-  const defaultUrl = 'http://192.168.54.11:3001';
+  const defaultUrl = 'http://192.168.54.26:3001';
+  // const defaultUrl = 'http://192.168.100.101:3001';
   console.log('🌐 Usando URL del backend por defecto:', defaultUrl);
   return defaultUrl;
 };
@@ -96,6 +97,15 @@ export const API_CONFIG = {
     PAYMENT_SYSTEM_FLAG_SUSPICIOUS: '/payment-system/flag-suspicious/:id',
     
     // Sistema de Pagos Móviles - NUEVOS ENDPOINTS
+    PAYMENT_SYSTEM: '/payment-system',
+    PAYMENT_SYSTEM_MY_BALANCE: '/payment-system/my-balance',
+    PAYMENT_SYSTEM_DEPOSIT: '/payment-system/deposit',
+    PAYMENT_SYSTEM_MY_DEPOSITS: '/payment-system/my-deposits',
+    PAYMENT_SYSTEM_BANK_ACCOUNTS_REGISTER: '/payment-system/bank-accounts/register',
+    PAYMENT_SYSTEM_BANK_ACCOUNTS_MY_ACCOUNTS: '/payment-system/bank-accounts/my-accounts',
+    PAYMENT_SYSTEM_PAY_MUSICIAN: '/payment-system/events/:eventId/pay-musician',
+    PAYMENT_SYSTEM_MUSICIAN_EARNINGS: '/payment-system/musicians/earnings',
+    PAYMENT_SYSTEM_WITHDRAW_EARNINGS: '/payment-system/musicians/withdraw-earnings',
     MOBILE_DEPOSITS_MY_DEPOSITS: '/deposits/my-deposits',
     MOBILE_DEPOSITS_CREATE: '/payment-system/deposit',
     MOBILE_DEPOSITS_APPROVE: '/deposits/:id/approve',

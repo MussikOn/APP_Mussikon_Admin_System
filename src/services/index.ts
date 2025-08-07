@@ -19,5 +19,5 @@ export { notificationService } from './notificationService';
 export type { Event } from './eventsService';
 export type { Conversation } from './chatService';
 export type { Invoice, PaymentMethod, PaymentIntent } from './paymentService';
-export type { MobilePayment, MobilePaymentStats } from './mobilePaymentsService';
+export type { MobilePaymentStats } from './mobilePaymentsService';
 export type { SearchResult } from './searchService'; 
