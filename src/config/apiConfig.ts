@@ -25,14 +25,14 @@ export const API_CONFIG = {
   
   // Endpoints de la API
   ENDPOINTS: {
-    // Autenticación - ACTUALIZADO para coincidir con el backend
-    LOGIN: '/auth/login',
+    // Autenticación - ACTUALIZADO para coincidir con el backend limpio
+    LOGIN: '/admin-auth/login',
     ADMIN_LOGIN: '/admin-auth/login',
-    REGISTER: '/auth/Register',
-    REFRESH_TOKEN: '/auth/refresh',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    VERIFY_CODE: '/auth/verify-code',
-    RESET_PASSWORD: '/auth/reset-password',
+    REGISTER: '/admin-auth/register',
+    REFRESH_TOKEN: '/admin-auth/refresh',
+    FORGOT_PASSWORD: '/admin-auth/forgot-password',
+    VERIFY_CODE: '/admin-auth/verify-code',
+    RESET_PASSWORD: '/admin-auth/reset-password',
     
     // Usuarios Móviles (Admin) - ACTUALIZADO para coincidir con el backend
     MOBILE_USERS: '/admin/users',
