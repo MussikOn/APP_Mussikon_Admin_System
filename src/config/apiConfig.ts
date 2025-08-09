@@ -12,7 +12,7 @@ const getBaseUrl = (): string => {
   
   // URL por defecto (puede ser cambiada aquí)
   // const defaultUrl = 'http://192.168.54.17:3001';
-  const defaultUrl = 'http://192.168.54.93:3001';
+  const defaultUrl = 'http://192.168.54.26:3001';
   // const defaultUrl = 'http://192.168.100.101:3001';
   console.log('🌐 Usando URL del backend por defecto:', defaultUrl);
   return defaultUrl;

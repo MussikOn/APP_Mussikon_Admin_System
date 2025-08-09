@@ -11,6 +11,7 @@ import {
   Box,
   Typography,
   IconButton,
+  Tooltip,
   CircularProgress,
   Alert,
   Paper,
@@ -27,7 +28,11 @@ import {
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
   RotateLeft as RotateLeftIcon,
-  RotateRight as RotateRightIcon
+  RotateRight as RotateRightIcon,
+  Crop as CropIcon,
+  Brightness6 as BrightnessIcon,
+  Contrast as ContrastIcon,
+  Filter as FilterIcon
 } from '@mui/icons-material';
 import { voucherService } from '../../../services/voucherService';
 
@@ -66,6 +71,7 @@ export const VoucherImageEditor: React.FC<VoucherImageEditorProps> = ({
   open,
   onClose,
   voucherId,
+  currentImageUrl,
   onImageUpdated
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

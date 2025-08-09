@@ -234,7 +234,7 @@ class VoucherService {
       const formData = new FormData();
       formData.append('voucherImage', imageFile);
       
-      const response = await apiService.postFormData(`${this.baseUrl}/${voucherId}/image`, formData);
+      const response = await apiService.putFormData(`${this.baseUrl}/${voucherId}/image`, formData);
       return response.data;
     } catch (error) {
       console.error('Error actualizando imagen del voucher:', error);
