@@ -5,6 +5,7 @@ import { mobileUsersService } from '../../services/mobileUsersService';
 import { eventsService } from '../../services/eventsService';
 import { musicianRequestsService } from '../../services/musicianRequestsService';
 import { imagesService } from '../../services/imagesService';
+import { analyticsService } from '../../services/analyticsService';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { useTheme } from '../../hooks/useTheme';
 import DashboardNotifications from '../../components/DashboardNotifications';
@@ -197,6 +198,10 @@ const Dashboard: React.FC = () => {
   // CORREGIDO: Estados para manejar errores de conexión
   const [connectionErrors, setConnectionErrors] = useState<{ [key: string]: string }>({});
   const [hasAnyData, setHasAnyData] = useState(false);
+  
+  // Estado para analytics del backend
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   // Hooks para obtener datos reales
   const {
@@ -282,7 +287,25 @@ const Dashboard: React.FC = () => {
     };
   }, []);
 
+  // Función para cargar datos de analytics del backend
+  const fetchAnalyticsData = async () => {
+    try {
+      setAnalyticsLoading(true);
+      console.log('📊 Cargando datos de analytics del backend...');
+      const stats = await analyticsService.getSystemStats();
+      setAnalyticsData(stats);
+      console.log('✅ Datos de analytics cargados:', stats);
+    } catch (error) {
+      console.warn('Error fetching analytics data:', error);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
   const fetchAllData = () => {
+    // Cargar datos de analytics del backend
+    fetchAnalyticsData();
+    
     // Agregar manejo de errores individual para cada llamada
     fetchUsersCount().catch(err => {
       console.warn('Error fetching users count:', err);
@@ -317,11 +340,23 @@ const Dashboard: React.FC = () => {
   const activityData = generateActivityDataFromRealData(eventsDataRecent);
   const notifications = generateNotificationsFromRealData(usersDataRecent, eventsDataRecent, requestsDataRecent);
 
-  // CORREGIDO: Generar métricas dinámicas
+  // CORREGIDO: Generar métricas dinámicas - usar datos de analytics si están disponibles
+  const metricData = analyticsData ? {
+    users: analyticsData.users?.total || usersData,
+    events: analyticsData.events?.total || eventsData,
+    requests: analyticsData.requests?.total || requestsData,
+    images: analyticsData.images?.total || imagesData
+  } : { users: usersData, events: eventsData, requests: requestsData, images: imagesData };
+
   const metricCards = getMetricCards(
-    { users: usersData, events: eventsData, requests: requestsData, images: imagesData },
+    metricData,
     connectionErrors,
-    { users: loadingUsersCount, events: loadingEventsCount, requests: loadingRequestsCount, images: loadingImagesCount }
+    { 
+      users: analyticsLoading || loadingUsersCount, 
+      events: analyticsLoading || loadingEventsCount, 
+      requests: analyticsLoading || loadingRequestsCount, 
+      images: analyticsLoading || loadingImagesCount 
+    }
   );
 
   const handleCardClick = (path: string) => {
@@ -441,7 +476,42 @@ const Dashboard: React.FC = () => {
                 month: 'long', 
                 day: 'numeric' 
               })}
-          </Typography>
+            </Typography>
+            {analyticsData && (
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1, 
+                mt: 1,
+                px: 2,
+                py: 0.5,
+                borderRadius: 2,
+                background: 'rgba(0, 224, 255, 0.1)',
+                border: '1px solid rgba(0, 224, 255, 0.3)',
+                width: 'fit-content'
+              }}>
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: '#00e0ff',
+                    boxShadow: '0 0 8px #00e0ff66',
+                    animation: 'pulse 2s ease-in-out infinite'
+                  }}
+                />
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: '#00e0ff',
+                    fontWeight: 600,
+                    fontSize: '0.75rem'
+                  }}
+                >
+                  ◆ CONECTADO AL BACKEND ◆
+                </Typography>
+              </Box>
+            )}
         </Box>
           
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>

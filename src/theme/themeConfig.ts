@@ -1,4 +1,5 @@
 import { createTheme, type ThemeOptions } from '@mui/material/styles';
+import { breakpoints, responsiveTypography } from './breakpoints';
 
 // Paleta de colores MussikOn
 const mussikOnColors = {
@@ -32,45 +33,135 @@ const mussikOnColors = {
 
 // Configuración base común
 const baseTheme: ThemeOptions = {
+  breakpoints: {
+    values: breakpoints,
+  },
   typography: {
     fontFamily: 'Poppins, Inter, Arial, sans-serif',
     h1: { 
       fontWeight: 800, 
       letterSpacing: '-0.5px',
-      fontSize: '2.5rem',
+      fontSize: responsiveTypography.h1.md,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h1.xs,
+      },
+      [(`@media (min-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h1.sm,
+      },
+      [(`@media (min-width:${breakpoints.lg}px)` as any)]: {
+        fontSize: responsiveTypography.h1.lg,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.h1.xl,
+      },
     },
     h2: { 
       fontWeight: 700,
-      fontSize: '2rem',
+      fontSize: responsiveTypography.h2.md,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h2.xs,
+      },
+      [(`@media (min-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h2.sm,
+      },
+      [(`@media (min-width:${breakpoints.lg}px)` as any)]: {
+        fontSize: responsiveTypography.h2.lg,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.h2.xl,
+      },
     },
     h3: { 
       fontWeight: 700,
-      fontSize: '1.75rem',
+      fontSize: responsiveTypography.h3.md,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h3.xs,
+      },
+      [(`@media (min-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h3.sm,
+      },
+      [(`@media (min-width:${breakpoints.lg}px)` as any)]: {
+        fontSize: responsiveTypography.h3.lg,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.h3.xl,
+      },
     },
     h4: { 
       fontWeight: 600,
-      fontSize: '1.5rem',
+      fontSize: responsiveTypography.h4.md,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h4.xs,
+      },
+      [(`@media (min-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h4.sm,
+      },
+      [(`@media (min-width:${breakpoints.lg}px)` as any)]: {
+        fontSize: responsiveTypography.h4.lg,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.h4.xl,
+      },
     },
     h5: { 
       fontWeight: 600,
-      fontSize: '1.25rem',
+      fontSize: responsiveTypography.h5.md,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h5.xs,
+      },
+      [(`@media (min-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h5.sm,
+      },
+      [(`@media (min-width:${breakpoints.lg}px)` as any)]: {
+        fontSize: responsiveTypography.h5.lg,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.h5.xl,
+      },
     },
     h6: { 
       fontWeight: 600,
-      fontSize: '1.125rem',
+      fontSize: responsiveTypography.h6.md,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h6.xs,
+      },
+      [(`@media (min-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.h6.sm,
+      },
+      [(`@media (min-width:${breakpoints.lg}px)` as any)]: {
+        fontSize: responsiveTypography.h6.lg,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.h6.xl,
+      },
     },
     button: { 
       fontWeight: 700, 
       textTransform: 'none',
-      fontSize: '0.875rem',
+      fontSize: responsiveTypography.body1.md,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.body1.xs,
+      },
     },
     body1: {
-      fontSize: '1rem',
+      fontSize: responsiveTypography.body1.md,
       lineHeight: 1.6,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.body1.xs,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.body1.xl,
+      },
     },
     body2: {
-      fontSize: '0.875rem',
+      fontSize: responsiveTypography.body2.md,
       lineHeight: 1.5,
+      [(`@media (max-width:${breakpoints.sm}px)` as any)]: {
+        fontSize: responsiveTypography.body2.xs,
+      },
+      [(`@media (min-width:${breakpoints.xl}px)` as any)]: {
+        fontSize: responsiveTypography.body2.xl,
+      },
     },
   },
   shape: {

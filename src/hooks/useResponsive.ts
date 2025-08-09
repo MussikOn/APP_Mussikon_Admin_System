@@ -1,19 +1,25 @@
 import { useEffect, useState } from 'react';
+import { breakpoints, breakpointUtils } from '../theme/breakpoints';
 
 export function useResponsive() {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-  const [isTablet, setIsTablet] = useState(() => window.innerWidth > 768 && window.innerWidth <= 1024);
-  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 1024);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < breakpoints.sm);
+  const [isTablet, setIsTablet] = useState(() => window.innerWidth >= breakpoints.sm && window.innerWidth < breakpoints.lg);
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= breakpoints.lg);
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl'>(() => 
+    breakpointUtils.getCurrentBreakpoint(window.innerWidth)
+  );
 
   useEffect(() => {
-    const mobileQuery = window.matchMedia('(max-width: 768px)');
-    const tabletQuery = window.matchMedia('(min-width: 769px) and (max-width: 1024px)');
-    const desktopQuery = window.matchMedia('(min-width: 1025px)');
+    const mobileQuery = window.matchMedia(`(max-width: ${breakpoints.sm - 1}px)`);
+    const tabletQuery = window.matchMedia(`(min-width: ${breakpoints.sm}px) and (max-width: ${breakpoints.lg - 1}px)`);
+    const desktopQuery = window.matchMedia(`(min-width: ${breakpoints.lg}px)`);
 
     const updateResponsive = () => {
+      const width = window.innerWidth;
       setIsMobile(mobileQuery.matches);
       setIsTablet(tabletQuery.matches);
       setIsDesktop(desktopQuery.matches);
+      setCurrentBreakpoint(breakpointUtils.getCurrentBreakpoint(width));
     };
 
     // Set initial values
@@ -31,5 +37,19 @@ export function useResponsive() {
     };
   }, []);
 
-  return { isMobile, isTablet, isDesktop };
+  return { 
+    isMobile, 
+    isTablet, 
+    isDesktop, 
+    currentBreakpoint,
+    breakpoints,
+    // Funciones helper
+    getResponsiveValue: <T>(values: { xs: T; sm?: T; md?: T; lg?: T; xl?: T }): T => 
+      breakpointUtils.getResponsiveValue(values, currentBreakpoint),
+    isXs: currentBreakpoint === 'xs',
+    isSm: currentBreakpoint === 'sm',
+    isMd: currentBreakpoint === 'md',
+    isLg: currentBreakpoint === 'lg',
+    isXl: currentBreakpoint === 'xl'
+  };
 } 

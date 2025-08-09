@@ -1,0 +1,1330 @@
+/* Sistema de Usuarios Futurista - 100% Responsivo y Integrado con Temas */
+
+/* ============ CONTENEDOR PRINCIPAL FUTURISTA ============ */
+.users-container {
+  padding: clamp(16px, 4vw, 24px);
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Efecto de partículas de fondo futurista */
+.users-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, var(--color-primary)08 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, var(--color-secondary)08 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--color-accent)05 0%, transparent 40%);
+  animation: float-particles 15s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes float-particles {
+  0% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-10px) rotate(180deg) scale(1.05);
+    opacity: 0.5;
+  }
+  100% { 
+    transform: translateY(0px) rotate(360deg) scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* ============ HEADER FUTURISTA ============ */
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(12px, 3vw, 20px);
+  margin-bottom: clamp(20px, 4vw, 30px);
+  padding: clamp(16px, 4vw, 24px);
+  background: var(--color-gradient-1);
+  border-radius: 20px;
+  color: var(--color-text);
+  box-shadow: 
+    0 8px 32px var(--color-glow),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    0 0 0 1px var(--color-primary)22;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Efecto de escaneo futurista */
+.users-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(90deg, 
+      transparent, 
+      var(--color-cyan)33 30%, 
+      var(--color-primary)44 50%, 
+      var(--color-secondary)33 70%, 
+      transparent
+    );
+  transition: left 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  animation: data-scan 4s infinite;
+}
+
+@keyframes data-scan {
+  0% { left: -100%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.users-header:hover::before {
+  animation: none;
+  left: 100%;
+  transition: left 0.8s ease;
+}
+
+/* Bordes neón futuristas */
+.users-header::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--color-gradient-1);
+  border-radius: 22px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.users-header:hover::after {
+  opacity: 0.5;
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { 
+    box-shadow: 0 0 20px var(--color-primary)66;
+  }
+  50% { 
+    box-shadow: 0 0 40px var(--color-secondary)88;
+  }
+}
+
+.users-title {
+  position: relative;
+  z-index: 2;
+}
+
+.users-title h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  font-family: 'Orbitron', 'Inter', Arial, sans-serif;
+  background: var(--color-gradient-2);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 
+    0 0 20px var(--color-cyan)66,
+    0 0 40px var(--color-primary)44,
+    0 4px 8px rgba(0,0,0,0.3);
+  position: relative;
+  letter-spacing: 2px;
+  animation: cyber-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes cyber-glow {
+  0% { 
+    filter: brightness(1) hue-rotate(0deg);
+    text-shadow: 
+      0 0 20px var(--color-cyan)66,
+      0 0 40px var(--color-primary)44;
+  }
+  100% { 
+    filter: brightness(1.1) hue-rotate(10deg);
+    text-shadow: 
+      0 0 30px var(--color-secondary)88,
+      0 0 60px var(--color-accent)55;
+  }
+}
+
+/* Efecto de datos holográficos */
+.users-title h1::before {
+  content: '◆ GESTIÓN DE USUARIOS ◆';
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--color-gradient-4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  animation: hologram-flicker 5s infinite;
+  pointer-events: none;
+}
+
+@keyframes hologram-flicker {
+  0%, 94%, 100% { opacity: 0; }
+  95%, 99% { opacity: 0.3; }
+}
+
+.users-count {
+  font-size: clamp(0.75rem, 2vw, 0.9rem);
+  opacity: 0.9;
+  margin-top: 5px;
+  display: block;
+  color: var(--color-text-secondary);
+}
+
+.users-actions {
+  display: flex;
+  gap: clamp(10px, 2vw, 15px);
+  align-items: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+/* ============ BOTONES FUTURISTAS ============ */
+.users-add-btn,
+.users-refresh-btn {
+  background: var(--color-gradient-1);
+  color: white;
+  border: 2px solid var(--color-primary)44;
+  padding: clamp(10px, 2vw, 12px) clamp(16px, 3vw, 24px);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-family: 'Orbitron', 'Inter', Arial, sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 16px var(--color-primary)44,
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Efecto de circuitos futuristas */
+.users-add-btn::before,
+.users-refresh-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(90deg, 
+      transparent, 
+      var(--color-cyan)66 20%,
+      var(--color-secondary)88 50%,
+      var(--color-accent)66 80%,
+      transparent
+    );
+  transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: circuit-flow 3s infinite;
+}
+
+@keyframes circuit-flow {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.users-add-btn:hover::before,
+.users-refresh-btn:hover::before {
+  animation: none;
+  left: 100%;
+  transition: left 0.4s ease;
+}
+
+/* Efectos hover futuristas */
+.users-add-btn:hover,
+.users-refresh-btn:hover {
+  background: var(--color-gradient-2);
+  border-color: var(--color-secondary);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 8px 32px var(--color-secondary)66,
+    0 0 40px var(--color-cyan)44,
+    inset 0 1px 0 rgba(255,255,255,0.4);
+  text-shadow: 0 0 10px var(--color-cyan)88;
+}
+
+/* Estados activos con efectos neón */
+.users-add-btn:active,
+.users-refresh-btn:active {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 
+    0 4px 16px var(--color-primary)88,
+    inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.users-refresh-btn {
+  background: var(--color-glass);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  box-shadow: 0 4px 16px var(--color-glow);
+}
+
+.users-refresh-btn:hover {
+  background: var(--color-glass-strong);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ============ PANEL DE FILTROS ============ */
+.users-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(12px, 3vw, 20px);
+  margin-bottom: clamp(20px, 4vw, 30px);
+  padding: clamp(16px, 4vw, 20px);
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-strong);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px var(--color-glow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s ease;
+}
+
+.users-filters:hover {
+  box-shadow: 0 12px 48px var(--color-glow);
+  transform: translateY(-2px);
+}
+
+.filters-left,
+.filters-right {
+  display: flex;
+  gap: clamp(12px, 3vw, 20px);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ============ CAMPO DE BÚSQUEDA ============ */
+.users-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.users-search-input {
+  padding: clamp(10px, 2vw, 12px) clamp(35px, 4vw, 40px) clamp(10px, 2vw, 12px) clamp(12px, 3vw, 15px);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  width: clamp(200px, 40vw, 300px);
+  background: var(--color-glass-strong);
+  color: var(--color-text);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.users-search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary)22, 0 4px 16px var(--color-glow);
+  transform: translateY(-1px);
+}
+
+.users-search-input::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.users-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-text-secondary);
+  font-size: clamp(16px, 2vw, 18px);
+}
+
+/* ============ GRID DE USUARIOS ============ */
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: clamp(16px, 3vw, 24px);
+  margin-bottom: clamp(20px, 4vw, 30px);
+  transition: all 0.3s ease;
+}
+
+/* ============ TARJETAS DE USUARIO FUTURISTAS ============ */
+.user-card {
+  background: var(--color-glass);
+  border: 2px solid var(--color-glass-strong);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 32px var(--color-glow),
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 0 0 1px var(--color-primary)22;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* Efecto de campo de energía */
+.user-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, var(--color-primary)05 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, var(--color-secondary)05 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.user-card:hover::before {
+  opacity: 1;
+  animation: energy-field 2s ease-in-out infinite;
+}
+
+@keyframes energy-field {
+  0%, 100% { 
+    background: 
+      radial-gradient(circle at 20% 20%, var(--color-primary)05 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, var(--color-secondary)05 0%, transparent 50%);
+  }
+  50% { 
+    background: 
+      radial-gradient(circle at 80% 20%, var(--color-cyan)08 0%, transparent 50%),
+      radial-gradient(circle at 20% 80%, var(--color-accent)08 0%, transparent 50%);
+  }
+}
+
+/* Efectos hover futuristas */
+.user-card:hover {
+  transform: translateY(-12px) scale(1.03);
+  box-shadow: 
+    0 20px 60px var(--color-glow),
+    0 0 40px var(--color-primary)44,
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  border-color: var(--color-secondary)66;
+}
+
+/* Líneas de circuitos en los bordes */
+.user-card::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--color-gradient-1);
+  border-radius: 22px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.user-card:hover::after {
+  opacity: 0.3;
+  animation: circuit-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes circuit-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+.user-card-header {
+  padding: clamp(16px, 3vw, 20px);
+  background: var(--color-glass-strong);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: clamp(48px, 8vw, 60px);
+  height: clamp(48px, 8vw, 60px);
+  background: var(--color-gradient-1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-family: 'Orbitron', 'Inter', Arial, sans-serif;
+  letter-spacing: 1px;
+  box-shadow: 
+    0 4px 16px var(--color-primary)44,
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    0 0 0 2px var(--color-primary)33;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Efecto de holograma en el avatar */
+.user-avatar::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--color-gradient-2);
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: avatar-pulse 3s ease-in-out infinite;
+}
+
+@keyframes avatar-pulse {
+  0%, 100% { 
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.3;
+    transform: scale(1.05);
+  }
+}
+
+.user-card:hover .user-avatar::before {
+  opacity: 0.5;
+  animation: avatar-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes avatar-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px var(--color-cyan)66;
+  }
+  50% { 
+    box-shadow: 0 0 40px var(--color-secondary)88;
+  }
+}
+
+.user-card:hover .user-avatar {
+  transform: scale(1.1);
+  box-shadow: 
+    0 6px 24px var(--color-primary)66,
+    0 0 30px var(--color-cyan)44,
+    inset 0 1px 0 rgba(255,255,255,0.5);
+  text-shadow: 0 0 10px var(--color-cyan)88;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  margin: 0;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.user-email {
+  margin: 4px 0 0 0;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.user-card-body {
+  padding: clamp(16px, 3vw, 20px);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.user-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.user-detail-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.user-detail-value {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ============ CHIPS FUTURISTAS DE ROL Y ESTADO ============ */
+.user-role-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 600;
+  font-family: 'Orbitron', 'Inter', Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de energía en los chips */
+.user-role-chip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.user-role-chip:hover::before {
+  left: 100%;
+}
+
+.user-role-chip.admin {
+  background: var(--color-glass);
+  color: var(--color-cyan);
+  border: 2px solid var(--color-cyan);
+  box-shadow: 
+    0 4px 16px rgba(0, 255, 247, 0.4),
+    inset 0 1px 0 rgba(0, 255, 247, 0.2);
+  text-shadow: 0 0 8px var(--color-cyan)66;
+}
+
+.user-role-chip.admin:hover {
+  box-shadow: 
+    0 6px 24px rgba(0, 255, 247, 0.6),
+    0 0 20px var(--color-cyan)88;
+  transform: scale(1.05);
+}
+
+.user-role-chip.superadmin {
+  background: var(--color-glass);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  box-shadow: 
+    0 4px 16px rgba(255, 46, 236, 0.4),
+    inset 0 1px 0 rgba(255, 46, 236, 0.2);
+  text-shadow: 0 0 8px var(--color-accent)66;
+}
+
+.user-role-chip.superadmin:hover {
+  box-shadow: 
+    0 6px 24px rgba(255, 46, 236, 0.6),
+    0 0 20px var(--color-accent)88;
+  transform: scale(1.05);
+}
+
+.user-role-chip.organizador {
+  background: var(--color-glass);
+  color: var(--color-purple);
+  border: 2px solid var(--color-purple);
+  box-shadow: 
+    0 4px 16px rgba(185, 147, 214, 0.4),
+    inset 0 1px 0 rgba(185, 147, 214, 0.2);
+  text-shadow: 0 0 8px var(--color-purple)66;
+}
+
+.user-role-chip.organizador:hover {
+  box-shadow: 
+    0 6px 24px rgba(185, 147, 214, 0.6),
+    0 0 20px var(--color-purple)88;
+  transform: scale(1.05);
+}
+
+.user-role-chip.musico {
+  background: var(--color-glass);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  box-shadow: 
+    0 4px 16px var(--color-primary)44,
+    inset 0 1px 0 var(--color-primary)22;
+  text-shadow: 0 0 8px var(--color-primary)66;
+}
+
+.user-role-chip.musico:hover {
+  box-shadow: 
+    0 6px 24px var(--color-primary)66,
+    0 0 20px var(--color-primary)88;
+  transform: scale(1.05);
+}
+
+.user-status-chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: clamp(0.625rem, 1.25vw, 0.75rem);
+  font-weight: 600;
+  font-family: 'Orbitron', 'Inter', Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-status-chip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.user-status-chip:hover::before {
+  left: 100%;
+}
+
+.user-status-chip.active {
+  background: var(--color-glass);
+  color: var(--color-secondary);
+  border: 2px solid var(--color-secondary);
+  box-shadow: 
+    0 3px 12px rgba(0, 224, 255, 0.4),
+    inset 0 1px 0 rgba(0, 224, 255, 0.2);
+  text-shadow: 0 0 6px var(--color-secondary)66;
+}
+
+.user-status-chip.active:hover {
+  box-shadow: 
+    0 4px 16px rgba(0, 224, 255, 0.6),
+    0 0 15px var(--color-secondary)88;
+  transform: scale(1.1);
+}
+
+.user-status-chip.inactive {
+  background: var(--color-glass);
+  color: var(--color-orange);
+  border: 2px solid var(--color-orange);
+  box-shadow: 
+    0 3px 12px rgba(255, 107, 53, 0.4),
+    inset 0 1px 0 rgba(255, 107, 53, 0.2);
+  text-shadow: 0 0 6px var(--color-orange)66;
+}
+
+.user-status-chip.inactive:hover {
+  box-shadow: 
+    0 4px 16px rgba(255, 107, 53, 0.6),
+    0 0 15px var(--color-orange)88;
+  transform: scale(1.1);
+}
+
+/* ============ ACCIONES FUTURISTAS DE USUARIO ============ */
+.user-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  position: relative;
+}
+
+.user-actions::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: var(--color-gradient-1);
+  opacity: 0.5;
+}
+
+.user-action-btn {
+  background: var(--color-glass);
+  border: 2px solid var(--color-border);
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: clamp(16px, 2vw, 18px);
+  color: var(--color-text-secondary);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.user-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.user-action-btn:hover::before {
+  left: 100%;
+}
+
+.user-action-btn:hover {
+  background: var(--color-glass-strong);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: scale(1.15) translateY(-2px);
+  box-shadow: 0 6px 20px var(--color-glow);
+}
+
+.user-action-btn.edit:hover {
+  border-color: var(--color-cyan);
+  color: var(--color-cyan);
+  box-shadow: 
+    0 6px 20px rgba(0, 255, 247, 0.4),
+    0 0 20px var(--color-cyan)66;
+  text-shadow: 0 0 8px var(--color-cyan)88;
+}
+
+.user-action-btn.delete:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  box-shadow: 
+    0 6px 20px rgba(255, 46, 236, 0.4),
+    0 0 20px var(--color-accent)66;
+  text-shadow: 0 0 8px var(--color-accent)88;
+}
+
+.user-action-btn:active {
+  transform: scale(1.05) translateY(0);
+  box-shadow: 0 2px 8px var(--color-glow);
+}
+
+/* ============ TABLA RESPONSIVA ============ */
+.users-table-container {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-strong);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px var(--color-glow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  background: var(--color-glass-strong);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: clamp(12px, 2vw, 16px);
+  text-align: left;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.users-table td {
+  padding: clamp(12px, 2vw, 16px);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  transition: all 0.2s ease;
+}
+
+.users-table tr:hover {
+  background: var(--color-glass-strong);
+}
+
+/* ============ PAGINACIÓN ============ */
+.users-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(16px, 4vw, 24px);
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-strong);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  margin-top: clamp(16px, 3vw, 24px);
+}
+
+.pagination-info {
+  color: var(--color-text-secondary);
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 500;
+}
+
+/* ============ MODAL DE FORMULARIO ============ */
+.user-modal {
+  background: var(--color-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-strong);
+  border-radius: 20px;
+  box-shadow: 0 20px 80px var(--color-glow);
+}
+
+.user-modal-header {
+  background: var(--color-gradient-1);
+  color: white;
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.8s;
+}
+
+.user-modal-header:hover::before {
+  left: 100%;
+}
+
+.user-modal-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: 700;
+  font-family: 'Orbitron', 'Inter', Arial, sans-serif;
+  position: relative;
+  z-index: 2;
+}
+
+.user-form {
+  padding: clamp(20px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 3vw, 20px);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: clamp(12px, 3vw, 16px);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.form-field input,
+.form-field select {
+  padding: clamp(10px, 2vw, 12px) clamp(12px, 3vw, 14px);
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  background: var(--color-glass-strong);
+  color: var(--color-text);
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary)22, 0 4px 16px var(--color-glow);
+  transform: translateY(-1px);
+}
+
+.form-field input::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.form-btn {
+  padding: clamp(10px, 2vw, 12px) clamp(20px, 4vw, 24px);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.form-btn.primary {
+  background: var(--color-gradient-1);
+  color: white;
+  box-shadow: 0 4px 16px var(--color-primary)44;
+}
+
+.form-btn.primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.form-btn.primary:hover::before {
+  left: 100%;
+}
+
+.form-btn.primary:hover {
+  background: var(--color-gradient-2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--color-primary)66;
+}
+
+.form-btn.secondary {
+  background: var(--color-glass);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.form-btn.secondary:hover {
+  background: var(--color-glass-strong);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+/* ============ ESTADOS DE CARGA ============ */
+.users-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(40px, 8vw, 60px) clamp(16px, 4vw, 20px);
+  text-align: center;
+  color: var(--color-text);
+}
+
+.loading-spinner {
+  width: clamp(40px, 8vw, 60px);
+  height: clamp(40px, 8vw, 60px);
+  border: 4px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.users-empty {
+  text-align: center;
+  padding: clamp(40px, 8vw, 60px) clamp(16px, 4vw, 20px);
+  color: var(--color-text-secondary);
+}
+
+.empty-icon {
+  font-size: clamp(3rem, 6vw, 4rem);
+  margin-bottom: 20px;
+  color: var(--color-text-disabled);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.users-empty h3 {
+  margin: 0 0 10px 0;
+  color: var(--color-text);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+}
+
+.users-empty p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+/* ============ ALERTAS Y NOTIFICACIONES ============ */
+.users-error {
+  padding: clamp(16px, 3vw, 20px);
+  background: var(--color-glass);
+  border: 1px solid var(--color-accent);
+  border-radius: 12px;
+  color: var(--color-accent);
+  margin-bottom: clamp(16px, 3vw, 20px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(255, 46, 236, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.users-success {
+  padding: clamp(16px, 3vw, 20px);
+  background: var(--color-glass);
+  border: 1px solid var(--color-secondary);
+  border-radius: 12px;
+  color: var(--color-secondary);
+  margin-bottom: clamp(16px, 3vw, 20px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 224, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ============ RESPONSIVIDAD AVANZADA ============ */
+
+/* Tablets */
+@media (max-width: 768px) {
+  .users-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .users-filters {
+    flex-direction: column;
+  }
+
+  .filters-left,
+  .filters-right {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .users-search-input {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .users-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    justify-content: center;
+  }
+}
+
+/* Móviles */
+@media (max-width: 480px) {
+  .users-container {
+    padding: 12px;
+  }
+
+  .users-header {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .users-title h1 {
+    font-size: 1.5rem;
+  }
+
+  .users-actions {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .users-filters {
+    padding: 16px;
+  }
+
+  .users-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .user-card-header {
+    padding: 16px;
+  }
+
+  .user-card-body {
+    padding: 16px;
+  }
+
+  .user-form {
+    padding: 20px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Tabla responsiva en móvil */
+  .users-table-container {
+    overflow-x: auto;
+  }
+
+  .users-table {
+    min-width: 600px;
+  }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 320px) {
+  .users-container {
+    padding: 8px;
+  }
+
+  .users-header {
+    padding: 12px;
+  }
+
+  .users-filters {
+    padding: 12px;
+  }
+
+  .filters-left,
+  .filters-right {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .users-search-input {
+    font-size: 14px;
+    padding: 8px 32px 8px 12px;
+  }
+}
+
+/* ============ MODO ALTO CONTRASTE ============ */
+@media (prefers-contrast: high) {
+  .user-card {
+    border-width: 2px;
+  }
+
+  .users-search-input:focus,
+  .form-field input:focus,
+  .form-field select:focus {
+    box-shadow: 0 0 0 4px var(--color-primary)66;
+  }
+
+  .user-action-btn:hover {
+    background: var(--color-primary);
+    color: white;
+  }
+}
+
+/* ============ MODO SIN ANIMACIONES ============ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .user-card:hover {
+    transform: none;
+  }
+
+  .empty-icon {
+    animation: none;
+  }
+}
+
+/* ============ TEMA OSCURO ESPECÍFICO ============ */
+[data-theme="dark"] .user-card {
+  box-shadow: 0 8px 32px rgba(127, 95, 255, 0.15);
+}
+
+[data-theme="dark"] .user-card:hover {
+  box-shadow: 0 16px 48px rgba(127, 95, 255, 0.25);
+}
+
+[data-theme="dark"] .users-search-input {
+  background: rgba(24, 28, 58, 0.8);
+}
+
+[data-theme="dark"] .user-modal {
+  background: rgba(24, 28, 58, 0.95);
+}
+
+/* ============ TEMA CLARO ESPECÍFICO ============ */
+[data-theme="light"] .user-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .user-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .users-search-input {
+  background: rgba(248, 250, 252, 0.8);
+}
+
+[data-theme="light"] .user-modal {
+  background: rgba(255, 255, 255, 0.95);
+}

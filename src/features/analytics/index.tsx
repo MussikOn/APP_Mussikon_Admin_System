@@ -34,7 +34,7 @@ import {
 } from '../../components/analytics/AnalyticsCharts';
 
 // Importar hook de analytics
-import { useAnalytics } from '../../hooks/useAnalytics';
+import { useAnalyticsSimple } from '../../hooks/useAnalyticsSimple';
 
 // Importar estilos
 import { buttonStyles } from '../../theme/buttonStyles';
@@ -49,23 +49,26 @@ const Analytics: React.FC = () => {
   // Estado para menú de exportación
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
 
-  // Hook de analytics
-  const {
-    dashboard,
-    eventAnalytics,
-    requestAnalytics,
-    userAnalytics,
-    platformAnalytics,
-    loading,
-    error,
-    usingMockData,
-    refreshDashboard,
-    refreshEventAnalytics,
-    refreshRequestAnalytics,
-    refreshUserAnalytics,
-    refreshPlatformAnalytics,
-    exportReport
-  } = useAnalytics();
+  // Hook de analytics simplificado
+  const { systemStats, loading, error, refreshData } = useAnalyticsSimple();
+  
+  // Simular los datos que espera el componente
+  const dashboard = systemStats;
+  const eventAnalytics = systemStats?.events;
+  const requestAnalytics = systemStats?.requests;
+  const userAnalytics = systemStats?.users;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const usingMockData = { dashboard: false, events: false, requests: false, users: false, platform: false };
+  
+  // Funciones simplificadas
+  const refreshDashboard = refreshData;
+  const refreshEventAnalytics = refreshData;
+  const refreshRequestAnalytics = refreshData;
+  const refreshUserAnalytics = refreshData;
+  const refreshPlatformAnalytics = refreshData;
+  const exportReport = async (reportType: string, format: string) => {
+    console.log(`Export ${reportType} as ${format} - not implemented`);
+  };
 
   // Cargar datos según la pestaña
   useEffect(() => {
@@ -112,48 +115,51 @@ const Analytics: React.FC = () => {
     handleExportMenuClose();
   };
 
-  // Preparar datos para gráficos
+  // Preparar datos para gráficos - usando datos reales del backend
   const prepareEventTypeChartData = () => {
-    if (!eventAnalytics?.eventsByType) return { labels: [], data: [] };
+    if (!eventAnalytics?.byStatus) return { labels: [], data: [] };
     
-    const labels = Object.keys(eventAnalytics.eventsByType);
-    const data = Object.values(eventAnalytics.eventsByType);
+    const labels = Object.keys(eventAnalytics.byStatus);
+    const data = Object.values(eventAnalytics.byStatus) as number[];
     
     return { labels, data };
   };
 
   const prepareEventMonthlyChartData = () => {
-    if (!eventAnalytics?.eventsByMonth) return { labels: [], data: [] };
+    // Como no tenemos datos por mes, usar datos por estado
+    if (!eventAnalytics?.byStatus) return { labels: [], data: [] };
     
-    const labels = Object.keys(eventAnalytics.eventsByMonth);
-    const data = Object.values(eventAnalytics.eventsByMonth);
+    const labels = Object.keys(eventAnalytics.byStatus);
+    const data = Object.values(eventAnalytics.byStatus) as number[];
     
     return { labels, data };
   };
 
   const prepareRequestStatusChartData = () => {
-    if (!requestAnalytics?.requestsByStatus) return { labels: [], data: [] };
+    if (!requestAnalytics?.byStatus) return { labels: [], data: [] };
     
-    const labels = Object.keys(requestAnalytics.requestsByStatus);
-    const data = Object.values(requestAnalytics.requestsByStatus);
+    const labels = Object.keys(requestAnalytics.byStatus);
+    const data = Object.values(requestAnalytics.byStatus) as number[];
     
     return { labels, data };
   };
 
   const prepareUserGrowthChartData = () => {
-    if (!userAnalytics?.usersByMonth) return { labels: [], data: [] };
+    // Como no tenemos datos por mes, usar datos por rol
+    if (!userAnalytics?.byRole) return { labels: [], data: [] };
     
-    const labels = Object.keys(userAnalytics.usersByMonth);
-    const data = Object.values(userAnalytics.usersByMonth);
+    const labels = Object.keys(userAnalytics.byRole);
+    const data = Object.values(userAnalytics.byRole) as number[];
     
     return { labels, data };
   };
 
   const preparePlatformUsageChartData = () => {
-    if (!platformAnalytics?.topEventTypes) return { labels: [], data: [] };
+    // Como no tenemos datos de plataforma, usar datos de eventos
+    if (!eventAnalytics?.byStatus) return { labels: [], data: [] };
     
-    const labels = platformAnalytics.topEventTypes.map(item => item.type);
-    const data = platformAnalytics.topEventTypes.map(item => item.count);
+    const labels = Object.keys(eventAnalytics.byStatus);
+    const data = Object.values(eventAnalytics.byStatus) as number[];
     
     return { labels, data };
   };
@@ -185,7 +191,7 @@ const Analytics: React.FC = () => {
               <Grid item xs={12} sm={6} md={3}>
                 <MetricCard
                   title="Total de Eventos"
-                  value={dashboard?.events?.totalEvents || 0}
+                  value={dashboard?.events?.total || 0}
                   icon={<EventIcon />}
                   color="primary"
                 />
@@ -193,7 +199,7 @@ const Analytics: React.FC = () => {
               <Grid item xs={12} sm={6} md={3}>
                 <MetricCard
                   title="Solicitudes Activas"
-                  value={dashboard?.requests?.totalRequests || 0}
+                  value={dashboard?.requests?.total || 0}
                   icon={<AssignmentIcon />}
                   color="secondary"
                 />
@@ -201,15 +207,15 @@ const Analytics: React.FC = () => {
               <Grid item xs={12} sm={6} md={3}>
                 <MetricCard
                   title="Usuarios Registrados"
-                  value={dashboard?.users?.totalUsers || 0}
+                  value={dashboard?.users?.total || 0}
                   icon={<PeopleIcon />}
                   color="success"
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <MetricCard
-                  title="Ingresos Totales"
-                  value={`$${(dashboard?.platform?.totalRevenue || 0).toLocaleString()}`}
+                  title="Imágenes Subidas"
+                  value={dashboard?.images?.total || 0}
                   icon={<TrendingUpIcon />}
                   color="info"
                 />
