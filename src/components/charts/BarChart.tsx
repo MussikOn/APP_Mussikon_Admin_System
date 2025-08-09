@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import type { ChartData } from '../../services/analyticsService';
+import type { ChartData } from '../../types/chartTypes';
 
 interface BarChartProps {
   data: ChartData[];
@@ -8,6 +8,7 @@ interface BarChartProps {
   height?: number;
   showValues?: boolean;
   animated?: boolean;
+  color?: string;
 }
 
 const BarChart: React.FC<BarChartProps> = ({
@@ -15,7 +16,8 @@ const BarChart: React.FC<BarChartProps> = ({
   title,
   height = 300,
   showValues = true,
-  animated = true
+  animated = true,
+  color = 'var(--color-primary)'
 }) => {
   const maxValue = Math.max(...data.map(item => item.value));
   const chartPadding = 40;
@@ -88,8 +90,8 @@ const BarChart: React.FC<BarChartProps> = ({
                       position: 'absolute',
                       top: -25,
                       fontWeight: 600,
-                      color: item.color,
-                      textShadow: `0 0 8px ${item.color}66`
+                      color: item.color || color,
+                      textShadow: `0 0 8px ${item.color || color}66`
                     }}
                   >
                     {item.value}
@@ -101,10 +103,10 @@ const BarChart: React.FC<BarChartProps> = ({
                   sx={{
                     width: '60%',
                     height: barHeight,
-                    background: `linear-gradient(to top, ${item.color}, ${item.color}aa)`,
+                    background: `linear-gradient(to top, ${item.color || color}, ${item.color || color}aa)`,
                     borderRadius: '8px 8px 0 0',
                     position: 'relative',
-                    boxShadow: `0 0 20px ${item.color}44, inset 0 1px 0 rgba(255,255,255,0.2)`,
+                    boxShadow: `0 0 20px ${item.color || color}44, inset 0 1px 0 rgba(255,255,255,0.2)`,
                     transition: animated ? 'all 0.3s ease' : 'none',
                     transform: animated ? 'scaleY(0)' : 'scaleY(1)',
                     transformOrigin: 'bottom',

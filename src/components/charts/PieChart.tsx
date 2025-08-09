@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import type { ChartData } from '../../services/analyticsService';
+import type { ChartData } from '../../types/chartTypes';
 
 interface PieChartProps {
   data: ChartData[];
