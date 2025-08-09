@@ -21,6 +21,7 @@ import { BankAccountsList } from './components/BankAccountsList';
 import { TransactionHistory } from './components/TransactionHistory';
 import ConnectionStatus from './components/ConnectionStatus';
 
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -63,6 +64,8 @@ const Payments: React.FC = () => {
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -170,12 +173,16 @@ const Payments: React.FC = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={4}>
-          <Typography variant="h6" gutterBottom>
-            Gestión de Vouchers
-          </Typography>
-          <Alert severity="info">
-            Gestión de vouchers en desarrollo. Próximamente disponible.
-          </Alert>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Gestión de Vouchers
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Funcionalidad de gestión de vouchers en desarrollo
+              </Typography>
+            </Grid>
+          </Grid>
         </TabPanel>
       </Paper>
     </Container>
