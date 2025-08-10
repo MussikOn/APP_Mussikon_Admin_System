@@ -109,8 +109,8 @@ const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
                           >
                             {column.label}:
                           </Typography>
-                          <Box sx={{ 
-                            flex: 1, 
+                          <Box sx={{
+                            flex: 1,
                             textAlign: 'right',
                             display: 'flex',
                             justifyContent: 'flex-end',
@@ -125,10 +125,10 @@ const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
                     
                     {/* Acciones */}
                     {actions.length > 0 && (
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'flex-end', 
-                        gap: 1, 
+                      <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: 1,
                         mt: 1,
                         pt: 1,
                         borderTop: `1px solid ${theme.palette.divider}`
@@ -277,4 +277,4 @@ const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
   );
 };
 
-export default ResponsiveTable; 
+export default ResponsiveTable;

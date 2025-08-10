@@ -13,6 +13,8 @@
   --color-gradient-2: linear-gradient(135deg, #00e0ff 0%, #7f5fff 100%);
   --color-gradient-3: linear-gradient(135deg, #ff2eec 0%, #b993d6 100%);
   --color-gradient-4: linear-gradient(135deg, #00fff7 0%, #7f5fff 100%);
+  --color-gradient-danger: linear-gradient(135deg, #ff2eec 0%, #ff6b35 100%);
+  --color-gradient-success: linear-gradient(135deg, #00e0ff 0%, #00fff7 100%);
   
   /* Tema Oscuro (por defecto) */
   --color-bg: #0a0a23;

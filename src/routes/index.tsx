@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Auth from '../features/auth';
 import Dashboard from '../features/dashboard';
+import DashboardEnhanced from '../features/dashboard/DashboardEnhanced';
+import DashboardComplete from '../features/dashboard/DashboardComplete';
 import Users from '../features/users';
 import Events from '../features/events';
 import MusicianRequests from '../features/musicianRequests';
@@ -65,7 +67,9 @@ const AppRoutes = () => (
   <Router>
     <Routes>
       <Route path="/login" element={<Auth />} />
-      <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/" element={<PrivateRoute><DashboardComplete /></PrivateRoute>} />
+      <Route path="/dashboard-original" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/dashboard-enhanced" element={<PrivateRoute><DashboardEnhanced /></PrivateRoute>} />
       <Route path="/users" element={<PrivateRoute><Users /></PrivateRoute>} />
       <Route path="/events" element={<PrivateRoute><Events /></PrivateRoute>} />
       <Route path="/musician-requests" element={<PrivateRoute><MusicianRequests /></PrivateRoute>} />
